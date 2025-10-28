@@ -1,1 +1,10 @@
+# Virtual Enviroment
 .venv/
+
+# Enviroment Variables
+.env
+
+# Python Generated Files 
+__pycache__/ 
+dist/
+build/
