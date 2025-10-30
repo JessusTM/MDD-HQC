@@ -1,0 +1,58 @@
+body {
+  background: #000;
+  color: #000;
+}
+
+.workspace {
+  background: #fff;
+  border: 2px solid #cfd2d4;
+  border-radius: .6rem;
+  min-height: 340px;
+  position: relative;
+  color: #222;
+}
+
+.workspace h4,
+.workspace h3 {
+  font-weight: 600;
+  letter-spacing: .5px;
+  margin: 0;
+}
+
+.btn-expand {
+  position: absolute;
+  top: .6rem;
+  right: .6rem;
+  line-height: 1;
+  border: 1px solid #adb5bd;
+  color: #212529;
+  background: rgba(255, 255, 255, .85);
+}
+
+.metrics-panel {
+  background: #1f1f1f;
+  border: 1px solid #2b2b2b;
+  border-radius: .6rem;
+  min-height: 160px;
+  color: #e9ecef;
+}
+
+.controls .form-select {
+  min-width: 210px;
+  background: #0b0b0b;
+  color: #fff;
+  border: 1px solid #343a40;
+}
+
+.controls .form-select:focus {
+  box-shadow: none;
+  border-color: #0d6efd;
+}
+
+.controls .btn-primary {
+  font-weight: 700;
+}
+
+.controls .btn-danger {
+  font-weight: 700;
+}
