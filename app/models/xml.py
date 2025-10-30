@@ -1,4 +1,4 @@
 from pydantic import BaseModel 
 
-class XmlRead(BaseModel):
+class Xml(BaseModel):
     name : str 
