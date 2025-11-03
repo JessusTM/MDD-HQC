@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0" version="28.2.5">
+  <diagram name="Page-1" id="iSLWnUf1thuh0qIqtbM6">
+    <mxGraphModel dx="987" dy="543" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <object label="Dr.Misi" type="actor" id="Ol-XAh_IkoKgGkO5Buyn-1">
+          <mxCell style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+            <mxGeometry x="250" y="210" width="85" height="85" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="&lt;div&gt;Modelar&amp;nbsp;&lt;/div&gt;&lt;div&gt;plegamiento de proteínas&lt;/div&gt;" type="goal" id="Ol-XAh_IkoKgGkO5Buyn-2">
+          <mxCell style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1;fontSize=12;allowArrows=0;" vertex="1" parent="1">
+            <mxGeometry x="420" y="130" width="90" height="50" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="Aumentar precisión" type="softgoal" id="Ol-XAh_IkoKgGkO5Buyn-3">
+          <mxCell style="shape=stencil(7ZjbboMwDIafJpeVcoC2u5zY9h4pTdeslCCgp7dfmhC0uJSewsUkpApkO3E+bPMLFbGkWvNCIIrXiH0gSiOsL9o8WHPemLwqRFpb356Xki8ycY6wT4Tfdfz8Y0mq8lwvkyqvvMifeFWXXOa1to82G4nsCSdrTq1ViFJuRS3KZpH1Ivp1d17q56XB8r55eeNQeSOfl+BQieOBgKcDFXg20EDMY583WIFn2EvMomAVBonnwUbCLwULN8SAOFiN6VDEdKgak6GmYvLKHLNEe67JNEsWPN18l2qXLztxCl6vOwIuvFV7gW4Ie/eTts+7K20K4uc4Ul/UjwyIMfEOObnljck86XsMwR3hECKAEAOE2Edox+AVhhgwTAFDK5ndDKAMT3ViBjrh1LRFwKi3E6AM7nV4EAKDOmAfotU14p/iKNzb3VI8143Yp4gABYUUoB0M1uK5uQQUFFAQfIMC1uKpjhDQkQkYCwImE3YEzsV9s5mpSlxdZSTuQqmM94q8sWSlStGjeyuZZVqH1abvVLvgIJf6ZP39bO73aHwmc/GjZK4tczN7mjrf2pfyQhvnq9lln6B31yjho4SPEj5K+D+UcF9oOzabbRdSbrz2Xw7j+AU=);whiteSpace=wrap;html=1;allowArrows=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+            <mxGeometry x="422" y="290" width="88" height="70" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="Ejecución algoritmo VQE" type="task" id="Ol-XAh_IkoKgGkO5Buyn-5">
+          <mxCell style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;strokeWidth=1;fillColor=#d5e8d4;strokeColor=#82b366;size=10;fontSize=12;allowArrows=0;" vertex="1" parent="1">
+            <mxGeometry x="427" y="200" width="76" height="42" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="" type="agent" id="Ol-XAh_IkoKgGkO5Buyn-6">
+          <mxCell style="group" vertex="1" connectable="0" parent="1">
+            <mxGeometry x="560" y="250" width="80" height="80" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="Proveedor Servicios Cuántico" type="agent" id="Ol-XAh_IkoKgGkO5Buyn-7">
+          <mxCell style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="Ol-XAh_IkoKgGkO5Buyn-6">
+            <mxGeometry width="80" height="80" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="Ol-XAh_IkoKgGkO5Buyn-8" value="" style="endArrow=none;html=1;rounded=0;startSize=9;endSize=6;sourcePerimeterSpacing=0;jumpStyle=sharp;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;strokeColor=#004C99;" edge="1" parent="Ol-XAh_IkoKgGkO5Buyn-6" source="Ol-XAh_IkoKgGkO5Buyn-7" target="Ol-XAh_IkoKgGkO5Buyn-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="48" y="-38" as="sourcePoint" />
+            <mxPoint x="98" y="-88" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <object label="Equipo de Desarollo" type="actor" id="Ol-XAh_IkoKgGkO5Buyn-9">
+          <mxCell style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+            <mxGeometry x="557.5" y="150" width="85" height="85" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-10">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-1" target="Ol-XAh_IkoKgGkO5Buyn-2">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="490" y="280" as="sourcePoint" />
+              <mxPoint x="544" y="280" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-11">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-1" target="Ol-XAh_IkoKgGkO5Buyn-5">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="490" y="280" as="sourcePoint" />
+              <mxPoint x="544" y="280" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-13">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.049;entryY=0.51;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-1" target="Ol-XAh_IkoKgGkO5Buyn-3">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="490" y="280" as="sourcePoint" />
+              <mxPoint x="390" y="366" as="targetPoint" />
+              <Array as="points">
+                <mxPoint x="380" y="253" />
+                <mxPoint x="380" y="326" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-14">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-2" target="Ol-XAh_IkoKgGkO5Buyn-9">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="410" y="260" as="sourcePoint" />
+              <mxPoint x="464" y="260" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-15">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-5" target="Ol-XAh_IkoKgGkO5Buyn-9">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="410" y="260" as="sourcePoint" />
+              <mxPoint x="560" y="200" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <object label="D" type="dependency-link" id="Ol-XAh_IkoKgGkO5Buyn-17">
+          <mxCell style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;curved=1;endFill=0;endSize=11;fontSize=16;exitX=64;exitY=2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Ol-XAh_IkoKgGkO5Buyn-3" target="Ol-XAh_IkoKgGkO5Buyn-7">
+            <mxGeometry width="50" height="50" relative="1" as="geometry">
+              <mxPoint x="569" y="360" as="sourcePoint" />
+              <mxPoint x="623" y="360" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
