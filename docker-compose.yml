@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./mdd-hqc-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mdd-hqc-backend:/app
+  frontend:
+    build: ./mdd-hqc-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./mdd-hqc-frontend:/app
+    depends_on:
+      - backend
