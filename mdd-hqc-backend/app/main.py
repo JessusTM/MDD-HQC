@@ -7,8 +7,10 @@ def main():
     cli_service = CliService()
     xml_service = XmlService(cli_service)
     uvl         = UVL()
-    cim_to_pim  = CimToPim(xml_service, uvl)
+    elements    = xml_service.get_elements()      
+    cim_to_pim  = CimToPim(xml_service, uvl, elements)
     cim_to_pim.apply_r1()
+    cim_to_pim.apply_r2()
 
 if __name__ == "__main__":
     main()

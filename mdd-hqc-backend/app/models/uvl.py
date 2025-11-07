@@ -10,3 +10,13 @@ class UVL:
     def write(self, text):
         with self.FILE_NAME.open("a") as file:
             file.write(text)
+
+    def set_metadata(self, elements):
+        for element in elements:
+            self.write("// " + element + "\n")
+
+    def set_section(self, text, elements):
+        self.write("\n" + text + " {")
+        for element in elements:
+            self.write("\n    " + element)
+        self.write("\n}")
