@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import argparse
 
-class CliArgs:
+class CliService:
     def read_cli_args(self):
         parser              = argparse.ArgumentParser(add_help=False)
         parser.add_argument("-i", "--input", required=True)

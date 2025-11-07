@@ -1,24 +1,14 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from app.services.xml_service import XmlService
+from app.services.transformations.cim_to_pim import CimToPim
+from app.services.cli_service import CliService
+from app.models.uvl import UVL
 
-from app.api import transformations, xml
+def main():
+    cli_service = CliService()
+    xml_service = XmlService(cli_service)
+    uvl         = UVL()
+    cim_to_pim  = CimToPim(xml_service, uvl)
+    cim_to_pim.apply_r1()
 
-
-app = FastAPI(title="HQC-MDD")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-        "http://localhost:4174",
-        "http://127.0.0.1:4174",
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(xml.router)
-app.include_router(transformations.router)
+if __name__ == "__main__":
+    main()
