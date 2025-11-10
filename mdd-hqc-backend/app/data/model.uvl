@@ -4,3 +4,6 @@
 features {
     Optimizar Plan de Rutas
 }
+constraints {
+    Ventaja Cuántica => Módulo Cuántico
+}

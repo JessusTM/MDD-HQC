@@ -19,3 +19,21 @@ class CimToPim:
     def apply_r3(self):
         tasks       = self.xml_service.get_elements_by_type(self.elements, "task")
         self.uvl.set_section("constraints", tasks)
+   
+    def apply_r4(self):
+        links   = self.xml_service.get_social_dependencies(self.elements)
+        labels  = self.xml_service.map_id_to_label(self.elements)
+
+        constraints = []
+        for link in links:
+            source_id = link.get("source")
+            target_id = link.get("target")
+
+        source_label = labels.get(source_id)
+        target_label = labels.get(target_id)
+
+        if source_label and target_label:
+            constraint_expression = f"{source_label} => {target_label}"
+            constraints.append(constraint_expression)
+
+        self.uvl.set_section("constraints", constraints)

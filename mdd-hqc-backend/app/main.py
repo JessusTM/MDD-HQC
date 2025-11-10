@@ -8,9 +8,11 @@ def main():
     xml_service = XmlService(cli_service)
     uvl         = UVL()
     elements    = xml_service.get_elements()      
+    xml_service.get_social_dependencies(elements)
     cim_to_pim  = CimToPim(xml_service, uvl, elements)
     cim_to_pim.apply_r1()
     cim_to_pim.apply_r2()
+    cim_to_pim.apply_r4()
 
 if __name__ == "__main__":
     main()

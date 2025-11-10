@@ -5,6 +5,7 @@ class XmlService:
     def __init__(self, cli_service : CliService):
         self.cli_service = cli_service 
 
+    # ============ ELEMENTS ============
     def get_root(self):
         path    = self.cli_service.read_cli_args() 
         tree    = ET.parse(path)
@@ -24,24 +25,16 @@ class XmlService:
             })
         return raw_diagram_elements
     
-    def verify_social_dependency(self, tag: str, attrib: dict) -> bool:
-        is_mxcell     = tag == "mxCell"
-        is_edge       = attrib.get("edge") == "1"
-        has_source    = "source" in attrib
-        has_target    = "target" in attrib
-        is_dependency = is_mxcell and is_edge and has_source and has_target
-        return is_dependency
-
     def get_elements_without_metadata(self, raw_diagram_elements):
-        filtered = []
+        excluded_tags   = {"Array", "root", "mxPoint", "mxGeometry"}
+        filtered        = []
         for element in raw_diagram_elements:
-            tag    = element.get("tag")
-            attrib = element.get("attrib")
+            tag             = element.get("tag")
+            attrib          = element.get("attrib")
+            is_dependency   = self.verify_social_dependency(tag, attrib)
 
-            is_dependency = self.verify_social_dependency(tag, attrib)
-
-            if tag in {"Array", "root", "mxPoint"} : continue
-            if tag in {"mxCell", "mxGeometry"} and not is_dependency : continue
+            if tag in excluded_tags : continue
+            if tag in {"mxCell"} and not is_dependency : continue
 
             filtered.append({"tag": tag, "attrib": attrib})
         return filtered
@@ -52,6 +45,38 @@ class XmlService:
         elements    = self.get_elements_without_metadata(raw)
         return elements 
 
+    # ============ SOCIAL DEPENDENCIES ============
+    def verify_social_dependency(self, tag: str, attrib: dict) -> bool:
+        is_mxcell     = tag == "mxCell"
+        is_edge       = attrib.get("edge") == "1"
+        has_source    = "source" in attrib
+        has_target    = "target" in attrib
+        is_dependency = is_mxcell and is_edge and has_source and has_target
+        return is_dependency
+
+    def get_social_dependencies(self, filtered_elements):
+        social_dependencies = []
+        for element in filtered_elements:
+            tag     = element.get("tag")
+            attrib  = element.get("attrib")
+            source  = attrib.get("source")
+            target  = attrib.get("target")
+            is_dependency   = self.verify_social_dependency(tag, attrib)
+            if not is_dependency : continue
+            social_dependencies.append({"source" : source, "target" : target}) 
+        return social_dependencies
+
+    # ============ GOALS ============
+    def get_goals(self, filtered_elements):
+        goals = []
+        for element in filtered_elements:
+            attrib  = element.get("attrib")
+            label   = attrib.get("label")
+            id      = attrib.get("id")
+            goals.append({"label" : label, "id" : id})
+        return goals
+
+    # ============ ELEMENTS ============
     def get_elements_by_type(self, elements, attrib_type : str):
         labels = []
         for element in elements:
@@ -60,4 +85,14 @@ class XmlService:
             element_type    = attrib.get("type")
             if element_type == str(attrib_type):
                 labels.append(label)
-        return labels 
+        return labels
+
+    def map_id_to_label(self, filtered_elements):
+        labels = {}
+        for element in filtered_elements:
+            attrib  = element.get("attrib")
+            id      = attrib.get("id")
+            if not id : continue
+            label   = attrib.get("label")
+            labels[id] = label
+        return labels
