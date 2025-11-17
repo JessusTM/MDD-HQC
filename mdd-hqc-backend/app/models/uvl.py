@@ -13,10 +13,16 @@ class UVL:
 
     def set_metadata(self, elements):
         for element in elements:
+            if not element : continue
             self.write("// " + element + "\n")
 
-    def set_section(self, text, elements):
-        self.write("\n" + text + " {")
+    def set_section(self, text, elements, optional_elements=None):
+        self.write("\n" + text + "{")
+
         for element in elements:
-            self.write("\n    " + element)
-        self.write("\n}")
+            self.write("\n      " + element)
+
+        if optional_elements:
+            for element in optional_elements:
+                self.write("\n      " + element)
+        self.write("\n}" + "\n")

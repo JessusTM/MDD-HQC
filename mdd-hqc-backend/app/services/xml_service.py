@@ -1,3 +1,5 @@
+import re
+import html
 import xml.etree.ElementTree as ET
 from app.services.cli_service import CliService 
 
@@ -66,14 +68,22 @@ class XmlService:
             social_dependencies.append({"source" : source, "target" : target}) 
         return social_dependencies
 
-    # ============ GOALS ============
+    # ============ GOALS ============ 
+    def format_label(self, label):
+        if not label : return label
+        unescaped   = html.unescape(label)
+        text        = re.sub(r"<.*?>", " ", unescaped)
+        text        = re.sub(r"\s+", " ", text).strip()
+        return text
+
     def get_goals(self, filtered_elements):
         goals = []
         for element in filtered_elements:
-            attrib  = element.get("attrib")
-            label   = attrib.get("label")
-            id      = attrib.get("id")
-            goals.append({"label" : label, "id" : id})
+            attrib          = element.get("attrib")
+            label           = attrib.get("label")
+            formatted_label = self.format_label(label)
+            id              = attrib.get("id")
+            goals.append({"label" : formatted_label, "id" : id})
         return goals
 
     # ============ ELEMENTS ============
@@ -82,17 +92,19 @@ class XmlService:
         for element in elements:
             attrib          = element["attrib"] 
             label           = attrib.get("label")
+            formatted_label = self.format_label(label)
             element_type    = attrib.get("type")
             if element_type == str(attrib_type):
-                labels.append(label)
+                labels.append(formatted_label)
         return labels
 
     def map_id_to_label(self, filtered_elements):
         labels = {}
         for element in filtered_elements:
-            attrib  = element.get("attrib")
-            id      = attrib.get("id")
+            attrib          = element.get("attrib")
+            id              = attrib.get("id")
             if not id : continue
-            label   = attrib.get("label")
-            labels[id] = label
+            label           = attrib.get("label")
+            formatted_label = self.format_label(label)
+            labels[id]      = formatted_label
         return labels

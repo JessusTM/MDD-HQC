@@ -8,17 +8,25 @@ class CimToPim:
         self.elements       = elements 
 
     def apply_r1(self):
-        actors   = self.xml_service.get_elements_by_type(self.elements, "actor")
+        actors  = self.xml_service.get_elements_by_type(self.elements, "actor")
+        agents  = self.xml_service.get_elements_by_type(self.elements, "agent")
+        roles   = self.xml_service.get_elements_by_type(self.elements, "role")
         self.uvl.create_file()
         self.uvl.set_metadata(actors) 
+        self.uvl.set_metadata(agents)
+        self.uvl.set_metadata(roles)        
 
     def apply_r2(self):
         goals       = self.xml_service.get_elements_by_type(self.elements, "goal")
-        self.uvl.set_section("features", goals)
+        softgoals   = self.xml_service.get_elements_by_type(self.elements, "softgoal")
+        self.uvl.set_section("features", goals, softgoals)
 
     def apply_r3(self):
-        tasks       = self.xml_service.get_elements_by_type(self.elements, "task")
-        self.uvl.set_section("constraints", tasks)
+        refinements     = self.xml_service.get_elements_by_type(self.elements, "refinement")
+        total_needed_by = self.xml_service.get_elements_by_type(self.elements, "needed-by") 
+        contributions   = self.xml_service.get_elements_by_type(self.elements, "contribution")
+        qualifications  = self.xml_service.get_elements_by_type(self.elements, "qualification-link")
+
    
     def apply_r4(self):
         links   = self.xml_service.get_social_dependencies(self.elements)

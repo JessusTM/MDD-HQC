@@ -1,7 +1,17 @@
+// ChileEsPres
+// Sistema de Planificación de Rutas
+// Módulo Cuántico
 
-features {
-    Realizar Envío
+features{
+      Realizar Envío
+      Rápidez
+      Uso Óptimo de Recurso
+      Tiempo de Cálculo
+      Escalabilidad ante alta demanda
+      Calidad Plan de Ruta
+      Uso de Cómputo
 }
-constraints {
-    <font style="font-size: 8px;">Resultado Cuántico de Rutas</font> => Ejecutar Algoritmo Quantum Annealing
+
+constraints{
+      Resultado Cuántico de Rutas => Ejecutar Algoritmo Quantum Annealing
 }
