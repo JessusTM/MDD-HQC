@@ -1,122 +1,107 @@
-# Model Driven Development for Hybrid Quantum-Hybrid Systems
+# Model-Driven Development for Hybrid Quantum–Classical Systems (MDD-HQC)
 
-Este repositorio contiene un protótipo funcional para una solución basada en MDD orientada a agentes para la creación de sistemas híbridos. Con esta, se permite transformar modelos construídos en iStar 2.0, a un nivel de estructura y comportamiento (PIM) por medio de un modelo de característica del dominio de las líneas de producto de software para la gestión de variabilidad y, finalmente, para el modelado arquitectónico de una configuración concreta del sistema. Con esta solución se busca obtener una trazabilidad vertical en los diferentes niveles del sistema HQC, de manera que sean trazables y no exista pérdida de información.
+This repository contains a functional prototype of an **MDD-based solution** for engineering **Hybrid Quantum–Classical (HQC) systems**.  
+The approach provides *vertical traceability* across three abstraction levels:
 
-El sistema permite el cálculo de métricas de transformación y la generación de diagramas de clases en PlantUML para los diseños dependientes de la plataforma. Como stack tecnológico se hace uso del lenguaje **Python** como backend junto al framework **FastAPI** y un frontend con lenguaje **Typescript** desarrollado en la librería **React**.
+- **CIM** — Goal-oriented models using *iStar 2.0* in XML.  
+- **PIM** — Variability models using *UVL* (feature models from Software Product Line Engineering).  
+- **PSM** — Platform-specific architectural configurations for concrete HQC system instances.
 
-## Tecnologías utilizadas
+The goal is to transform high-level goal models into structured representations that preserve information across levels, ensuring that decisions made at the CIM level remain traceable down to PIM and PSM.
 
-* Python 3.14
-* FastAPI con Uvicorn
-* Pydantic para validación de datos
-* React 19 con Vite y TypeScript
-* Docker y Docker Compose para la orquestación local
-* PlantUML para la visualización de diagramas de clases generados
+The system currently offers:
 
-## Pasos de ejecución
+- A **backend** for XML parsing, transformation logic, and UVL generation.  
+- A **frontend** for interacting with models and exploring the CIM–PIM–PSM flow.  
+- A **Docker-based** local environment for running the entire stack.
 
-1. Instalar Docker y Docker Compose.
-2. Clonar el repositorio:
+## ⚙️ Tech Stack
 
-   ```bash
-   git clone git@github.com:JessusTM/MDD-HQC.git
-   cd RDD-Hybrid-Systems
-   ```
-3. Construir y levantar los servicios:
+- **Python 3.12+**
+- **FastAPI** with Uvicorn
+- **React** (JavaScript, JSX components)
+- **Docker & Docker Compose**
+- **PlantUML** (planned integration for class diagram visualization)
 
-   ```bash
-   docker compose up --build
-   ```
-4. Acceder al entorno del frontend en:
-   **[http://localhost:5173](http://localhost:5173)**
-5. Detener el entorno al finalizar:
+## 🚀 Running the Project
 
-   ```bash
-   docker compose down
-   ```
+1. Install **Docker** and **Docker Compose**.
+2. Clone the repository:
 
----
+```bash
+git clone git@github.com:JessusTM/MDD-HQC.git
+cd MDD-HQC
+````
 
-## Estructura del proyecto
+3. Build and start the services:
 
-### Backend (`mdd-hqc-backend`)
-
+```bash
+docker compose up --build
 ```
+
+4. Access the frontend in your browser at: **[http://localhost:5173](http://localhost:5173)**
+
+5. Stop the environment when you are done:
+
+```bash
+docker compose down
+```
+
+## 🧩 Project Structure
+
+Global view of the repository, including orchestration, backend and frontend:
+
+```text
 .
-├── app
-│   ├── api                         # Rutas y controladores de la API
-│   │   ├── transformations.py         # Endpoints para las transformaciones CIM–PIM–PSM
-│   │   └── xml.py                     # Endpoints de carga y procesamiento de archivos XML
-│   ├── core                        # Configuración base del sistema
-│   │   ├── config.py                  # Variables de entorno y parámetros globales
-│   │   └── logging.py                 # Configuración de registro y logs
-│   ├── data                        # Ejemplos iStar 2.0 en formato XML para el primer nivel de modelado
-│   │   │   ├── Chemistry.xml
-│   │   │   └── ChileEsPres.xml
-│   ├── main.py                     # Punto de entrada principal del servidor FastAPI
-│   ├── models                      # Modelos de datos y entidades del dominio
-│   │   ├── feature_tree.py            # Representación de árboles de características UVL
-│   │   ├── metrics.py                 # Estructuras de métricas calculadas
-│   │   ├── transformation_result.py   # Resultados intermedios y finales de las transformaciones
-│   │   └── xml.py                     # Modelo para manejo de archivos XML
-│   └── services                    # Servicios auxiliares de negocio y transformación
-│       ├── cli_args_service.py        # Módulo para argumentos de línea de comandos
-│       ├── xml_service.py             # Servicio para procesar diagramas XML
-│       └── transformations            # Transformaciones entre niveles del modelo
-│           ├── cim_to_pim.py
-│           ├── pim_to_psm.py
-│           ├── metrics_calculator.py
-│           └── plant_uml_diagram_service.py
-├── Dockerfile                      # Imagen base para despliegue del backend
-├── requirements.txt                # Dependencias de Python
-└── tests
+├── docker-compose.yml          # Orchestration of backend and frontend services
+├── mdd-hqc-backend/            # Backend service (FastAPI)
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app/
+│       ├── data/               # Example iStar 2.0 XML models and sample UVL output
+│       │   ├── Chemistry.xml
+│       │   ├── ChileEsPres.xml
+│       │   ├── ChileEsPresOLD.xml
+│       │   └── model.uvl
+│       ├── __init__.py
+│       ├── main.py             # FastAPI entry point (ASGI application)
+│       ├── models/
+│       │   ├── __init__.py
+│       │   └── uvl.py          # UVL-related data structures and helpers
+│       └── services/
+│           ├── __init__.py
+│           ├── cli_service.py  # CLI utilities for local experimentation
+│           ├── xml_service.py  # XML parsing and preprocessing for iStar 2.0 models
+│           └── transformations/
+│               ├── __init__.py
+│               └── cim_to_pim.py  # Core CIM → PIM transformation logic
+├── mdd-hqc-frontend/           # Frontend application (React)
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public/
+│   │   ├── favicon.ico
+│   │   └── index.html          # Root HTML for the SPA
+│   └── src/
+│       ├── components/
+│       │   ├── App.jsx         # Root component of the UI
+│       │   ├── Commons/
+│       │   │   └── MddCard.jsx # Reusable card component for layout/sections
+│       │   ├── Filter/
+│       │   │   └── Filter.jsx  # Filter component for model/level selection
+│       │   └── Levels/
+│       │       ├── CIM.jsx     # CIM-level workspace (iStar 2.0 perspective)
+│       │       ├── PIM.jsx     # PIM-level workspace (UVL / variability perspective)
+│       │       └── PSM.jsx     # PSM-level workspace (platform-specific perspective)
+│       ├── index.js            # React entry point (render root)
+│       └── style.css           # Global styles for the application
+└── README.md                   # Project documentation
 ```
 
----
+## 📊 Current Capabilities
 
-### Frontend (`mdd-hqc-frontend`)
+* Load and process **iStar 2.0 XML models** at the CIM level.
+* Apply initial **CIM → PIM transformation rules** to generate UVL-based representations.
+* Inspect and navigate **CIM, PIM, and PSM views** through the frontend.
+* Run the entire system (backend + frontend) via a single **Docker Compose** configuration.
 
-```
-.
-├── public
-│   └── vite.svg                 
-├── src
-│   ├── assets                   
-│   │   └── react.svg
-│   ├── components               # Componentes modulares del sistema
-│   │   ├── Filters
-│   │   │   └── LevelFilter.tsx  # Filtro de niveles para el panel de métricas
-│   │   ├── Layout
-│   │   │   └── Layout.tsx       # Estructura principal del layout
-│   │   ├── Levels
-│   │   │   ├── CimLevel.tsx     # Nivel CIM (modelo independiente del cómputo)
-│   │   │   ├── PimLevel.tsx     # Nivel PIM (modelo independiente de la plataforma)
-│   │   │   └── PsmLevel.tsx     # Nivel PSM (modelo dependiente de la plataforma)
-│   │   ├── Metrics
-│   │   │   └── MetricsPanel.tsx # Panel de visualización de métricas
-│   │   └── Orchestrator
-│   │       └── Orchestrator.tsx # Orquestador de transformaciones y vistas
-│   ├── index.css                # Estilos globales
-│   ├── main.tsx                 # Punto de entrada de la aplicación React
-│   ├── services                 # Servicios de comunicación con el backend
-│   │   ├── CimService.ts
-│   │   └── PimService.ts
-│   ├── types                    # Definiciones de tipos TypeScript
-│   │   ├── components
-│   │   │   ├── filters.ts
-│   │   │   └── levels.ts
-│   │   ├── levels.ts
-│   │   ├── metrics.ts
-│   │   └── transformations.ts
-│   └── utils
-│       └── uvl.ts               # Funciones auxiliares para manejo de UVL
-├── Dockerfile                   # Imagen base para despliegue del frontend
-├── eslint.config.js             # Configuración de reglas de linting
-├── index.html                   # Archivo raíz de la aplicación
-├── package.json                 # Dependencias del proyecto Node.js
-├── package-lock.json
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts               # Configuración de Vite para desarrollo y compilación
-```
+The prototype is intended as a research and experimentation platform for **Model-Driven Development in Hybrid Quantum–Classical Systems**, enabling further extensions such as refined transformation rules, metric extraction, and automated architectural views.
