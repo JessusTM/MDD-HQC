@@ -1,9 +1,7 @@
-// ChileEsPres
-// Módulo Cuántico
 
 features {
-    Optimizar Plan de Rutas
+    Realizar Envío
 }
 constraints {
-    Ventaja Cuántica => Módulo Cuántico
+    <font style="font-size: 8px;">Resultado Cuántico de Rutas</font> => Ejecutar Algoritmo Quantum Annealing
 }
