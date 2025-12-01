@@ -1,17 +1,16 @@
+# app/services/xml_service.py
 import re
 import html
 import xml.etree.ElementTree as ET
-from app.services.cli_service import CliService 
 
 class XmlService:
-    def __init__(self, cli_service : CliService):
-        self.cli_service = cli_service 
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
     # ============ ELEMENTS ============
     def get_root(self):
-        path    = self.cli_service.read_cli_args() 
-        tree    = ET.parse(path)
-        root    = tree.getroot()
+        tree = ET.parse(self.file_path)
+        root = tree.getroot()
         return root
 
     def get_raw_diagram_elements(self, root):
@@ -22,11 +21,11 @@ class XmlService:
             tag     = child.tag
             attrib  = child.attrib
             raw_diagram_elements.append({
-                "tag"   : tag, 
+                "tag"   : tag,
                 "attrib": attrib,
             })
         return raw_diagram_elements
-    
+
     def get_elements_without_metadata(self, raw_diagram_elements):
         excluded_tags   = {"Array", "root", "mxPoint", "mxGeometry"}
         filtered        = []
@@ -45,7 +44,7 @@ class XmlService:
         root        = self.get_root()
         raw         = self.get_raw_diagram_elements(root)
         elements    = self.get_elements_without_metadata(raw)
-        return elements 
+        return elements
 
     # ============ SOCIAL DEPENDENCIES ============
     def verify_social_dependency(self, tag: str, attrib: dict) -> bool:
@@ -65,10 +64,10 @@ class XmlService:
             target  = attrib.get("target")
             is_dependency   = self.verify_social_dependency(tag, attrib)
             if not is_dependency : continue
-            social_dependencies.append({"source" : source, "target" : target}) 
+            social_dependencies.append({"source": source, "target": target})
         return social_dependencies
 
-    # ============ GOALS ============ 
+    # ============ LABELS / GOALS ============
     def format_label(self, label):
         if not label : return label
         unescaped   = html.unescape(label)
@@ -83,14 +82,18 @@ class XmlService:
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
             id              = attrib.get("id")
-            goals.append({"label" : formatted_label, "id" : id})
+            goals.append(
+                {
+                    "label" : formatted_label, 
+                    "id"    : id
+                }
+            )
         return goals
 
-    # ============ ELEMENTS ============
-    def get_elements_by_type(self, elements, attrib_type : str):
+    def get_elements_by_type(self, elements, attrib_type: str):
         labels = []
         for element in elements:
-            attrib          = element["attrib"] 
+            attrib          = element["attrib"]
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
             element_type    = attrib.get("type")
@@ -106,5 +109,5 @@ class XmlService:
             if not id : continue
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
-            labels[id]      = formatted_label
+            labels[id]     = formatted_label
         return labels
