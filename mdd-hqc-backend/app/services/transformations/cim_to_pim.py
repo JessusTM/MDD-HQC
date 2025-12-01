@@ -22,12 +22,38 @@ class CimToPim:
         self.uvl.set_section("features", goals, softgoals)
 
     def apply_r3(self):
-        refinements     = self.xml_service.get_elements_by_type(self.elements, "refinement")
-        total_needed_by = self.xml_service.get_elements_by_type(self.elements, "needed-by") 
-        contributions   = self.xml_service.get_elements_by_type(self.elements, "contribution")
-        qualifications  = self.xml_service.get_elements_by_type(self.elements, "qualification-link")
+        links           = self.xml_service.get_internal_links()
+        labels          = self.xml_service.map_id_to_label(self.elements)
+        constraints     = []
 
-   
+        for link in links:
+            link_type = link.get("type")
+            source_id = link.get("source")
+            target_id = link.get("target")
+            raw_value = (link.get("value") or "").strip().lower()
+            if not source_id or not target_id : continue
+
+            source_label = labels.get(source_id)
+            target_label = labels.get(target_id)
+            if not source_label or not target_label : continue
+
+            if link_type == "needed-by":
+                constraints.append(f"{target_label} => {source_label}")
+                continue
+
+            if link_type == "qualification-link":
+                constraints.append(f"{target_label} => {source_label}")
+                continue
+
+            if link_type == "contribution":
+                if raw_value in {"make", "help"}:
+                    constraints.append(f"{source_label} => {target_label}")
+                elif raw_value in {"hurt", "break"}:
+                    constraints.append(f"{source_label} => !{target_label}")
+                continue
+        if constraints:
+            self.uvl.set_section("constraints", constraints)
+
     def apply_r4(self):
         links   = self.xml_service.get_social_dependencies(self.elements)
         labels  = self.xml_service.map_id_to_label(self.elements)
