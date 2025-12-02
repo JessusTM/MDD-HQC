@@ -138,3 +138,31 @@ class XmlService:
                 }
             )
         return links
+
+    # ============ ENLACES DE REFINAMIENTO ============
+    def get_refinements(self):
+        root        = self.get_root()
+        root_node   = root.find("./diagram/mxGraphModel/root")
+        refinements = []
+
+        if root_node is None : return refinements
+
+        for obj in root_node.findall("object"):
+            link_type = obj.attrib.get("type")
+            if link_type != "refinement" : continue
+
+            mxcell = obj.find("mxCell")
+            if mxcell is None : continue
+
+            mx_attrib = mxcell.attrib
+            if mx_attrib.get("edge") != "1" : continue
+
+            refinements.append(
+                {
+                    "source"    : mx_attrib.get("source"),
+                    "target"    : mx_attrib.get("target"),
+                    "value"     : (obj.attrib.get("value") or obj.attrib.get("label") or "").strip().lower(),
+                }
+            )
+
+        return refinements

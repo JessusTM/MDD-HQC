@@ -22,6 +22,24 @@ class CimToPim:
         self.uvl.set_section("features", goals, softgoals)
 
     def apply_r3(self):
+        links   = self.xml_service.get_social_dependencies(self.elements)
+        labels  = self.xml_service.map_id_to_label(self.elements)
+
+        constraints = []
+        for link in links:
+            source_id = link.get("source")
+            target_id = link.get("target")
+
+        source_label = labels.get(source_id)
+        target_label = labels.get(target_id)
+
+        if source_label and target_label:
+            constraint_expression = f"{source_label} => {target_label}"
+            constraints.append(constraint_expression)
+
+        self.uvl.set_section("constraints", constraints)
+
+    def apply_r4(self):
         links           = self.xml_service.get_internal_links()
         labels          = self.xml_service.map_id_to_label(self.elements)
         constraints     = []
@@ -52,22 +70,4 @@ class CimToPim:
                     constraints.append(f"{source_label} => !{target_label}")
                 continue
         if constraints:
-            self.uvl.set_section("constraints", constraints)
-
-    def apply_r4(self):
-        links   = self.xml_service.get_social_dependencies(self.elements)
-        labels  = self.xml_service.map_id_to_label(self.elements)
-
-        constraints = []
-        for link in links:
-            source_id = link.get("source")
-            target_id = link.get("target")
-
-        source_label = labels.get(source_id)
-        target_label = labels.get(target_id)
-
-        if source_label and target_label:
-            constraint_expression = f"{source_label} => {target_label}"
-            constraints.append(constraint_expression)
-
-        self.uvl.set_section("constraints", constraints)
+            self.uvl.set_section("constraints", constraints) 
