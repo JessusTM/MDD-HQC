@@ -10,7 +10,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "lucide-react": "^0.555.0"
   },
   "scripts": {
     "start": "react-scripts start",
