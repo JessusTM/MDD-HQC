@@ -45,9 +45,7 @@ The following table shows the features currently implemented and those planned f
 
 ### Frontend
 * **React 19** - JavaScript library for building user interfaces
-* **React Scripts 5.0.1** - Configuration tools for React applications
 * **Axios** - HTTP client for making requests to the backend
-* **Lucide React** - Modern icon library
 * **PlantUML Encoder** - PlantUML diagram encoding for visualization
 
 ### Infrastructure
