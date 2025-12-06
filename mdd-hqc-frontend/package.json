@@ -11,7 +11,9 @@
     "react-dom": "^19.2.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
-    "lucide-react": "^0.555.0"
+    "lucide-react": "^0.555.0",
+    "axios": "^1.6.0",
+    "plantuml-encoder": "^1.4.0"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,17 +1,21 @@
 import { useRef, useState } from "react"
-import { Upload, FileText, CheckCircle } from "lucide-react"
+import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
+import { uploadFile, getCimMetrics } from "../../services/api"
 
-export const CIM = ({ onModelReady, onModelCleared }) => {
-  const [file, setFile] = useState(null)
+export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
+  const [file, setFile]                 = useState(null)
+  const [filePath, setFilePath]         = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
-  const [infoMessage, setInfoMessage] = useState("")
-  const fileInputRef = useRef(null)
+  const [infoMessage, setInfoMessage]   = useState("")
+  const [loading, setLoading]           = useState(false)
+  const fileInputRef                    = useRef(null)
 
   const reset = () => {
     setFile(null)
+    setFilePath(null)
     setErrorMessage("")
     setInfoMessage("")
-    onModelCleared?.()
+    onMetricsLoaded?.(null)
   }
 
   const handleFile = async (event) => {
@@ -23,21 +27,30 @@ export const CIM = ({ onModelReady, onModelCleared }) => {
     }
 
     setFile(selected)
-    setInfoMessage("Validando archivo…")
+    setInfoMessage("Subiendo archivo…")
     setErrorMessage("")
+    setLoading(true)
     await processFile(selected)
   }
 
   const processFile = async (fileToRead) => {
     try {
-      const xmlContent = await fileToRead.text()
-      setInfoMessage("Modelo válido.")
-      onModelReady?.(xmlContent)
+      const uploadResponse  = await uploadFile(fileToRead)
+      const path            = uploadResponse.path
+      setFilePath(path)
+      setInfoMessage("Archivo subido correctamente")
+      onFileUploaded?.(path)
+      setInfoMessage("Calculando métricas CIM…")
+      const metricsResponse = await getCimMetrics(path)
+      onMetricsLoaded?.(metricsResponse.metrics?.cim)
+      setInfoMessage("Métricas calculadas")
     } catch (error) {
-      console.error("XML inválido", error)
-      setErrorMessage("El archivo no es un XML válido.")
+      console.error("Error procesando archivo", error)
+      setErrorMessage(error.response?.data?.detail || "Error al procesar el archivo")
       setInfoMessage("")
-      onModelCleared?.()
+      reset()
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -103,10 +116,89 @@ export const CIM = ({ onModelReady, onModelCleared }) => {
       </div>
 
       <div className="shrink-0 bg-ctp-mantle border-t border-ctp-surface0/50 p-4">
-        <div className="h-[104px] rounded-lg bg-ctp-mantle/40 flex items-center justify-center">
-          <span className="text-ctp-subtext0 text-xl font-semibold italic">
-            Sin métricas disponibles
-          </span>
+        <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 text-ctp-subtext0">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm font-semibold">Calculando métricas...</span>
+            </div>
+          ) : metrics ? (
+            <div className="space-y-2">
+              <h4 className="text-ctp-text font-bold text-sm mb-3">Métricas CIM</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Goals:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.goals || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Tasks:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.tasks || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Softgoals:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.softgoals || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Resources:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.resources || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Actors:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.actors || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Agents:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.agents || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Roles:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.roles || 0}</span>
+                </div>
+                <div className="bg-ctp-surface0/50 p-2 rounded">
+                  <span className="text-ctp-subtext0">Dependencias:</span>
+                  <span className="text-ctp-text font-semibold ml-2">{metrics.social_dependencies || 0}</span>
+                </div>
+                {metrics.internal_links && (
+                  <>
+                    <div className="bg-ctp-surface0/50 p-2 rounded">
+                      <span className="text-ctp-subtext0">Needed-by:</span>
+                      <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.needed_by || 0}</span>
+                    </div>
+                    <div className="bg-ctp-surface0/50 p-2 rounded">
+                      <span className="text-ctp-subtext0">Qualification:</span>
+                      <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.qualification_links || 0}</span>
+                    </div>
+                    <div className="bg-ctp-surface0/50 p-2 rounded">
+                      <span className="text-ctp-subtext0">Contributions:</span>
+                      <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.contributions || 0}</span>
+                    </div>
+                  </>
+                )}
+                {metrics.refinements && (
+                  <>
+                    <div className="bg-ctp-surface0/50 p-2 rounded">
+                      <span className="text-ctp-subtext0">Refinements AND:</span>
+                      <span className="text-ctp-text font-semibold ml-2">{metrics.refinements.and || 0}</span>
+                    </div>
+                    <div className="bg-ctp-surface0/50 p-2 rounded">
+                      <span className="text-ctp-subtext0">Refinements OR:</span>
+                      <span className="text-ctp-text font-semibold ml-2">{metrics.refinements.or || 0}</span>
+                    </div>
+                  </>
+                )}
+                {metrics.total_nodes !== undefined && (
+                  <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
+                    <span className="text-ctp-subtext0">Total nodos:</span>
+                    <span className="text-ctp-text font-semibold ml-2">{metrics.total_nodes}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <span className="text-ctp-subtext0 text-xl font-semibold italic">
+              Sin métricas disponibles
+            </span>
+          )}
         </div>
       </div>
     </div>
