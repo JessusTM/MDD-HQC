@@ -1,17 +1,15 @@
 import re
 import html
 import xml.etree.ElementTree as ET
-from app.services.cli_service import CliService 
 
 class XmlService:
-    def __init__(self, cli_service : CliService):
-        self.cli_service = cli_service 
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
     # ============ ELEMENTS ============
     def get_root(self):
-        path    = self.cli_service.read_cli_args() 
-        tree    = ET.parse(path)
-        root    = tree.getroot()
+        tree = ET.parse(self.file_path)
+        root = tree.getroot()
         return root
 
     def get_raw_diagram_elements(self, root):
@@ -22,11 +20,11 @@ class XmlService:
             tag     = child.tag
             attrib  = child.attrib
             raw_diagram_elements.append({
-                "tag"   : tag, 
+                "tag"   : tag,
                 "attrib": attrib,
             })
         return raw_diagram_elements
-    
+
     def get_elements_without_metadata(self, raw_diagram_elements):
         excluded_tags   = {"Array", "root", "mxPoint", "mxGeometry"}
         filtered        = []
@@ -45,7 +43,7 @@ class XmlService:
         root        = self.get_root()
         raw         = self.get_raw_diagram_elements(root)
         elements    = self.get_elements_without_metadata(raw)
-        return elements 
+        return elements
 
     # ============ SOCIAL DEPENDENCIES ============
     def verify_social_dependency(self, tag: str, attrib: dict) -> bool:
@@ -65,10 +63,10 @@ class XmlService:
             target  = attrib.get("target")
             is_dependency   = self.verify_social_dependency(tag, attrib)
             if not is_dependency : continue
-            social_dependencies.append({"source" : source, "target" : target}) 
+            social_dependencies.append({"source": source, "target": target})
         return social_dependencies
 
-    # ============ GOALS ============ 
+    # ============ LABELS / GOALS ============
     def format_label(self, label):
         if not label : return label
         unescaped   = html.unescape(label)
@@ -83,14 +81,18 @@ class XmlService:
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
             id              = attrib.get("id")
-            goals.append({"label" : formatted_label, "id" : id})
+            goals.append(
+                {
+                    "label" : formatted_label, 
+                    "id"    : id
+                }
+            )
         return goals
 
-    # ============ ELEMENTS ============
-    def get_elements_by_type(self, elements, attrib_type : str):
+    def get_elements_by_type(self, elements, attrib_type: str):
         labels = []
         for element in elements:
-            attrib          = element["attrib"] 
+            attrib          = element["attrib"]
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
             element_type    = attrib.get("type")
@@ -106,5 +108,122 @@ class XmlService:
             if not id : continue
             label           = attrib.get("label")
             formatted_label = self.format_label(label)
-            labels[id]      = formatted_label
+            labels[id]     = formatted_label
         return labels
+
+    # ============ ENLACES ENTRE ELEMENTOS INTERNOS ============ 
+    def get_internal_links(self):
+        root      = self.get_root()
+        root_node = root.find("./diagram/mxGraphModel/root")
+        links     = []
+        if root_node is None : return links
+
+        for obj in root_node.findall("object"):
+            link_type = obj.attrib.get("type")
+            if link_type not in {"needed-by", "qualification-link", "contribution"} : continue
+
+            mxcell = obj.find("mxCell")
+            if mxcell is None : continue
+
+            mx_attrib = mxcell.attrib
+            if mx_attrib.get("edge") != "1" : continue
+
+            links.append(
+                {
+                    "type"      : link_type,
+                    "source"    : mx_attrib.get("source"),
+                    "target"    : mx_attrib.get("target"),
+                    "value"     : obj.attrib.get("value") or obj.attrib.get("label") or "",
+                }
+            )
+        return links
+
+    # ============ ENLACES DE REFINAMIENTO ============
+    def get_refinements(self):
+        root        = self.get_root()
+        root_node   = root.find("./diagram/mxGraphModel/root")
+        refinements = []
+
+        if root_node is None : return refinements
+
+        for obj in root_node.findall("object"):
+            link_type = obj.attrib.get("type")
+            if link_type != "refinement" : continue
+
+            mxcell = obj.find("mxCell")
+            if mxcell is None : continue
+
+            mx_attrib = mxcell.attrib
+            if mx_attrib.get("edge") != "1" : continue
+
+            refinements.append(
+                {
+                    "source"    : mx_attrib.get("source"),
+                    "target"    : mx_attrib.get("target"),
+                    "value"     : (obj.attrib.get("value") or obj.attrib.get("label") or "").strip().lower(),
+                }
+            )
+
+        return refinements
+
+    # ============ ACTOR OWNERSHIP ============
+    def get_element_to_actor_mapping(self):
+        root        = self.get_root()
+        root_node   = root.find("./diagram/mxGraphModel/root")
+        if root_node is None : return {}
+        
+        element_to_actor    = {}
+        id_to_label         = self.map_id_to_label(self.get_elements())
+        owns_links          = {}
+
+        for obj in root_node.findall("object"):
+            if obj.attrib.get("type") == "owns":
+                mxcell = obj.find("mxCell")
+                if mxcell is None : continue
+                
+                mx_attrib = mxcell.attrib
+                if mx_attrib.get("edge") != "1" : continue
+
+                source_id = mx_attrib.get("source")
+                target_id = mx_attrib.get("target")
+                if source_id and target_id:
+                    owns_links[target_id] = source_id
+        
+        for obj in root_node.findall("object"):
+            element_id    = obj.attrib.get("id")
+            element_type  = obj.attrib.get("type")
+            if element_type not in {"goal", "task"} : continue
+            
+            mxcell = obj.find("mxCell")
+            if mxcell is None : continue
+            
+            parent_id = mxcell.attrib.get("parent")
+            if not parent_id : continue
+            
+            actor_id        = None
+            current_parent  = parent_id
+            max_depth       = 10
+            depth           = 0
+            while current_parent and depth < max_depth:
+                if current_parent in owns_links:
+                    actor_id = owns_links[current_parent]
+                    break
+                
+                for parent_obj in root_node.findall("object"):
+                    if parent_obj.attrib.get("id") == current_parent:
+                        parent_mxcell = parent_obj.find("mxCell")
+                        if parent_mxcell is not None:
+                            current_parent = parent_mxcell.attrib.get("parent")
+                        else:
+                            current_parent = None
+                        break
+                else:
+                    current_parent = None
+                depth += 1
+            
+            if actor_id:
+                actor_label = id_to_label.get(actor_id, "")
+                if actor_label:
+                    element_to_actor[element_id] = actor_label
+        
+        return element_to_actor
