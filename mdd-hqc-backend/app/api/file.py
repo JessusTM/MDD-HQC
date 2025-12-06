@@ -1,17 +1,29 @@
-from fastapi import APIRouter, HTTPException, UploadFile
-from app.services.file_service import FileService
+from pathlib import Path
 
-router          = APIRouter()
-file_service    = FileService()
+from fastapi import APIRouter, HTTPException, UploadFile
+
+from app.models.uvl import UVL
+from app.services.upload_service import UploadService
+from app.services.xml_service import XmlService
+from app.services.transformations.cim_to_pim import CimToPim
+from app.services.transformations.pim_to_psm import PimToPsm
+from app.services.plantuml_service import PlantumlService
+from app.services.metrics.istar_metrics import IstarMetricsService
+from app.services.metrics.uvl_metrics import UvlMetricsService
+from app.services.metrics.plantuml_metrics import PlantumlMetricsService
+
+router = APIRouter()
+upload_service = UploadService()
+
 
 @router.post("/upload")
 async def upload_file(file: UploadFile):
     try:
-        saved_path = await file_service.upload_file(file)
+        saved_path = await upload_service.upload_file(file)
     except ValueError as exc:
         raise HTTPException(
-            status_code = 400, 
-            detail      = str(exc)
+            status_code = 400,
+            detail      = str(exc),
         )
 
     response = {
@@ -19,4 +31,82 @@ async def upload_file(file: UploadFile):
         "filename"  : file.filename,
         "path"      : str(saved_path),
     }
-    return response 
+    return response
+
+
+@router.post("/transform-cim-pim")
+async def transform_cim_pim(path: str):
+    xml_service = XmlService(str(path))
+    uvl         = UVL()
+    elements    = xml_service.get_elements()
+    cim_to_pim  = CimToPim(xml_service, uvl, elements)
+
+    istar_metrics_service   = IstarMetricsService(xml_service, elements)
+    istar_metrics           = istar_metrics_service.calculate()
+
+    uvl.clear()
+    cim_to_pim.apply_r1()
+    cim_to_pim.apply_r2()
+    cim_to_pim.apply_r3()
+    cim_to_pim.apply_r4()
+    cim_to_pim.apply_r5()
+    uvl.create_file()
+
+    uvl_metrics_service = UvlMetricsService(uvl)
+    uvl_metrics         = uvl_metrics_service.calculate()
+
+    response = {
+        "detail"    : "Transformación CIM -> PIM completada",
+        "input_xml" : str(path),
+        "output_uvl": str(uvl.FILE_NAME),
+        "metrics": {
+            "cim": istar_metrics,
+            "pim": uvl_metrics,
+        },
+    }
+    return response
+
+
+@router.post("/transform-pim-psm")
+async def transform_pim_psm(path: str):
+    xml_service = XmlService(str(path))
+    uvl         = UVL()
+    elements    = xml_service.get_elements()
+    cim_to_pim  = CimToPim(xml_service, uvl, elements)
+
+    istar_metrics_service   = IstarMetricsService(xml_service, elements)
+    istar_metrics           = istar_metrics_service.calculate()
+
+    uvl.clear()
+    cim_to_pim.apply_r1()
+    cim_to_pim.apply_r2()
+    cim_to_pim.apply_r3()
+    cim_to_pim.apply_r4()
+    cim_to_pim.apply_r5()
+    uvl.create_file()
+
+    uvl_metrics_service = UvlMetricsService(uvl)
+    uvl_metrics         = uvl_metrics_service.calculate()
+
+    pim_to_psm  = PimToPsm(uvl)
+    uml_model   = pim_to_psm.transform()
+
+    plantuml_metrics_service    = PlantumlMetricsService(uml_model)
+    plantuml_metrics            = plantuml_metrics_service.calculate()
+
+    puml_output         = Path("app/data/model.puml")
+    plantuml_service    = PlantumlService()
+    puml_path           = plantuml_service.render(uml_model, puml_output)
+
+    response = {
+        "detail"        : "Transformación PIM -> PSM completada",
+        "input_xml"     : str(path),
+        "output_uvl"    : str(uvl.FILE_NAME),
+        "output_puml"   : str(puml_path),
+        "metrics": {
+            "cim": istar_metrics,
+            "pim": uvl_metrics,
+            "psm": plantuml_metrics,
+        },
+    }
+    return response

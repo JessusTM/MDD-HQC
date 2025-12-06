@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import UploadFile
 import shutil
 
-class FileService:
+class UploadService:
     BASE_DIR = Path("app/data")
 
     async def upload_file(self, uploaded_file : UploadFile) -> Path:
