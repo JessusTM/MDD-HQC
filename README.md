@@ -1,122 +1,167 @@
-# Model Driven Development for Hybrid Quantum-Hybrid Systems
+# Model Driven Development for Hybrid Quantum-Classical Systems (MDD-HQC)
 
-Este repositorio contiene un protótipo funcional para una solución basada en MDD orientada a agentes para la creación de sistemas híbridos. Con esta, se permite transformar modelos construídos en iStar 2.0, a un nivel de estructura y comportamiento (PIM) por medio de un modelo de característica del dominio de las líneas de producto de software para la gestión de variabilidad y, finalmente, para el modelado arquitectónico de una configuración concreta del sistema. Con esta solución se busca obtener una trazabilidad vertical en los diferentes niveles del sistema HQC, de manera que sean trazables y no exista pérdida de información.
+> **Version:** v1.1.0  
+> **Status:** Functional Prototype
 
-El sistema permite el cálculo de métricas de transformación y la generación de diagramas de clases en PlantUML para los diseños dependientes de la plataforma. Como stack tecnológico se hace uso del lenguaje **Python** como backend junto al framework **FastAPI** y un frontend con lenguaje **Typescript** desarrollado en la librería **React**.
+This repository contains a functional prototype for an agent-oriented MDD-based solution for creating hybrid quantum-classical systems. This solution enables the transformation of models built in iStar 2.0 to a structure and behavior level (PIM) through a feature model from the software product line domain for variability management, and finally, for the architectural modeling of a concrete system configuration.
 
-## Tecnologías utilizadas
+This solution aims to achieve vertical traceability across the different levels of the HQC system, ensuring that elements are traceable and no information is lost.
 
-* Python 3.14
-* FastAPI con Uvicorn
-* Pydantic para validación de datos
-* React 19 con Vite y TypeScript
-* Docker y Docker Compose para la orquestación local
-* PlantUML para la visualización de diagramas de clases generados
+> [!NOTE]
+> The system enables the calculation of transformation metrics and the generation of class diagrams in PlantUML for platform-dependent designs.
 
-## Pasos de ejecución
+## System Features
 
-1. Instalar Docker y Docker Compose.
-2. Clonar el repositorio:
+The following table shows the features currently implemented and those planned for future versions:
 
+| Capability                                                             | Status |
+| ---------------------------------------------------------------------- | ------ |
+| **iStar 2.0 XML model upload**                                         | ✅     |
+| **CIM metrics extraction (goals, tasks, softgoals, dependencies)**     | ✅     |
+| **CIM → PIM transformation (iStar → UVL)**                             | ✅     |
+| **UVL model generation (features, categories, OR-groups)**             | ⚠️     |
+| **UVL metrics (categories, semantic preservation, constraints)**       | ⚠️     |
+| **Preliminary PlantUML generation derived from UVL**                   | ⚠️     |
+| **PSM metrics (classes, stereotypes, dependencies)**                   | ⚠️     |
+| **Semi-automatic user–system interaction for completing missing model details across the entire pipeline (CIM → PIM → PSM)** | ❌ |
+| **Conversational assistant for semantic interpretation of models**     | ❌     |
+| **Semi-automatic support for enriching incomplete CIM/PIM information**| ❌     |
+| **Automatic iStar model generation from repositories or local folders** | ❌    |
+| **Expanded architectural templates for hybrid quantum–classical systems (SOA, middleware, integration patterns)** | ❌ |
+| **Base code generation from the PSM architecture**                      | ❌     |
+
+
+> [!CAUTION]
+> Features marked with ❌ are planned for future versions and are not yet available in the current version.
+
+## Technologies Used
+
+### Backend
+* **Python 3.x** - Main programming language
+* **FastAPI** - Modern and fast web framework for building APIs
+* **Uvicorn** - High-performance ASGI server
+* **Pydantic** - Data validation and configuration using type annotations
+* **PlantUML** - UML diagram generation from text
+
+### Frontend
+* **React 19** - JavaScript library for building user interfaces
+* **React Scripts 5.0.1** - Configuration tools for React applications
+* **Axios** - HTTP client for making requests to the backend
+* **Lucide React** - Modern icon library
+* **PlantUML Encoder** - PlantUML diagram encoding for visualization
+
+### Infrastructure
+* **Docker** - Application containerization
+* **Docker Compose** - Multi-container service orchestration
+
+## Prerequisites
+
+The following must be installed before starting:
+
+* Docker (version 20.10 or higher)
+* Docker Compose (version 2.0 or higher)
+* Git (for cloning the repository)
+
+> [!NOTE]
+> The system is designed to run in containerized environments using Docker Compose for optimal compatibility and ease of deployment.
+
+## Installation and Execution
+
+### Using Docker Compose
+
+1. **Clone the repository:**
    ```bash
    git clone git@github.com:JessusTM/MDD-HQC.git
-   cd RDD-Hybrid-Systems
+   cd MDD-HQC
    ```
-3. Construir y levantar los servicios:
 
+2. **Build and start the services:**
    ```bash
    docker compose up --build
    ```
-4. Acceder al entorno del frontend en:
-   **[http://localhost:5173](http://localhost:5173)**
-5. Detener el entorno al finalizar:
 
+   This command builds the Docker images for the backend and frontend, and starts both services.
+
+3. **Access the application:**
+   * **Frontend:** [http://localhost:3000](http://localhost:3000)
+   * **Backend API:** [http://localhost:8000](http://localhost:8000)
+   * **API Documentation (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+4. **Stop the services:**
    ```bash
    docker compose down
    ```
 
----
+> [!CAUTION]
+> Ensure that ports 3000 and 8000 are available on the system before running the containers. If these ports are in use, they can be modified in the `docker-compose.yml` file.
 
-## Estructura del proyecto
+## Project Structure
 
 ### Backend (`mdd-hqc-backend`)
 
 ```
-.
-├── app
-│   ├── api                         # Rutas y controladores de la API
-│   │   ├── transformations.py         # Endpoints para las transformaciones CIM–PIM–PSM
-│   │   └── xml.py                     # Endpoints de carga y procesamiento de archivos XML
-│   ├── core                        # Configuración base del sistema
-│   │   ├── config.py                  # Variables de entorno y parámetros globales
-│   │   └── logging.py                 # Configuración de registro y logs
-│   ├── data                        # Ejemplos iStar 2.0 en formato XML para el primer nivel de modelado
-│   │   │   ├── Chemistry.xml
-│   │   │   └── ChileEsPres.xml
-│   ├── main.py                     # Punto de entrada principal del servidor FastAPI
-│   ├── models                      # Modelos de datos y entidades del dominio
-│   │   ├── feature_tree.py            # Representación de árboles de características UVL
-│   │   ├── metrics.py                 # Estructuras de métricas calculadas
-│   │   ├── transformation_result.py   # Resultados intermedios y finales de las transformaciones
-│   │   └── xml.py                     # Modelo para manejo de archivos XML
-│   └── services                    # Servicios auxiliares de negocio y transformación
-│       ├── cli_args_service.py        # Módulo para argumentos de línea de comandos
-│       ├── xml_service.py             # Servicio para procesar diagramas XML
-│       └── transformations            # Transformaciones entre niveles del modelo
-│           ├── cim_to_pim.py
-│           ├── pim_to_psm.py
-│           ├── metrics_calculator.py
-│           └── plant_uml_diagram_service.py
-├── Dockerfile                      # Imagen base para despliegue del backend
-├── requirements.txt                # Dependencias de Python
-└── tests
+mdd-hqc-backend/
+├── app/
+│   ├── api/                          # API routes and controllers
+│   │   └── file.py                      # Endpoints for XML file upload and processing
+│   ├── data/                         # Example iStar 2.0 files in XML format
+│   │   └── ChileEsPres.xml
+│   ├── main.py                       # Main entry point of the FastAPI server
+│   ├── models/                       # Data models and domain entities
+│   │   ├── feature.py                  # UVL feature model
+│   │   ├── uml.py                      # UML diagram model
+│   │   └── uvl.py                      # UVL feature tree model
+│   └── services/                     # Business logic and transformation services
+│       ├── metrics/                     # Metrics calculation
+│       │   ├── istar_metrics.py         # Metrics for iStar models
+│       │   ├── plantuml_metrics.py      # Metrics for PlantUML diagrams
+│       │   └── uvl_metrics.py           # Metrics for UVL models
+│       ├── transformations/             # Transformations between model levels
+│       │   ├── cim_to_pim.py            # CIM → PIM transformation
+│       │   └── pim_to_psm.py            # PIM → PSM transformation
+│       ├── plantuml_service.py          # Service for PlantUML diagram generation
+│       ├── upload_service.py            # Service for handling uploaded files
+│       ├── uvl_service.py               # Service for UVL model processing
+│       ├── xml_service.py              # Service for processing XML diagrams
+│       └── uvl_category_keywords.csv    # Keywords for UVL categorization
+├── Dockerfile                        # Base image for backend deployment
+└── requirements.txt                 # Python dependencies
 ```
-
----
 
 ### Frontend (`mdd-hqc-frontend`)
 
 ```
-.
-├── public
-│   └── vite.svg                 
-├── src
-│   ├── assets                   
-│   │   └── react.svg
-│   ├── components               # Componentes modulares del sistema
-│   │   ├── Filters
-│   │   │   └── LevelFilter.tsx  # Filtro de niveles para el panel de métricas
-│   │   ├── Layout
-│   │   │   └── Layout.tsx       # Estructura principal del layout
-│   │   ├── Levels
-│   │   │   ├── CimLevel.tsx     # Nivel CIM (modelo independiente del cómputo)
-│   │   │   ├── PimLevel.tsx     # Nivel PIM (modelo independiente de la plataforma)
-│   │   │   └── PsmLevel.tsx     # Nivel PSM (modelo dependiente de la plataforma)
-│   │   ├── Metrics
-│   │   │   └── MetricsPanel.tsx # Panel de visualización de métricas
-│   │   └── Orchestrator
-│   │       └── Orchestrator.tsx # Orquestador de transformaciones y vistas
-│   ├── index.css                # Estilos globales
-│   ├── main.tsx                 # Punto de entrada de la aplicación React
-│   ├── services                 # Servicios de comunicación con el backend
-│   │   ├── CimService.ts
-│   │   └── PimService.ts
-│   ├── types                    # Definiciones de tipos TypeScript
-│   │   ├── components
-│   │   │   ├── filters.ts
-│   │   │   └── levels.ts
-│   │   ├── levels.ts
-│   │   ├── metrics.ts
-│   │   └── transformations.ts
-│   └── utils
-│       └── uvl.ts               # Funciones auxiliares para manejo de UVL
-├── Dockerfile                   # Imagen base para despliegue del frontend
-├── eslint.config.js             # Configuración de reglas de linting
-├── index.html                   # Archivo raíz de la aplicación
-├── package.json                 # Dependencias del proyecto Node.js
-├── package-lock.json
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts               # Configuración de Vite para desarrollo y compilación
+mdd-hqc-frontend/
+├── public/
+│   └── index.html                   # Root HTML file of the application
+├── src/
+│   ├── components/                  # Modular system components
+│   │   ├── App.jsx                     # Main application component
+│   │   ├── Commons/                    # Reusable common components
+│   │   │   ├── Header.jsx              # Application header
+│   │   │   └── MddCard.jsx            # Reusable card for displaying information
+│   │   ├── Filter/                     # Filtering components
+│   │   │   └── Filter.jsx              # Level filter for metrics panel
+│   │   └── Levels/                    # Level visualization components
+│   │       ├── CIM.jsx                 # CIM level (computation independent model)
+│   │       ├── PIM.jsx                 # PIM level (platform independent model)
+│   │       └── PSM.jsx                 # PSM level (platform specific model)
+│   ├── services/                     # Backend communication services
+│   │   └── api.js                      # API client for making HTTP requests
+│   ├── index.js                      # React application entry point
+│   └── style.css                     # Global application styles
+├── Dockerfile                        # Base image for frontend deployment
+├── package.json                      # Node.js project dependencies
+└── package-lock.json                 # Dependency lock file
 ```
+
+## Transformation Flow
+
+The system implements a three-level transformation flow:
+
+1. **CIM (Computation Independent Model)**: Computation-independent model based on iStar 2.0
+2. **PIM (Platform Independent Model)**: Platform-independent model using UVL (Universal Variability Language)
+3. **PSM (Platform Specific Model)**: Platform-dependent model with UML diagrams in PlantUML
+
+> [!NOTE]
+> Each transformation maintains traceability between levels, allowing elements to be traced from the business model to the platform-specific implementation.
