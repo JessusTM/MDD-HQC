@@ -1,18 +1,6 @@
-from app.services.xml_service import XmlService
-from app.services.transformations.cim_to_pim import CimToPim
-from app.services.cli_service import CliService
-from app.models.uvl import UVL
+from fastapi import FastAPI
+from app.api import file
 
-def main():
-    cli_service = CliService()
-    xml_service = XmlService(cli_service)
-    uvl         = UVL()
-    elements    = xml_service.get_elements()      
-    xml_service.get_social_dependencies(elements)
-    cim_to_pim  = CimToPim(xml_service, uvl, elements)
-    cim_to_pim.apply_r1()
-    cim_to_pim.apply_r2()
-    cim_to_pim.apply_r4()
+app = FastAPI()
 
-if __name__ == "__main__":
-    main()
+app.include_router(file.router, prefix="/files")
