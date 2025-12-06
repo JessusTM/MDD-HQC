@@ -1,73 +1,185 @@
+# app/services/transformations/cim_to_pim.py
 from app.services.xml_service import XmlService
 from app.models.uvl import UVL
+from app.services.uvl_service import UvlService
 
 class CimToPim:
-    def __init__(self, xml_service: XmlService, uvl: UVL, elements : list):
+    def __init__(self, xml_service: XmlService, uvl: UVL, elements: list):
         self.xml_service    = xml_service
         self.uvl            = uvl
-        self.elements       = elements 
+        self.elements       = elements
+        self.uvl_service    = UvlService()
+        self.actor_resource_comments: list[str] = []
 
-    def apply_r1(self):
-        actors  = self.xml_service.get_elements_by_type(self.elements, "actor")
-        agents  = self.xml_service.get_elements_by_type(self.elements, "agent")
-        roles   = self.xml_service.get_elements_by_type(self.elements, "role")
-        self.uvl.create_file()
-        self.uvl.set_metadata(actors) 
-        self.uvl.set_metadata(agents)
-        self.uvl.set_metadata(roles)        
+    # R1: Actores / Recursos -> comentarios (se usarán en R2)
+    def apply_r1(self) -> None:
+        actors     = self.xml_service.get_elements_by_type(self.elements, "actor")
+        agents     = self.xml_service.get_elements_by_type(self.elements, "agent")
+        roles      = self.xml_service.get_elements_by_type(self.elements, "role")
+        resources  = self.xml_service.get_elements_by_type(self.elements, "resource")
 
-    def apply_r2(self):
-        goals       = self.xml_service.get_elements_by_type(self.elements, "goal")
-        softgoals   = self.xml_service.get_elements_by_type(self.elements, "softgoal")
-        self.uvl.set_section("features", goals, softgoals)
+        comments: list[str] = []
+        for name in actors      : comments.append(f"actor: {name}")
+        for name in agents      : comments.append(f"agent: {name}")
+        for name in roles       : comments.append(f"role: {name}")
+        for name in resources   : comments.append(f"resource: {name}")
+        self.actor_resource_comments = comments
 
-    def apply_r3(self):
-        links   = self.xml_service.get_social_dependencies(self.elements)
-        labels  = self.xml_service.map_id_to_label(self.elements)
+    # R2: Goals / Tasks -> Features @Category + kind + comentarios de R1
+    def apply_r2(self) -> None:
+        goal_labels = self.xml_service.get_elements_by_type(self.elements, "goal")
+        task_labels = self.xml_service.get_elements_by_type(self.elements, "task")
 
-        constraints = []
+        for label in goal_labels:
+            feature_name = self.uvl_service.format_feature_name(label)
+            category     = self.uvl_service.assign_category(label)
+            self.uvl.add_feature(
+                name     = feature_name,
+                category = category,
+                kind     = "goal",
+                comments = list(self.actor_resource_comments),
+            )
+
+        for label in task_labels:
+            feature_name = self.uvl_service.format_feature_name(label)
+            category     = self.uvl_service.assign_category(label)
+            self.uvl.add_feature(
+                name     = feature_name,
+                category = category,
+                kind     = "task",
+                comments = list(self.actor_resource_comments),
+            )
+
+    # R3: Softgoals -> atributos (via qualification-link)
+    def apply_r3(self) -> None:
+        softgoal_labels = set(
+            self.xml_service.get_elements_by_type(self.elements, "softgoal")
+        )
+
+        id_to_label = self.xml_service.map_id_to_label(self.elements)
+        links       = self.xml_service.get_internal_links()
+
         for link in links:
+            if link.get("type") != "qualification-link" : continue
+
             source_id = link.get("source")
             target_id = link.get("target")
-
-        source_label = labels.get(source_id)
-        target_label = labels.get(target_id)
-
-        if source_label and target_label:
-            constraint_expression = f"{source_label} => {target_label}"
-            constraints.append(constraint_expression)
-
-        self.uvl.set_section("constraints", constraints)
-
-    def apply_r4(self):
-        links           = self.xml_service.get_internal_links()
-        labels          = self.xml_service.map_id_to_label(self.elements)
-        constraints     = []
-
-        for link in links:
-            link_type = link.get("type")
-            source_id = link.get("source")
-            target_id = link.get("target")
-            raw_value = (link.get("value") or "").strip().lower()
             if not source_id or not target_id : continue
 
-            source_label = labels.get(source_id)
-            target_label = labels.get(target_id)
+            source_label = id_to_label.get(source_id)
+            target_label = id_to_label.get(target_id)
             if not source_label or not target_label : continue
 
-            if link_type == "needed-by":
-                constraints.append(f"{target_label} => {source_label}")
+            if source_label in softgoal_labels and target_label not in softgoal_labels:
+                softgoal_label = source_label
+                feature_label  = target_label
+            elif target_label in softgoal_labels and source_label not in softgoal_labels:
+                softgoal_label = target_label
+                feature_label  = source_label
+            else:
                 continue
 
-            if link_type == "qualification-link":
-                constraints.append(f"{target_label} => {source_label}")
-                continue
+            feature_name = self.uvl_service.format_feature_name(feature_label)
+            category     = self.uvl_service.assign_category(feature_label)
+            attr_name    = self.uvl_service.format_feature_name(softgoal_label).lower()
+            attr_value   = "true"
 
-            if link_type == "contribution":
-                if raw_value in {"make", "help"}:
-                    constraints.append(f"{source_label} => {target_label}")
-                elif raw_value in {"hurt", "break"}:
-                    constraints.append(f"{source_label} => !{target_label}")
-                continue
-        if constraints:
-            self.uvl.set_section("constraints", constraints) 
+            self.uvl.add_attribute_to_feature(
+                feature_name    = feature_name,
+                category        = category,
+                attr_name       = attr_name,
+                attr_value      = attr_value,
+            )
+
+    # R4: Dependencias sociales -> requires
+    def apply_r4(self) -> None:
+        id_to_label = self.xml_service.map_id_to_label(self.elements)
+        links       = self.xml_service.get_social_dependencies(self.elements)
+
+        for link in links:
+            source_id = link.get("source")
+            target_id = link.get("target")
+            if not source_id or not target_id : continue
+
+            source_label = id_to_label.get(source_id)
+            target_label = id_to_label.get(target_id)
+            if not source_label or not target_label : continue
+
+            depender_name = self.uvl_service.format_feature_name(source_label)
+            dependee_name = self.uvl_service.format_feature_name(target_label)
+
+            expr = f"{depender_name} => {dependee_name}"
+            self.uvl.add_constraint(expr)
+
+    # R5: needed-by / qualification-link / contribution / refinement
+    def apply_r5(self) -> None:
+        id_to_label = self.xml_service.map_id_to_label(self.elements)
+        links       = self.xml_service.get_internal_links()
+        refinements = self.xml_service.get_refinements()
+
+        # R5.1: needed-by / qualification-link -> requires
+        for link in links:
+            link_type = link.get("type")
+            if link_type not in {"needed-by", "qualification-link"} : continue
+
+            source_id = link.get("source")
+            target_id = link.get("target")
+            if not source_id or not target_id : continue
+
+            source_label = id_to_label.get(source_id)
+            target_label = id_to_label.get(target_id)
+            if not source_label or not target_label : continue
+
+            src_name = self.uvl_service.format_feature_name(source_label)
+            tgt_name = self.uvl_service.format_feature_name(target_label)
+
+            expr = f"{tgt_name} => {src_name}"
+            self.uvl.add_constraint(expr)
+
+        # R5.2: contribution -> comentarios
+        for link in links:
+            if link.get("type") != "contribution" : continue
+
+            raw_value = (link.get("value") or "").strip().lower()
+            source_id = link.get("source")
+            target_id = link.get("target")
+            if not source_id or not target_id : continue
+
+            source_label = id_to_label.get(source_id)
+            target_label = id_to_label.get(target_id)
+            if not source_label or not target_label : continue
+
+            feature_name    = self.uvl_service.format_feature_name(target_label)
+            category        = self.uvl_service.assign_category(target_label)
+            comment         = f"contribution {raw_value}: {source_label} -> {target_label}"
+            self.uvl.add_comment_to_feature(
+                feature_name    = feature_name,
+                category        = category,
+                comment         = comment,
+            )
+
+        # R5.3: refinement AND / OR
+        for ref in refinements:
+            parent_id = ref.get("source")
+            child_id  = ref.get("target")
+            kind      = (ref.get("value") or "").strip().lower()
+            if not parent_id or not child_id or kind not in {"and", "or"} : continue
+
+            parent_label = id_to_label.get(parent_id)
+            child_label  = id_to_label.get(child_id)
+            if not parent_label or not child_label : continue
+
+            parent_name = self.uvl_service.format_feature_name(parent_label)
+            child_name  = self.uvl_service.format_feature_name(child_label)
+
+            if kind == "and":
+                expr = f"{child_name} => {parent_name}"
+                self.uvl.add_constraint(expr)
+            elif kind == "or":
+                category = self.uvl_service.assign_category(parent_label)
+                comment  = f"or-refinement: {parent_label} <-> {child_label}"
+                self.uvl.add_comment_to_feature(
+                    feature_name    = parent_name,
+                    category        = category,
+                    comment         = comment,
+                )

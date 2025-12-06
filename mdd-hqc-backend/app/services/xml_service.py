@@ -1,4 +1,3 @@
-# app/services/xml_service.py
 import re
 import html
 import xml.etree.ElementTree as ET
