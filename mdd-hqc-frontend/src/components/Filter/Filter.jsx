@@ -1,11 +1,45 @@
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
+import { transformCimToPim, transformPimToPsm } from "../../services/api"
 
-export const Filter = () => {
+export const Filter = ({
+  uploadedFilePath,
+  uvlContent,
+  onTransformCimToPim,
+  onTransformPimToPsm,
+}) => {
   const [source, setSource] = useState("CIM")
   const [target, setTarget] = useState("PIM")
+  const [loading, setLoading] = useState(false)
 
   const sameLevel = source === target
+
+  const handleTransform = async () => {
+    if (sameLevel || !uploadedFilePath) return
+
+    setLoading(true)
+    try {
+      if (source === "CIM" && target === "PIM") {
+        const response = await transformCimToPim(uploadedFilePath)
+        onTransformCimToPim?.(response)
+      } else if (source === "PIM" && target === "PSM") {
+        if (!uvlContent) {
+          alert("Primero debes completar la transformación CIM → PIM")
+          return
+        }
+        const response = await transformPimToPsm(uploadedFilePath)
+        onTransformPimToPsm?.(response)
+      }
+    } catch (error) {
+      console.error("Error en transformación:", error)
+      alert(error.response?.data?.detail || "Error al realizar la transformación")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const canTransform = !sameLevel && uploadedFilePath && 
+    !(source === "PIM" && target === "PSM" && !uvlContent)
 
   return (
     <div className="w-full relative">
@@ -55,17 +89,27 @@ export const Filter = () => {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            disabled={sameLevel}
+            disabled={!canTransform || loading}
+            onClick={handleTransform}
             className={`
               flex items-center gap-3 px-8 py-3 rounded-lg font-bold text-ctp-base shadow-lg transition-all text-base tracking-wide
-              ${sameLevel
+              ${!canTransform || loading
                 ? "bg-ctp-surface0 text-ctp-overlay0 cursor-not-allowed shadow-none border border-ctp-surface1"
                 : "bg-ctp-mauve hover:bg-ctp-pink active:bg-ctp-pink text-ctp-base"
               }
             `}
           >
-            <Play className="w-5 h-5 fill-current" />
-            Ejecutar
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-ctp-base border-t-transparent rounded-full animate-spin" />
+                Transformando...
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 fill-current" />
+                Ejecutar
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -73,6 +117,11 @@ export const Filter = () => {
       {sameLevel && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
           Origen y Destino no pueden ser iguales.
+        </div>
+      )}
+      {source === "PIM" && target === "PSM" && !uvlContent && uploadedFilePath && (
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
+          Primero completa la transformación CIM → PIM.
         </div>
       )}
     </div>
