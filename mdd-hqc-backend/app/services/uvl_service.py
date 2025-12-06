@@ -19,16 +19,20 @@ class UvlService:
             for row in reader:
                 category = row["category"].strip()
                 keyword  = row["keyword"].strip().lower()
-                if not category or not keyword:
-                    continue
+                if not category or not keyword : continue
                 categories.setdefault(category, []).append(keyword)
         return categories
 
     def format_feature_name(self, label: str) -> str:
         text = label.strip()
-        text = re.sub(r"\s+", "_", text)
-        text = re.sub(r"[^A-Za-z0-9_]", "", text)
-        return text
+        if not text : return ""
+        words = re.split(r"\s+", text)
+        if not words : return ""
+        result = words[0].capitalize()
+        for word in words[1:]:
+            if word:
+                result += word.capitalize()
+        return result
 
     def assign_category(self, label: str) -> str:
         lower = label.lower()

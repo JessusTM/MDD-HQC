@@ -165,3 +165,65 @@ class XmlService:
             )
 
         return refinements
+
+    # ============ ACTOR OWNERSHIP ============
+    def get_element_to_actor_mapping(self):
+        root        = self.get_root()
+        root_node   = root.find("./diagram/mxGraphModel/root")
+        if root_node is None : return {}
+        
+        element_to_actor    = {}
+        id_to_label         = self.map_id_to_label(self.get_elements())
+        owns_links          = {}
+
+        for obj in root_node.findall("object"):
+            if obj.attrib.get("type") == "owns":
+                mxcell = obj.find("mxCell")
+                if mxcell is None : continue
+                
+                mx_attrib = mxcell.attrib
+                if mx_attrib.get("edge") != "1" : continue
+
+                source_id = mx_attrib.get("source")
+                target_id = mx_attrib.get("target")
+                if source_id and target_id:
+                    owns_links[target_id] = source_id
+        
+        for obj in root_node.findall("object"):
+            element_id    = obj.attrib.get("id")
+            element_type  = obj.attrib.get("type")
+            if element_type not in {"goal", "task"} : continue
+            
+            mxcell = obj.find("mxCell")
+            if mxcell is None : continue
+            
+            parent_id = mxcell.attrib.get("parent")
+            if not parent_id : continue
+            
+            actor_id        = None
+            current_parent  = parent_id
+            max_depth       = 10
+            depth           = 0
+            while current_parent and depth < max_depth:
+                if current_parent in owns_links:
+                    actor_id = owns_links[current_parent]
+                    break
+                
+                for parent_obj in root_node.findall("object"):
+                    if parent_obj.attrib.get("id") == current_parent:
+                        parent_mxcell = parent_obj.find("mxCell")
+                        if parent_mxcell is not None:
+                            current_parent = parent_mxcell.attrib.get("parent")
+                        else:
+                            current_parent = None
+                        break
+                else:
+                    current_parent = None
+                depth += 1
+            
+            if actor_id:
+                actor_label = id_to_label.get(actor_id, "")
+                if actor_label:
+                    element_to_actor[element_id] = actor_label
+        
+        return element_to_actor

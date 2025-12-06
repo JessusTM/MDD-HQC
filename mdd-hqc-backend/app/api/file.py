@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile
+from pydantic import BaseModel
 
 from app.models.uvl import UVL
 from app.services.upload_service import UploadService
@@ -14,6 +15,10 @@ from app.services.metrics.plantuml_metrics import PlantumlMetricsService
 
 router = APIRouter()
 upload_service = UploadService()
+
+
+class PathRequest(BaseModel):
+    path: str
 
 
 @router.post("/upload")
@@ -34,9 +39,29 @@ async def upload_file(file: UploadFile):
     return response
 
 
+@router.post("/metrics-cim")
+async def get_cim_metrics(request: PathRequest):
+    try:
+        xml_service             = XmlService(str(request.path))
+        elements                = xml_service.get_elements()
+        istar_metrics_service   = IstarMetricsService(xml_service, elements)
+        istar_metrics           = istar_metrics_service.calculate()
+
+        response = {
+            "detail"    : "Métricas CIM calculadas",
+            "input_xml" : request.path,
+            "metrics"   : {
+                "cim": istar_metrics,
+            },
+        }
+        return response
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
 @router.post("/transform-cim-pim")
-async def transform_cim_pim(path: str):
-    xml_service = XmlService(str(path))
+async def transform_cim_pim(request: PathRequest):
+    xml_service = XmlService(str(request.path))
     uvl         = UVL()
     elements    = xml_service.get_elements()
     cim_to_pim  = CimToPim(xml_service, uvl, elements)
@@ -55,21 +80,26 @@ async def transform_cim_pim(path: str):
     uvl_metrics_service = UvlMetricsService(uvl)
     uvl_metrics         = uvl_metrics_service.calculate()
 
+    uvl_content = ""
+    if uvl.FILE_NAME.exists():
+        uvl_content = uvl.FILE_NAME.read_text(encoding="utf-8")
+
     response = {
-        "detail"    : "Transformación CIM -> PIM completada",
-        "input_xml" : str(path),
-        "output_uvl": str(uvl.FILE_NAME),
-        "metrics": {
-            "cim": istar_metrics,
-            "pim": uvl_metrics,
+        "detail"        : "Transformación CIM -> PIM completada",
+        "input_xml"     : str(request.path),
+        "output_uvl"    : str(uvl.FILE_NAME),
+        "uvl_content"   : uvl_content,
+        "metrics"       : {
+            "cim"   : istar_metrics,
+            "pim"   : uvl_metrics,
         },
     }
     return response
 
 
 @router.post("/transform-pim-psm")
-async def transform_pim_psm(path: str):
-    xml_service = XmlService(str(path))
+async def transform_pim_psm(request: PathRequest):
+    xml_service = XmlService(str(request.path))
     uvl         = UVL()
     elements    = xml_service.get_elements()
     cim_to_pim  = CimToPim(xml_service, uvl, elements)
@@ -88,8 +118,8 @@ async def transform_pim_psm(path: str):
     uvl_metrics_service = UvlMetricsService(uvl)
     uvl_metrics         = uvl_metrics_service.calculate()
 
-    pim_to_psm  = PimToPsm(uvl)
-    uml_model   = pim_to_psm.transform()
+    pim_to_psm          = PimToPsm(uvl)
+    uml_model           = pim_to_psm.transform()
 
     plantuml_metrics_service    = PlantumlMetricsService(uml_model)
     plantuml_metrics            = plantuml_metrics_service.calculate()
@@ -98,11 +128,21 @@ async def transform_pim_psm(path: str):
     plantuml_service    = PlantumlService()
     puml_path           = plantuml_service.render(uml_model, puml_output)
 
+    uvl_content         = ""
+    if uvl.FILE_NAME.exists():
+        uvl_content = uvl.FILE_NAME.read_text(encoding="utf-8")
+    
+    puml_content = ""
+    if puml_path.exists():
+        puml_content = puml_path.read_text(encoding="utf-8")
+
     response = {
         "detail"        : "Transformación PIM -> PSM completada",
-        "input_xml"     : str(path),
+        "input_xml"     : str(request.path),
         "output_uvl"    : str(uvl.FILE_NAME),
         "output_puml"   : str(puml_path),
+        "uvl_content"   : uvl_content,
+        "puml_content"  : puml_content,
         "metrics": {
             "cim": istar_metrics,
             "pim": uvl_metrics,

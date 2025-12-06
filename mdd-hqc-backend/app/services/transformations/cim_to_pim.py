@@ -1,56 +1,79 @@
-# app/services/transformations/cim_to_pim.py
 from app.services.xml_service import XmlService
 from app.models.uvl import UVL
 from app.services.uvl_service import UvlService
 
 class CimToPim:
     def __init__(self, xml_service: XmlService, uvl: UVL, elements: list):
-        self.xml_service    = xml_service
-        self.uvl            = uvl
-        self.elements       = elements
-        self.uvl_service    = UvlService()
-        self.actor_resource_comments: list[str] = []
+        self.xml_service        = xml_service
+        self.uvl                = uvl
+        self.elements           = elements
+        self.uvl_service        = UvlService()
+        self.element_to_actor   = {}
 
-    # R1: Actores / Recursos -> comentarios (se usarán en R2)
+    # R1: Actores / Recursos -> Comentarios
     def apply_r1(self) -> None:
-        actors     = self.xml_service.get_elements_by_type(self.elements, "actor")
-        agents     = self.xml_service.get_elements_by_type(self.elements, "agent")
-        roles      = self.xml_service.get_elements_by_type(self.elements, "role")
-        resources  = self.xml_service.get_elements_by_type(self.elements, "resource")
+        self.element_to_actor = self.xml_service.get_element_to_actor_mapping()
 
-        comments: list[str] = []
-        for name in actors      : comments.append(f"actor: {name}")
-        for name in agents      : comments.append(f"agent: {name}")
-        for name in roles       : comments.append(f"role: {name}")
-        for name in resources   : comments.append(f"resource: {name}")
-        self.actor_resource_comments = comments
-
-    # R2: Goals / Tasks -> Features @Category + kind + comentarios de R1
+    # R2: Goals / Tasks -> Features 
     def apply_r2(self) -> None:
-        goal_labels = self.xml_service.get_elements_by_type(self.elements, "goal")
-        task_labels = self.xml_service.get_elements_by_type(self.elements, "task")
+        goal_elements = []
+        task_elements = []
+        for element in self.elements:
+            attrib          = element.get("attrib", {})
+            element_type    = attrib.get("type")
+            element_id      = attrib.get("id")
+            label           = self.xml_service.format_label(attrib.get("label", ""))
+            
+            if element_type == "goal" and element_id and label:
+                goal_elements.append(
+                    {
+                        "id"    : element_id, 
+                        "label" : label,
+                    }
+                )
+            elif element_type == "task" and element_id and label:
+                task_elements.append(
+                    {
+                        "id"    : element_id, 
+                        "label" : label,
+                    }
+                )
 
-        for label in goal_labels:
-            feature_name = self.uvl_service.format_feature_name(label)
-            category     = self.uvl_service.assign_category(label)
+        for goal_elem in goal_elements:
+            goal_id         = goal_elem["id"]
+            goal_label      = goal_elem["label"]
+            feature_name    = self.uvl_service.format_feature_name(goal_label)
+            category        = self.uvl_service.assign_category(goal_label)
+            
+            comments        = []
+            actor_label     = self.element_to_actor.get(goal_id)
+            if actor_label : comments.append(f"actor: {actor_label}")
+            
             self.uvl.add_feature(
                 name     = feature_name,
                 category = category,
                 kind     = "goal",
-                comments = list(self.actor_resource_comments),
+                comments = comments,
             )
 
-        for label in task_labels:
-            feature_name = self.uvl_service.format_feature_name(label)
-            category     = self.uvl_service.assign_category(label)
+        for task_elem in task_elements:
+            task_id         = task_elem["id"]
+            task_label      = task_elem["label"]
+            feature_name    = self.uvl_service.format_feature_name(task_label)
+            category        = self.uvl_service.assign_category(task_label)
+            
+            comments        = []
+            actor_label     = self.element_to_actor.get(task_id)
+            if actor_label : comments.append(f"actor: {actor_label}")
+            
             self.uvl.add_feature(
                 name     = feature_name,
                 category = category,
                 kind     = "task",
-                comments = list(self.actor_resource_comments),
+                comments = comments,
             )
 
-    # R3: Softgoals -> atributos (via qualification-link)
+    # R3: Softgoals -> Atributos (via qualification-link)
     def apply_r3(self) -> None:
         softgoal_labels = set(
             self.xml_service.get_elements_by_type(self.elements, "softgoal")
@@ -81,7 +104,7 @@ class CimToPim:
 
             feature_name = self.uvl_service.format_feature_name(feature_label)
             category     = self.uvl_service.assign_category(feature_label)
-            attr_name    = self.uvl_service.format_feature_name(softgoal_label).lower()
+            attr_name    = self.uvl_service.format_feature_name(softgoal_label)
             attr_value   = "true"
 
             self.uvl.add_attribute_to_feature(
@@ -149,14 +172,10 @@ class CimToPim:
             target_label = id_to_label.get(target_id)
             if not source_label or not target_label : continue
 
-            feature_name    = self.uvl_service.format_feature_name(target_label)
-            category        = self.uvl_service.assign_category(target_label)
-            comment         = f"contribution {raw_value}: {source_label} -> {target_label}"
-            self.uvl.add_comment_to_feature(
-                feature_name    = feature_name,
-                category        = category,
-                comment         = comment,
-            )
+            source_name         = self.uvl_service.format_feature_name(source_label)
+            target_name         = self.uvl_service.format_feature_name(target_label)
+            contribution_text   = f"{source_name} {raw_value} {target_name}"
+            self.uvl.add_contribution(contribution_text)
 
         # R5.3: refinement AND / OR
         for ref in refinements:
@@ -176,10 +195,4 @@ class CimToPim:
                 expr = f"{child_name} => {parent_name}"
                 self.uvl.add_constraint(expr)
             elif kind == "or":
-                category = self.uvl_service.assign_category(parent_label)
-                comment  = f"or-refinement: {parent_label} <-> {child_label}"
-                self.uvl.add_comment_to_feature(
-                    feature_name    = parent_name,
-                    category        = category,
-                    comment         = comment,
-                )
+                self.uvl.add_or_group(parent_name, child_name)
