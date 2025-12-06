@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, UploadFile
+
 from app.models.uvl import UVL
 from app.services.upload_service import UploadService
-from app.services.transformations.cim_to_pim import CimToPim
 from app.services.xml_service import XmlService
+from app.services.transformations.cim_to_pim import CimToPim
+from app.services.transformations.pim_to_psm import PimToPsm
+from app.services.plantuml_service import PlantumlService
 
 router          = APIRouter()
 upload_service  = UploadService()
@@ -25,8 +30,8 @@ async def upload_file(file: UploadFile):
     return response 
 
 
-@router.post("/transform")
-async def transform(path: str):
+@router.post("/transform-cim-pim")
+async def transform_cim_pim(path: str):
     xml_service = XmlService(str(path))
     uvl         = UVL()
     elements    = xml_service.get_elements()
@@ -38,11 +43,44 @@ async def transform(path: str):
     cim_to_pim.apply_r3()
     cim_to_pim.apply_r4()
     cim_to_pim.apply_r5()
+    uvl.create_file()
 
     response = {
-        "detail"        : "Transformación CIM -> PIM completada",
+        "detail"    : "Transformación CIM -> PIM completada",
+        "input_xml" : str(path),
+        "output_uvl": str(uvl.FILE_NAME),
+        "metrics"   : {},
+    }
+    return response
+
+
+@router.post("/transform-pim-psm")
+async def transform_pim_psm(path: str):
+    xml_service = XmlService(str(path))
+    uvl         = UVL()
+    elements    = xml_service.get_elements()
+    cim_to_pim  = CimToPim(xml_service, uvl, elements)
+
+    uvl.clear()
+    cim_to_pim.apply_r1()
+    cim_to_pim.apply_r2()
+    cim_to_pim.apply_r3()
+    cim_to_pim.apply_r4()
+    cim_to_pim.apply_r5()
+    uvl.create_file()
+
+    pim_to_psm  = PimToPsm(uvl)
+    uml_model   = pim_to_psm.transform()
+
+    puml_output         = Path("app/data/model.puml")
+    plantuml_service    = PlantumlService()
+    puml_path           = plantuml_service.render(uml_model, puml_output)
+
+    response = {
+        "detail"        : "Transformación PIM -> PSM completada",
         "input_xml"     : str(path),
         "output_uvl"    : str(uvl.FILE_NAME),
+        "output_puml"   : str(puml_path),
         "metrics"       : {},
     }
     return response

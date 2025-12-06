@@ -66,7 +66,7 @@ class UVL:
             self.constraints.append(expr)
 
     # ====== CREATE FILE ======
-    def render_to_file(self) -> None:
+    def create_file(self) -> None:
         self.FILE_NAME.parent.mkdir(parents=True, exist_ok=True)
         with self.FILE_NAME.open("w", encoding="utf-8") as file:
             self._write_namespace_header(file)
