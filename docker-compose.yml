@@ -1,15 +1,22 @@
 services:
   backend:
     build: ./mdd-hqc-backend
+    container_name: mdd-hqc-backend
     ports:
       - "8000:8000"
     volumes:
       - ./mdd-hqc-backend:/app
+
   frontend:
     build: ./mdd-hqc-frontend
+    container_name: mdd-hqc-frontend
     ports:
-      - "5173:5173"
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
     volumes:
       - ./mdd-hqc-frontend:/app
+      - /app/node_modules
     depends_on:
       - backend

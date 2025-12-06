@@ -1,0 +1,85 @@
+category,keyword
+@Algorithm,qaoa
+@Algorithm,vqe
+@Algorithm,qml
+@Algorithm,grover
+@Algorithm,shor
+@Algorithm,deutsch
+@Algorithm,bernstein
+@Algorithm,simon
+@Algorithm,qft
+@Algorithm,qpe
+@Algorithm,hhl
+@Algorithm,annealing
+@Algorithm,quantum annealing
+@Algorithm,quantum_annealing
+@Algorithm,algoritmo
+@Algorithm,algorithm
+@Algorithm,heurístico
+@Algorithm,heuristico
+@Algorithm,optimización
+@Algorithm,optimization
+@Programming,qiskit
+@Programming,dwave
+@Programming,d-wave
+@Programming,cirq
+@Programming,braket
+@Programming,sdk
+@Programming,qasm
+@Programming,qsharp
+@Programming,q#
+@Programming,python
+@Programming,csharp
+@Programming,c#
+@Programming,lenguaje
+@Programming,language
+@Programming,framework
+@Programming,library
+@Programming,librería
+@Programming,libreria
+@Programming,api client
+@Integration_model,api
+@Integration_model,middleware
+@Integration_model,microservice
+@Integration_model,microservicio
+@Integration_model,microservices
+@Integration_model,soa
+@Integration_model,qsoa
+@Integration_model,gateway
+@Integration_model,orquestación
+@Integration_model,orquestacion
+@Integration_model,orchestration
+@Integration_model,servicio
+@Integration_model,service
+@Quantum_HW_constraint,qubit
+@Quantum_HW_constraint,qubits
+@Quantum_HW_constraint,qpu
+@Quantum_HW_constraint,hardware
+@Quantum_HW_constraint,latencia
+@Quantum_HW_constraint,latency
+@Quantum_HW_constraint,error
+@Quantum_HW_constraint,corrección
+@Quantum_HW_constraint,correccion
+@Quantum_HW_constraint,mitigación
+@Quantum_HW_constraint,mitigacion
+@Quantum_HW_constraint,logic qubits
+@Quantum_HW_constraint,memoria
+@Quantum_HW_constraint,memory
+@Quantum_HW_constraint,schedule
+@Quantum_HW_constraint,planificación
+@Quantum_HW_constraint,planificacion
+@Quantum_HW_constraint,quality
+@Quantum_HW_constraint,calidad
+@Quantum_HW_constraint,ruido
+@Quantum_HW_constraint,noise
+@Functionality,gate based
+@Functionality,gate_based
+@Functionality,adiabatic
+@Functionality,funcionalidad
+@Functionality,functionality
+@Functionality,clásico
+@Functionality,clasico
+@Functionality,classical
+@Functionality,cómputo cuántico
+@Functionality,computo cuantico
+@Functionality,quantum functionality

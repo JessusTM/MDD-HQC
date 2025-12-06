@@ -5,8 +5,83 @@
   <meta charset="utf-8" />
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+  <!-- Tailwind -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ctp: {
+              rosewater: '#f5e0dc',
+              flamingo: '#f2cdcd',
+              pink: '#f5c2e7',
+              mauve: '#cba6f7',
+              red: '#f38ba8',
+              maroon: '#eba0ac',
+              peach: '#fab387',
+              yellow: '#f9e2af',
+              green: '#a6e3a1',
+              teal: '#94e2d5',
+              sky: '#89dceb',
+              sapphire: '#74c7ec',
+              blue: '#89b4fa',
+              lavender: '#b4befe',
+              text: '#cdd6f4',
+              subtext1: '#bac2de',
+              subtext0: '#a6adc8',
+              overlay2: '#9399b2',
+              overlay1: '#7f849c',
+              overlay0: '#6c7086',
+              surface2: '#585b70',
+              surface1: '#45475a',
+              surface0: '#313244',
+              base: '#1e1e2e',
+              mantle: '#181825',
+              crust: '#11111b',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #1e1e2e;
+      color: #cdd6f4;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #181825;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #45475a;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #585b70;
+    }
+  </style>
+
   <title>MDD-HQC</title>
 </head>
 
