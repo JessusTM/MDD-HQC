@@ -2,228 +2,281 @@ import re
 import html
 import xml.etree.ElementTree as ET
 
+
 class XmlService:
     def __init__(self, file_path: str):
         self.file_path = file_path
+        self._intentional_elements = {}
+        self._social_dependencies = {}
+        self._internal_links = {}
+        self._refinements = {}
+        self._build_index()
 
     # ============ ELEMENTS ============
-    def get_root(self):
+    def _get_root(self):
         tree = ET.parse(self.file_path)
         root = tree.getroot()
         return root
 
-    def get_raw_diagram_elements(self, root):
-        elements                = root.find("./diagram/mxGraphModel/root")
-        raw_diagram_elements    = []
+    def _get_raw_diagram_elements(self, root):
+        """
+        Extract all diagram elements from the iStar 2.0 export (draw.io XML).
+        This output is treated as the single raw source for downstream indexing.
+        """
+        elements = root.find("./diagram/mxGraphModel/root")
+        raw_elements = []
 
-        for child in elements.iter():
-            tag     = child.tag
-            attrib  = child.attrib
-            raw_diagram_elements.append({
-                "tag"   : tag,
-                "attrib": attrib,
-            })
-        return raw_diagram_elements
+        for element in elements.iter():
+            tag = element.tag
+            attrib = element.attrib
+            element_id = attrib.get("id")
+            raw_elements.append(
+                {
+                    "id": element_id,
+                    "tag": tag,
+                    "attrib": attrib,
+                }
+            )
+        return raw_elements
 
-    def get_elements_without_metadata(self, raw_diagram_elements):
-        excluded_tags   = {"Array", "root", "mxPoint", "mxGeometry"}
-        filtered        = []
-        for element in raw_diagram_elements:
-            tag             = element.get("tag")
-            attrib          = element.get("attrib")
-            is_dependency   = self.verify_social_dependency(tag, attrib)
+    def _build_intentional_elements_index(self, raw_elements):
+        """
+        Build an index of iStar intentional elements (goals, tasks, softgoals, resources, actors, etc.)
+        excluding non-semantic metadata nodes. Social-dependency mxCells are kept.
+        """
+        excluded_tags = {"Array", "root", "mxPoint", "mxGeometry"}
+        for element in raw_elements:
+            tag = element.get("tag")
+            attrib = element.get("attrib")
+            raw_label = attrib.get("label")
+            formatted_label = self.format_label(raw_label)
+            element_id = attrib.get("id")
+            if element_id is None:
+                continue
 
-            if tag in excluded_tags : continue
-            if tag in {"mxCell"} and not is_dependency : continue
+            element_type = attrib.get("type")
+            is_social_dependency = self.verify_social_dependency(tag, attrib)
 
-            filtered.append({"tag": tag, "attrib": attrib})
-        return filtered
+            if tag in excluded_tags:
+                continue
+            if tag in {"mxCell"} and not is_social_dependency:
+                continue
 
-    def get_elements(self):
-        root        = self.get_root()
-        raw         = self.get_raw_diagram_elements(root)
-        elements    = self.get_elements_without_metadata(raw)
-        return elements
+            self._intentional_elements[element_type] = {
+                "id": element_id,
+                "type": element_type,
+                "tag": tag,
+                "label": raw_label,
+            }
 
-    # ============ SOCIAL DEPENDENCIES ============
+    # ------------ SOCIAL DEPENDENCIES ------------
     def verify_social_dependency(self, tag: str, attrib: dict) -> bool:
-        is_mxcell     = tag == "mxCell"
-        is_edge       = attrib.get("edge") == "1"
-        has_source    = "source" in attrib
-        has_target    = "target" in attrib
-        is_dependency = is_mxcell and is_edge and has_source and has_target
-        return is_dependency
+        """
+        Identify social dependencies encoded as mxCell edges with source/target.
+        """
+        is_mxcell = tag == "mxCell"
+        is_edge = attrib.get("edge") == "1"
+        has_source = "source" in attrib
+        has_target = "target" in attrib
+        return is_mxcell and is_edge and has_source and has_target
 
-    def get_social_dependencies(self, filtered_elements):
-        social_dependencies = []
-        for element in filtered_elements:
-            tag     = element.get("tag")
-            attrib  = element.get("attrib")
-            source  = attrib.get("source")
-            target  = attrib.get("target")
-            is_dependency   = self.verify_social_dependency(tag, attrib)
-            if not is_dependency : continue
-            social_dependencies.append({"source": source, "target": target})
-        return social_dependencies
+    def _build_social_dependencies_index(self, raw_elements):
+        """
+        Build an index of social-dependency links (mxCell edges) using element id as key.
+        """
+        required_tag = {"mxCell"}
+        for element in raw_elements:
+            tag = element.get("tag")
+            if tag not in required_tag:
+                continue
 
-    # ============ LABELS / GOALS ============
+            attrib = element.get("attrib")
+            element_id = attrib.get("id")
+            if element_id is None:
+                continue
+
+            source = attrib.get("source")
+            target = attrib.get("target")
+            if not self.verify_social_dependency(tag, attrib):
+                continue
+
+            self._social_dependencies[element_id] = {
+                "id": element_id,
+                "source": source,
+                "target": target,
+            }
+
+    # ------------ INTERNAL LINKS ------------
+    def _build_internal_links_index(self, raw_elements):
+        """
+        Build an index for internal links among intentional elements:
+        - needed-by
+        - qualification-link
+        - contribution
+
+        These are expected to appear as mxCell edges with a 'type' attribute.
+        """
+        required_type = {"needed-by", "qualification-link", "contribution"}
+
+        for element in raw_elements:
+            attrib = element.get("attrib")
+            element_id = attrib.get("id")
+            if element_id is None:
+                continue
+
+            link_type = attrib.get("type")
+            raw_label = attrib.get("label")
+            formatted_label = self.format_label(raw_label)
+            if link_type not in required_type:
+                continue
+
+            tag = element.get("tag")
+            if tag != "mxCell":
+                continue
+
+            if attrib.get("edge") != "1":
+                continue
+
+            self._internal_links[element_id] = {
+                "id": element_id,
+                "type": link_type,
+                "source": attrib.get("source"),
+                "target": attrib.get("target"),
+                "label": formatted_label,
+            }
+
+    # ------------ LABEL NORMALIZATION ------------
     def format_label(self, label):
-        if not label : return label
-        unescaped   = html.unescape(label)
-        text        = re.sub(r"<.*?>", " ", unescaped)
-        text        = re.sub(r"\s+", " ", text).strip()
+        """
+        Normalize a label by unescaping HTML and stripping markup, collapsing whitespace.
+        """
+        if not label:
+            return label
+        unescaped = html.unescape(label)
+        text = re.sub(r"<.*?>", " ", unescaped)
+        text = re.sub(r"\s+", " ", text).strip()
         return text
 
-    def get_goals(self, filtered_elements):
-        goals = []
-        for element in filtered_elements:
-            attrib          = element.get("attrib")
-            label           = attrib.get("label")
-            formatted_label = self.format_label(label)
-            id              = attrib.get("id")
-            goals.append(
-                {
-                    "label" : formatted_label, 
-                    "id"    : id
-                }
-            )
-        return goals
+    # ------------ REFINEMENT LINKS ------------
+    def _build_refinements_index(self, raw_elements):
+        """
+        Build an index for refinement edges (AND/OR) represented as mxCell edges with type='refinement'.
+        """
+        required_type = {"refinement"}
+        for element in raw_elements:
+            attrib = element.get("attrib")
+            element_id = attrib.get("id")
+            if element_id is None:
+                continue
 
-    def get_elements_by_type(self, elements, attrib_type: str):
-        labels = []
-        for element in elements:
-            attrib          = element["attrib"]
-            label           = attrib.get("label")
-            formatted_label = self.format_label(label)
-            element_type    = attrib.get("type")
-            if element_type == str(attrib_type):
-                labels.append(formatted_label)
-        return labels
+            link_type = attrib.get("type")
+            value = attrib.get("value")
+            if link_type not in required_type:
+                continue
 
-    def map_id_to_label(self, filtered_elements):
-        labels = {}
-        for element in filtered_elements:
-            attrib          = element.get("attrib")
-            id              = attrib.get("id")
-            if not id : continue
-            label           = attrib.get("label")
-            formatted_label = self.format_label(label)
-            labels[id]     = formatted_label
-        return labels
+            tag = element.get("tag")
+            if tag != "mxCell":
+                continue
 
-    # ============ ENLACES ENTRE ELEMENTOS INTERNOS ============ 
-    def get_internal_links(self):
-        root      = self.get_root()
-        root_node = root.find("./diagram/mxGraphModel/root")
-        links     = []
-        if root_node is None : return links
+            if attrib.get("edge") != "1":
+                continue
 
-        for obj in root_node.findall("object"):
-            link_type = obj.attrib.get("type")
-            if link_type not in {"needed-by", "qualification-link", "contribution"} : continue
+            self._refinements[element_id] = {
+                "id": element_id,
+                "source": attrib.get("source"),
+                "target": attrib.get("target"),
+                "value": value,
+            }
 
-            mxcell = obj.find("mxCell")
-            if mxcell is None : continue
+    # ------------ INDEX BUILD ------------
+    def _build_index(self):
+        """
+        Build all in-memory indexes from the XML file in a single pass over raw elements.
+        """
+        root = self._get_root()
+        raw_elements = self._get_raw_diagram_elements(root)
+        self._build_intentional_elements_index(raw_elements)
+        self._build_social_dependencies_index(raw_elements)
+        self._build_internal_links_index(raw_elements)
+        self._build_refinements_index(raw_elements)
 
-            mx_attrib = mxcell.attrib
-            if mx_attrib.get("edge") != "1" : continue
+    # ------------ PUBLIC GETTERS ------------
+    def get_intentional_element_by_type(self, element_type):
+        """
+        Return all indexed intentional elements matching the requested iStar type.
+        """
+        return self._intentional_elements[element_type].iter()
 
-            links.append(
-                {
-                    "type"      : link_type,
-                    "source"    : mx_attrib.get("source"),
-                    "target"    : mx_attrib.get("target"),
-                    "value"     : obj.attrib.get("value") or obj.attrib.get("label") or "",
-                }
-            )
-        return links
+    def get_social_dependencies(self):
+        """
+        Return the social-dependency index (mxCell edges).
+        """
+        return self._social_dependencies
 
-    # ============ ENLACES DE REFINAMIENTO ============
     def get_refinements(self):
-        root        = self.get_root()
-        root_node   = root.find("./diagram/mxGraphModel/root")
-        refinements = []
+        """
+        Return the refinement index (mxCell edges).
+        """
+        return self._refinements
 
-        if root_node is None : return refinements
-
-        for obj in root_node.findall("object"):
-            link_type = obj.attrib.get("type")
-            if link_type != "refinement" : continue
-
-            mxcell = obj.find("mxCell")
-            if mxcell is None : continue
-
-            mx_attrib = mxcell.attrib
-            if mx_attrib.get("edge") != "1" : continue
-
-            refinements.append(
-                {
-                    "source"    : mx_attrib.get("source"),
-                    "target"    : mx_attrib.get("target"),
-                    "value"     : (obj.attrib.get("value") or obj.attrib.get("label") or "").strip().lower(),
-                }
-            )
-
-        return refinements
+    def get_internal_links(self):
+        """
+        Return the internal-links index (needed-by, qualification-link, contribution).
+        """
+        return self._internal_links
 
     # ============ ACTOR OWNERSHIP ============
     def get_element_to_actor_mapping(self):
-        root        = self.get_root()
-        root_node   = root.find("./diagram/mxGraphModel/root")
-        if root_node is None : return {}
-        
-        element_to_actor    = {}
-        id_to_label         = self.map_id_to_label(self.get_elements())
-        owns_links          = {}
+        root = self._get_root()
+
+        root_node = root.find("./diagram/mxGraphModel/root")
+        if root_node is None:
+            return {}
+
+        # Minimal indexes (single pass)
+        parent_by_id = {}
+        type_by_id = {}
+        raw_label_by_id = {}
 
         for obj in root_node.findall("object"):
-            if obj.attrib.get("type") == "owns":
-                mxcell = obj.find("mxCell")
-                if mxcell is None : continue
-                
-                mx_attrib = mxcell.attrib
-                if mx_attrib.get("edge") != "1" : continue
+            obj_id = obj.attrib.get("id")
+            if obj_id is None:
+                continue
 
-                source_id = mx_attrib.get("source")
-                target_id = mx_attrib.get("target")
-                if source_id and target_id:
-                    owns_links[target_id] = source_id
-        
-        for obj in root_node.findall("object"):
-            element_id    = obj.attrib.get("id")
-            element_type  = obj.attrib.get("type")
-            if element_type not in {"goal", "task"} : continue
-            
+            type_by_id[obj_id] = obj.attrib.get("type")
+            raw_label_by_id[obj_id] = obj.attrib.get("label")  # raw label (may be None)
+
             mxcell = obj.find("mxCell")
-            if mxcell is None : continue
-            
-            parent_id = mxcell.attrib.get("parent")
-            if not parent_id : continue
-            
-            actor_id        = None
-            current_parent  = parent_id
-            max_depth       = 10
-            depth           = 0
+            if mxcell is not None:
+                parent_by_id[obj_id] = mxcell.attrib.get("parent")
+
+        element_to_actor = {}
+        required_actor_type = "agent"
+
+        # Resolve only for goal/task by walking up the parent chain
+        for element_id, element_type in type_by_id.items():
+            if element_type not in {"goal", "task"}:
+                continue
+
+            current_parent = parent_by_id.get(element_id)
+            if not current_parent:
+                continue
+
+            actor_id = None
+            depth = 0
+            max_depth = 10
+
             while current_parent and depth < max_depth:
-                if current_parent in owns_links:
-                    actor_id = owns_links[current_parent]
+                if type_by_id.get(current_parent) == required_actor_type:
+                    actor_id = current_parent
                     break
-                
-                for parent_obj in root_node.findall("object"):
-                    if parent_obj.attrib.get("id") == current_parent:
-                        parent_mxcell = parent_obj.find("mxCell")
-                        if parent_mxcell is not None:
-                            current_parent = parent_mxcell.attrib.get("parent")
-                        else:
-                            current_parent = None
-                        break
-                else:
-                    current_parent = None
+                current_parent = parent_by_id.get(current_parent)
                 depth += 1
-            
+
             if actor_id:
-                actor_label = id_to_label.get(actor_id, "")
-                if actor_label:
-                    element_to_actor[element_id] = actor_label
-        
+                raw_label = raw_label_by_id.get(actor_id)
+                formatted_label = self.format_label(raw_label) if raw_label else ""
+                if formatted_label:
+                    element_to_actor[element_id] = formatted_label
+
         return element_to_actor
