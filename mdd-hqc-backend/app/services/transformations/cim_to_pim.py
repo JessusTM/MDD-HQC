@@ -4,61 +4,44 @@ from app.services.uvl_service import UvlService
 
 
 class CimToPim:
-    def __init__(self, xml_service: XmlService, uvl: UVL):
+    def __init__(self, xml_service: XmlService, uvl_service: UvlService, uvl: UVL):
         self.xml_service = xml_service
+        self.uvl_service = uvl_service
         self.uvl = uvl
-        self.uvl_service = UvlService()
-        self.element_to_actor = {}
+        self.elements_to_actors = {}
 
-    # R1: Actores / Recursos -> Comentarios
+    # R1: Actors / Resources -> Metadata
     def apply_r1(self) -> None:
-        self.element_to_actor = self.xml_service.get_element_to_actor_mapping()
+        self.elements_to_actors = self.xml_service.get_element_to_actor_mapping()
+
+    def _convert_intentional_element_in_feature(self, kind):
+        elements = self.xml_service.get_intentional_element_by_type(f"{kind}")
+        for element in elements:
+            id = element.get("id")
+            label = element.get("label")
+
+            if not id or not label:
+                continue
+
+            feature_category = self.uvl_service.assign_category(label)
+            feature_name = self.uvl_service.format_feature_name(label)
+            actor_label = self.elements_to_actors.get(id)
+
+            metadata = []
+            if actor_label:
+                metadata.append(f"actor: {actor_label}")
+
+            self.uvl.add_feature(
+                category=feature_category,
+                name=feature_name,
+                kind=f"{kind}",
+                metadata=metadata,
+            )
 
     # R2: Goals / Tasks -> Features
     def apply_r2(self) -> None:
-        goals = self.xml_service.get_intentional_element_by_type("goal")
-        for goal in goals:
-            goal_id = goal.get("id")
-            goal_label = goal.get("label")
-
-            if not goal_id or not goal_label:
-                continue
-
-            feature_name = self.uvl_service.format_feature_name(goal_label)
-            feature_category = self.uvl_service.assign_category(goal_label)
-            actor_label = self.element_to_actor.get(element_id)
-            comments = []
-            if actor_label:
-                comments.append(f"actor: {actor_label}")
-
-            self.uvl.add_feature(
-                name=feature_name,
-                category=feature_category,
-                kind="goal",
-                comments=comments,
-            )
-
-        for element in self.xml_service.get_intentional_element_by_type("task"):
-            element_id = element.get("id")
-            label = self.xml_service.format_label(element.get("label", ""))
-
-            if not element_id or not label:
-                continue
-
-            feature_name = self.uvl_service.format_feature_name(label)
-            category = self.uvl_service.assign_category(label)
-
-            comments = []
-            actor_label = self.element_to_actor.get(element_id)
-            if actor_label:
-                comments.append(f"actor: {actor_label}")
-
-            self.uvl.add_feature(
-                name=feature_name,
-                category=category,
-                kind="task",
-                comments=comments,
-            )
+        self._convert_intentional_element_in_feature("goal")
+        self._convert_intentional_element_in_feature("task")
 
     # R3: Softgoals -> Atributos (via qualification-link)
     def apply_r3(self) -> None:
@@ -198,4 +181,3 @@ class CimToPim:
                 self.uvl.add_constraint(expr)
             elif kind == "or":
                 self.uvl.add_or_group(parent_name, child_name)
-
