@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-pydantic
-pydantic_settings
-python-multipart
