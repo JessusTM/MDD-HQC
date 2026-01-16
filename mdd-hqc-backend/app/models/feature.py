@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional
+
 
 @dataclass
 class Feature:
-    name        : str
-    category    : str
-    kind        : Optional[str]     = None            
-    attributes  : Dict[str, str]    = field(default_factory=dict)
-    comments    : List[str]         = field(default_factory=list)
+    category: str
+    metadata: List[str]
+    name: str
+    kind: str
+    attributes: Optional[Dict[str, str]]
