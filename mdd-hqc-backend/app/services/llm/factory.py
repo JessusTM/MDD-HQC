@@ -3,7 +3,7 @@ from .lmstudio_client import LMStudioClient
 
 def get_llm_client(provider: str):
     if provider == "ollama":
-        return OllamaClient(model_name="devstral-small-2")
+        return OllamaClient(model_name="llama3.1")
     elif provider == "lmstudio":
         return LMStudioClient(model_name="Meta-Llama-3-8B-Instruct")
     else:

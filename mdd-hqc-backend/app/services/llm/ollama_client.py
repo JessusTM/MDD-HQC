@@ -5,7 +5,7 @@ import json
 import re
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "devstral-small-2"
+OLLAMA_MODEL = "llama3.1"
 
 SYSTEM_INSTRUCTIONS = ( 
     "Eres un clasificador. Dado texto de elementos iStar (type, text), " 
@@ -70,17 +70,4 @@ class OllamaClient(LLMInterface):
         missing = [k for k, v in result.items() if not v]
         result["missing"] = parsed.get("missing", missing)
         return result
-    
-    def _fallback_empty(self) -> Dict:
-        return {
-            "Functionality": False,
-            "Algorithm": False,
-            "Programming": False,
-            "Integration_model": False,
-            "Quantum_HW_constraint": False,
-            "missing": [
-                "Functionality", "Algorithm", "Programming",
-                "Integration_model", "Quantum_HW_constraint"
-            ]
-        }
 

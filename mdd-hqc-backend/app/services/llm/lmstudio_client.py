@@ -70,14 +70,5 @@ class LMStudioClient(LLMInterface):
         result["missing"] = parsed.get("missing", missing)
         return result
     
-    def _fallback_empty(self) -> Dict:
-        keys = [
-            "Functionality",
-            "Algorithm",
-            "Programming",
-            "Integration_model",
-            "Quantum_HW_constraint",
-        ]
-        return {k: False for k in keys} | {"missing": keys}
     
     
