@@ -51,6 +51,8 @@ class InteractionQuestion(BaseModel):
     id: str
     text: str
     scope: QuestionScope = "other"
+    options: Optional[List[str]] = None
+    answers: Optional[str] = None
 
 
 ProposalKind = Literal[
