@@ -18,25 +18,29 @@ class LLMInteractionEngine(InteractionEngine):
                 questions.append(InteractionQuestion(
                     id="q_algorithm",
                     text="¿Qué tipo de algoritmo se utilizará?",
-                    scope="missing_information"
+                    scope="missing_information",
+                    options=["Greedy", "Dynamic Programming", "Quantum Search", "Otro"]
                 ))
             elif missing == "Programming":
                 questions.append(InteractionQuestion( 
                     id="q_programming", 
                     text="¿Qué framework/lenguaje se usará para programar?", 
-                    scope="missing_information" 
+                    scope="missing_information",
+                    options=["Python", "Rust", "Q#", "Otro"] 
                 ))
             elif missing == "Integration_model":
                 questions.append(InteractionQuestion( 
                     id="q_integration", 
                     text="¿Qué modelo de integración se usará? (SOA, middleware, etc.)", 
-                    scope="missing_information" 
+                    scope="missing_information",
+                    options=["Middleware/API", "Microservices", "Quantum-SOA"] 
                 ))
             elif missing == "Quantum_HW_constraint":
                 questions.append(InteractionQuestion( 
                     id="q_hw", 
-                    text="¿Qué restricciones de hardware cuántico aplican?", 
-                    scope="missing_information" 
+                    text="¿Qué restriccion HW es más relevante?", 
+                    scope="missing_information",
+                    options=["Qubits", "Shots", "Circuit depth", "Error rate", "Conectividad", "Otro"] 
                 ))
             elif missing == "Functionality":
                 questions.append(InteractionQuestion( 
