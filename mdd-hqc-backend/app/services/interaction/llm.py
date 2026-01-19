@@ -1,5 +1,6 @@
 from typing import List, Dict 
-from app.services.llm.base import LLMInterface 
+from app.services.interaction.llm.base import LLMInterface
+
 from app.models.llm_contract import InteractionInput, InteractionReport, InteractionQuestion 
 from app.services.interaction.interaction_engine import InteractionEngine
 

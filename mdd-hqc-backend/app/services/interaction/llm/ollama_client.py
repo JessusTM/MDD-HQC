@@ -1,6 +1,6 @@
 import requests
 from typing import List, Dict
-from app.services.llm.base import LLMInterface
+from app.services.interaction.llm.base import LLMInterface
 import json
 import re
 
@@ -56,18 +56,17 @@ class OllamaClient(LLMInterface):
     def _safe_parse_json(self, raw: str) -> Dict:
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
-            return self._fallback_empty()
+            return {}
         try:
             parsed = json.loads(match.group(0))
         except Exception:
-            return self._fallback_empty()
+            return {}
         
         keys = [
             "Functionality", "Algorithm", "Programming",
             "Integration_model", "Quantum_HW_constraint"
         ]
         result = {k: bool(parsed.get(k, False)) for k in keys}
-        missing = [k for k, v in result.items() if not v]
-        result["missing"] = parsed.get("missing", missing)
+        result["missing"] = parsed.get("missing", [k for k, v in result.items() if not v])
         return result
 
