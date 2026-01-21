@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./mdd-hqc-backend:/app
+      - ./mdd-hqc-backend/app:/app/app
 
   frontend:
     build: ./mdd-hqc-frontend
