@@ -28,7 +28,6 @@ class UVL:
     FILE_NAME = Path("app/data/model.uvl")
 
     def __init__(self):
-        """Creates an empty UVL model ready to receive features, constraints, etc."""
         self.namespace: str = "MDD-HQC"
         self.features: List[Feature] = []
         self.constraints: List[str] = []
@@ -174,7 +173,7 @@ class UVL:
         metadata: Optional[List[str]],
         name: str,
         kind: Optional[str],
-        attributes: Optional[Dict[str, str]],
+        attributes: Optional[Dict[str, str]] = None,
     ) -> Feature:
         """
         Adds a feature to the model.
