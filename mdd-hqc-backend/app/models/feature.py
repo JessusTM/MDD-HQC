@@ -7,5 +7,5 @@ class Feature:
     category: str
     metadata: List[str]
     name: str
-    kind: str
-    attributes: Optional[Dict[str, str]]
+    kind: Optional[str]
+    attributes: Dict[str, str]

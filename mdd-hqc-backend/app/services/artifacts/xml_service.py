@@ -36,21 +36,28 @@ class XmlService:
 
     def _get_raw_diagram_elements(self, root):
         """
-        Extract all diagram elements from the iStar 2.0 export (draw.io XML).
-        This output is treated as the single raw source for downstream indexing.
-        """
-        elements = root.find("./diagram/mxGraphModel/root")
-        raw_elements = []
-        if elements is None:
-            return raw_elements
+        Extract indexable diagram elements from draw.io XML.
 
-        for element in elements.iter():
-            raw_elements.append(
-                {
-                    "tag": element.tag,
-                    "attrib": element.attrib,
-                }
-            )
+        We merge <object> attributes (semantic: type/label/value/id)
+        with its inner <mxCell> attributes (graph: edge/source/target/parent),
+        because downstream indexers require both views at once.
+        """
+        objects = root.findall("./diagram/mxGraphModel/root/object")
+        raw_elements = []
+
+        for obj in objects:
+            obj_attrib = obj.attrib or {}
+
+            mxcell = obj.find("mxCell")
+            mx_attrib = mxcell.attrib if mxcell is not None else {}
+
+            merged = dict(mx_attrib)
+            merged.update(obj_attrib)
+
+            is_edge = mx_attrib.get("edge") == "1"
+            tag = "mxCell" if is_edge else obj.tag
+            raw_elements.append({"tag": tag, "attrib": merged})
+
         return raw_elements
 
     # ============ VALIDATIONS ============
@@ -204,7 +211,6 @@ class XmlService:
         type_by_id = {}
         label_by_id = {}
 
-        # Build helper indexes from <object> nodes (single pass over objects)
         self._collect_object_indexes(
             objects=objects,
             parent_by_id=parent_by_id,
@@ -214,7 +220,6 @@ class XmlService:
 
         element_to_actor = {}
 
-        # Assign ownership (element -> actor) using only the in-memory indexes
         self._assign_element_to_actor(
             objects=objects,
             parent_by_id=parent_by_id,
@@ -240,13 +245,11 @@ class XmlService:
             if id is None:
                 continue
 
-            # Store what this node is (type) and how it is named (label)
             type_by_id[id] = object.attrib.get("type")
             label_by_id[id] = object.attrib.get("label")
 
             mxcell = object.find("mxCell")
             if mxcell is not None:
-                # Store where this node lives (parent) to support upward traversal
                 parent_by_id[id] = mxcell.attrib.get("parent")
 
     def _assign_element_to_actor(
@@ -273,7 +276,6 @@ class XmlService:
             if object.attrib.get("type") not in {"goal", "task"}:
                 continue
 
-            # Walk up containment parents (parent -> parent -> ...) until reaching an agent
             current_parent = parent_by_id.get(id)
             while current_parent:
                 if type_by_id.get(current_parent) == "agent":
@@ -337,3 +339,25 @@ class XmlService:
         Return the element -> actor ownership mapping.
         """
         return self._element_to_actor
+
+    def get_label_by_id(self, element_id: str) -> str:
+        """
+        Resolve an element label by its id.
+
+        In the XML export, relationships (e.g., internal links, social dependencies, refinements) are encoded as edges
+        that reference elements only through `source`/`target` ids. The human-readable text, however, is stored in the
+        intentional element nodes themselves (goal/task/softgoal/etc.) under their `label` field.
+
+        This helper exists to bridge that representation: given an element id coming from an edge, it searches the
+        indexed intentional elements (across all iStar types) and returns the corresponding label. If the id is unknown
+        or has no label, it returns an empty string.
+        """
+        if not element_id:
+            return ""
+
+        for elements in self._intentional_elements.values():
+            element = elements.get(element_id)
+            if element:
+                return element.get("label") or ""
+
+        return ""

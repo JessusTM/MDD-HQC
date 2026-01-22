@@ -1,14 +1,15 @@
 import { useRef, useState } from "react"
 import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
-import { uploadFile, getCimMetrics } from "../../services/api"
+import { uploadFile } from "../../services/file"
+import { getCimMetrics } from "../../services/metrics"
 
 export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
-  const [file, setFile]                 = useState(null)
-  const [filePath, setFilePath]         = useState(null)
+  const [file, setFile] = useState(null)
+  const [filePath, setFilePath] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
-  const [infoMessage, setInfoMessage]   = useState("")
-  const [loading, setLoading]           = useState(false)
-  const fileInputRef                    = useRef(null)
+  const [infoMessage, setInfoMessage] = useState("")
+  const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const reset = () => {
     setFile(null)
@@ -35,8 +36,8 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
 
   const processFile = async (fileToRead) => {
     try {
-      const uploadResponse  = await uploadFile(fileToRead)
-      const path            = uploadResponse.path
+      const uploadResponse = await uploadFile(fileToRead)
+      const path = uploadResponse.path
       setFilePath(path)
       setInfoMessage("Archivo subido correctamente")
       onFileUploaded?.(path)
