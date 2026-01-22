@@ -1,6 +1,7 @@
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
-import { transformCimToPim, transformPimToPsm } from "../../services/api"
+import { transformCimToPim } from "../../services/transformations"
+import { transformPimToPsm } from "../../services/transformations"
 
 export const Filter = ({
   uploadedFilePath,
@@ -38,7 +39,7 @@ export const Filter = ({
     }
   }
 
-  const canTransform = !sameLevel && uploadedFilePath && 
+  const canTransform = !sameLevel && uploadedFilePath &&
     !(source === "PIM" && target === "PSM" && !uvlContent)
 
   return (

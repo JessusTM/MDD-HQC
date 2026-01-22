@@ -49,8 +49,11 @@ export const PIM = ({ uvlContent, metrics }) => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
                   <span className="text-ctp-subtext0">Total Features:</span>
-                  <span className="text-ctp-text font-semibold ml-2">{metrics.total_features || 0}</span>
+                  <span className="text-ctp-text font-semibold ml-2">
+                    {metrics.total_features || 0}
+                  </span>
                 </div>
+
                 {metrics.features_by_category && Object.keys(metrics.features_by_category).length > 0 && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
                     <span className="text-ctp-subtext0 font-semibold">Por Categoría:</span>
@@ -63,25 +66,46 @@ export const PIM = ({ uvlContent, metrics }) => {
                     </div>
                   </div>
                 )}
+
                 <div className="bg-ctp-surface0/50 p-2 rounded">
                   <span className="text-ctp-subtext0">Constraints:</span>
-                  <span className="text-ctp-text font-semibold ml-2">{metrics.constraints || 0}</span>
+                  <span className="text-ctp-text font-semibold ml-2">
+                    {metrics.constraints || 0}
+                  </span>
                 </div>
+
                 {metrics.semantic_preservation && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
                     <span className="text-ctp-subtext0 font-semibold">Preservación Semántica:</span>
                     <div className="mt-1 space-y-1 text-xs">
                       <div className="text-ctp-text">
-                        Features con comentarios: <span className="font-semibold">{metrics.semantic_preservation.features_with_comments || 0}</span> ({metrics.semantic_preservation.comments_percentage || 0}%)
+                        Features con metadata:{" "}
+                        <span className="font-semibold">
+                          {metrics.semantic_preservation.features_with_metadata || 0}
+                        </span>{" "}
+                        ({metrics.semantic_preservation.metadata_percentage || 0}%)
                       </div>
+
                       <div className="text-ctp-text">
-                        Total comentarios: <span className="font-semibold">{metrics.semantic_preservation.total_comments || 0}</span>
+                        Total metadata:{" "}
+                        <span className="font-semibold">
+                          {metrics.semantic_preservation.total_metadata || 0}
+                        </span>
                       </div>
+
                       <div className="text-ctp-text">
-                        Features con atributos: <span className="font-semibold">{metrics.semantic_preservation.features_with_attributes || 0}</span> ({metrics.semantic_preservation.attributes_percentage || 0}%)
+                        Features con atributos:{" "}
+                        <span className="font-semibold">
+                          {metrics.semantic_preservation.features_with_attributes || 0}
+                        </span>{" "}
+                        ({metrics.semantic_preservation.attributes_percentage || 0}%)
                       </div>
+
                       <div className="text-ctp-text">
-                        Total atributos: <span className="font-semibold">{metrics.semantic_preservation.total_attributes || 0}</span>
+                        Total atributos:{" "}
+                        <span className="font-semibold">
+                          {metrics.semantic_preservation.total_attributes || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
