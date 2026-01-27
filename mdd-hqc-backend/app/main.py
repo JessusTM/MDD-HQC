@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.file import router as file_router
 from app.api.metrics import router as metrics_router
 from app.api.transformations import router as transformations_router
+from app.core.logging.logging import setup_logging
 
+setup_logging()
 app = FastAPI()
 
 app.add_middleware(

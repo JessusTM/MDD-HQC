@@ -6,6 +6,10 @@ load_dotenv()
 
 class Config(BaseSettings):
     APP_NAME: str = "MDD-HQC"
+    LOG_LEVEL: str = "DEBUG"
+    LOG_FILE_NAME: str = "mdd_hqc.jsonl"
+    LOG_MAX_BYTES: int = 10_485_760
+    LOG_BACKUP_COUNT: int = 5
 
 
 config = Config()
