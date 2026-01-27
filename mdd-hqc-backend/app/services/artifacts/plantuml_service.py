@@ -1,11 +1,16 @@
+import logging
 from pathlib import Path
 from typing import List
+
 from app.models.uml import UmlModel
+
+logger = logging.getLogger(__name__)
 
 
 class PlantumlService:
     def render(self, model: UmlModel, output_path: str | Path) -> Path:
         file_path = Path(output_path)
+        logger.debug("Rendering PlantUML: output_path=%s, classes=%s", file_path, len(model.classes))
 
         lines: List[str] = []
         lines.append("@startuml")
@@ -47,4 +52,5 @@ class PlantumlService:
 
         content = "\n".join(lines)
         file_path.write_text(content, encoding="utf-8")
+        logger.info("PlantUML file written: path=%s, lines=%s", file_path, len(lines))
         return file_path

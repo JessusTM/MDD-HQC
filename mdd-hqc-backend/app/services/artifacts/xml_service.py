@@ -1,6 +1,9 @@
+import logging
 import re
 import html
 import xml.etree.ElementTree as ET
+
+logger = logging.getLogger(__name__)
 
 
 class XmlService:
@@ -24,15 +27,31 @@ class XmlService:
         self._refinements = {}
         self._element_to_actor = {}
 
+        logger.debug("Parsing iStar XML: path=%s", file_path)
         self._build_indexes()
+        logger.info(
+            "XML indexes built: path=%s, intentional_types=%s, social_deps=%s, internal_links=%s, refinements=%s",
+            file_path,
+            len(self._intentional_elements),
+            len(self._social_dependencies),
+            len(self._internal_links),
+            len(self._refinements),
+        )
 
     # ============ ROOT / RAW EXTRACTION ============
     def _get_root(self):
         """
         Parse the XML file located at self.file_path and return its root element.
         """
-        tree = ET.parse(self.file_path)
-        return tree.getroot()
+        try:
+            tree = ET.parse(self.file_path)
+            return tree.getroot()
+        except ET.ParseError as exc:
+            logger.error("XML parse error: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            raise
+        except OSError as exc:
+            logger.error("Failed to read XML file: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            raise
 
     def _get_raw_diagram_elements(self, root):
         """

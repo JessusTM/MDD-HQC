@@ -1,7 +1,10 @@
 import csv
+import logging
 import re
 from pathlib import Path
 from typing import Dict, List
+
+logger = logging.getLogger(__name__)
 
 
 class UvlService:
@@ -18,9 +21,11 @@ class UvlService:
             reader = csv.DictReader(f)
             for row in reader:
                 category = row["category"].strip()
-                keyword  = row["keyword"].strip().lower()
-                if not category or not keyword : continue
+                keyword = row["keyword"].strip().lower()
+                if not category or not keyword:
+                    continue
                 categories.setdefault(category, []).append(keyword)
+        logger.debug("Loaded UVL category keywords: path=%s, categories=%s", self.CSV_PATH, list(categories.keys()))
         return categories
 
     def format_feature_name(self, label: str) -> str:
