@@ -1,6 +1,10 @@
+import logging
+
 from app.models.uvl import UVL
 from app.services.artifacts.xml_service import XmlService
 from app.services.artifacts.uvl_service import UvlService
+
+logger = logging.getLogger(__name__)
 
 
 class CimToPim:
@@ -13,6 +17,7 @@ class CimToPim:
     # R1: Actors / Resources -> Metadata
     def apply_r1(self) -> None:
         self.elements_to_actors = self.xml_service.get_element_to_actor_mapping()
+        logger.debug("CIM-to-PIM R1 applied: element-to-actor mappings=%s", len(self.elements_to_actors))
 
     def _convert_intentional_element_in_feature(self, kind):
         elements = self.xml_service.get_intentional_element_by_type(kind)
@@ -42,6 +47,7 @@ class CimToPim:
     def apply_r2(self) -> None:
         self._convert_intentional_element_in_feature("goal")
         self._convert_intentional_element_in_feature("task")
+        logger.debug("CIM-to-PIM R2 applied: goals and tasks converted to features")
 
     # R3: Softgoals -> Atributos (via qualification-link)
     def apply_r3(self) -> None:
@@ -87,6 +93,7 @@ class CimToPim:
                 attribute_name=attribute_name,
                 attribute_value="true",
             )
+        logger.debug("CIM-to-PIM R3 applied: softgoals -> attributes via qualification-link")
 
     # R4: Dependencias sociales -> requires
     def apply_r4(self) -> None:
@@ -122,6 +129,7 @@ class CimToPim:
                 continue
 
             self.uvl.add_constraint(f"{source_feature} -> {target_feature}")
+        logger.debug("CIM-to-PIM R4 applied: social dependencies -> requires constraints")
 
     # R5: needed-by / qualification-link / contribution / refinement
     def apply_r5(self) -> None:
@@ -146,6 +154,7 @@ class CimToPim:
         self._apply_r5_needed_by(links, feature_elements)
         self._apply_r5_contributions(links)
         self._apply_r5_refinements(refinements, feature_elements)
+        logger.debug("CIM-to-PIM R5 applied: needed-by, contributions, refinements")
 
     def _apply_r5_needed_by(self, links, feature_elements) -> None:
         """

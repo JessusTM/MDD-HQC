@@ -1,4 +1,6 @@
+import logging
 from typing import Dict
+
 from app.models.uvl import UVL
 from app.models.uml import (
     UmlModel,
@@ -7,6 +9,8 @@ from app.models.uml import (
     UmlAttribute,
     UmlDependency,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PimToPsm:
@@ -17,6 +21,7 @@ class PimToPsm:
 
 
     def transform(self) -> UmlModel:
+        logger.debug("PIM-to-PSM transform started: namespace=%s", self.uvl_model.namespace)
         self.apply_q2()
         self.apply_q3()
         self.apply_q4()
@@ -24,6 +29,11 @@ class PimToPsm:
         self.apply_q1()
         self.apply_q6()
         self.apply_q5()
+        logger.info(
+            "PIM-to-PSM transform completed: classes=%s, dependencies=%s",
+            len(self.uml_model.classes),
+            len(self.uml_model.dependencies),
+        )
         return self.uml_model
 
     def get_or_create_class(self, class_name: str) -> UmlClass:
