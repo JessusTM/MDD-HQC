@@ -1,8 +1,8 @@
 from typing import Dict 
 from app.models.llm_contract import InteractionInput, InteractionReport 
-from app.services.interaction.llm import LLMInteractionEngine 
+from app.services.interaction.llm_client import LLMInteractionEngine 
 from app.services.interaction.rule_based import RuleBasedInteractionEngine 
-from app.services.llm.factory import get_llm_client 
+from app.services.interaction.llm.factory import get_llm_client 
 from app.models.uvl import UVL
 
 def get_interaction_engine(provider: str = "ollama") -> object:
@@ -32,5 +32,3 @@ def apply_user_answers(uvl: UVL, answers: Dict) -> str:
     if uvl.FILE_NAME.exists(): 
         return uvl.FILE_NAME.read_text(encoding="utf-8") 
     return ""
-
-
