@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -16,11 +17,13 @@ from app.services.metrics.istar_metrics import IstarMetricsService
 from app.services.metrics.uvl_metrics import UvlMetricsService
 from app.services.metrics.plantuml_metrics import PlantumlMetricsService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/transformations", tags=["transformations"])
 
 
 @router.post("/cim-to-pim")
 async def transform_cim_pim(request: PathRequest):
+    logger.info("CIM-to-PIM transformation requested: input_path=%s", request.path)
     try:
         xml_service = XmlService(request.path)
         uvl_service = UvlService()
@@ -42,6 +45,10 @@ async def transform_cim_pim(request: PathRequest):
         if uvl.FILE_NAME.exists():
             uvl_content = uvl.FILE_NAME.read_text(encoding="utf-8")
 
+        logger.info(
+            "CIM-to-PIM transformation completed: input_path=%s, output_uvl=%s, features=%s",
+            request.path, uvl.FILE_NAME, uvl_metrics.get("total_features"),
+        )
         return {
             "detail": "Transformación CIM -> PIM completada",
             "input_xml": request.path,
@@ -50,11 +57,13 @@ async def transform_cim_pim(request: PathRequest):
             "metrics": {"cim": istar_metrics, "pim": uvl_metrics},
         }
     except Exception as exc:
+        logger.error("CIM-to-PIM transformation failed: input_path=%s, error=%s", request.path, exc, exc_info=True)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/pim-to-psm")
 async def transform_pim_psm(request: PathRequest):
+    logger.info("PIM-to-PSM transformation requested: input_path=%s", request.path)
     try:
         xml_service = XmlService(request.path)
         uvl_service = UvlService()
@@ -89,6 +98,10 @@ async def transform_pim_psm(request: PathRequest):
         if puml_path.exists():
             puml_content = puml_path.read_text(encoding="utf-8")
 
+        logger.info(
+            "PIM-to-PSM transformation completed: input_path=%s, output_uvl=%s, output_puml=%s, classes=%s",
+            request.path, uvl.FILE_NAME, puml_path, plantuml_metrics.get("total_classes"),
+        )
         return {
             "detail": "Transformación PIM -> PSM completada",
             "input_xml": request.path,
@@ -103,4 +116,5 @@ async def transform_pim_psm(request: PathRequest):
             },
         }
     except Exception as exc:
+        logger.error("PIM-to-PSM transformation failed: input_path=%s, error=%s", request.path, exc, exc_info=True)
         raise HTTPException(status_code=400, detail=str(exc)) from exc

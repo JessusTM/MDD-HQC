@@ -1,7 +1,10 @@
+import logging
 from typing import Any, Dict, List
 
 from app.models.uvl import UVL
 from app.models.feature import Feature
+
+logger = logging.getLogger(__name__)
 
 
 class UvlMetricsService:
@@ -73,4 +76,5 @@ class UvlMetricsService:
                 "average_attributes_per_feature": 0.0,
             }
 
+        logger.debug("UVL metrics calculated: total_features=%s, constraints=%s", total_features, constraints_count)
         return metrics

@@ -1,10 +1,14 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.file import router as file_router
 from app.api.metrics import router as metrics_router
 from app.api.transformations import router as transformations_router
 from app.api.interactions import router as interactions_router
-import logging
+from app.core.logging.logging import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 

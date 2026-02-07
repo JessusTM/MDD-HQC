@@ -1,6 +1,9 @@
+import logging
 from typing import Any, Dict
 
 from app.services.artifacts.xml_service import XmlService
+
+logger = logging.getLogger(__name__)
 
 
 class IstarMetricsService:
@@ -86,4 +89,5 @@ class IstarMetricsService:
         )
         metrics["total_links"] = total_links
 
+        logger.debug("iStar metrics calculated: total_nodes=%s, total_links=%s", total_elements, total_links)
         return metrics

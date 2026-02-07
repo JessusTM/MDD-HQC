@@ -1,6 +1,10 @@
+import logging
 from typing import Any, Dict
 
 from app.models.uml import UmlModel, UmlClass, UmlDependency
+
+logger = logging.getLogger(__name__)
+
 
 class PlantumlMetricsService:
     def __init__(self, uml_model: UmlModel):
@@ -85,4 +89,8 @@ class PlantumlMetricsService:
             if (dep.stereotype or "").strip().lower() == "requires"
         )
 
+        logger.debug(
+            "PlantUML metrics calculated: total_classes=%s, total_dependencies=%s",
+            total_classes, len(dependencies),
+        )
         return metrics
