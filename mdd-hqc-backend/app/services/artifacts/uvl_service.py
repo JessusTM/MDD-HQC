@@ -52,3 +52,26 @@ class UvlService:
             for word in self.category_keywords.get(category, []):
                 if word in lower : return category
         return "@Functionality"
+    
+    def parse_uvl_to_dict(self, uvl_text: str) -> dict:
+        namespace_line = [line for line in uvl_text.splitlines() if line.startswith("namespace")]
+        namespace = namespace_line[0].split()[1] if namespace_line else "default"
+
+        features = []
+        if "Functionality" in uvl_text:
+            features.append({"name": "Functionality", "category": "HQCSPL"})
+        if "Algorithm" in uvl_text:
+            features.append({"name": "Algorithm", "category": "HQCSPL"})
+        if "Programming" in uvl_text:
+            features.append({"name": "Programming", "category": "HQCSPL"})
+        if "Integration_model" in uvl_text:
+            features.append({"name": "Integration_model", "category": "HQCSPL"})
+        if "Quantum_HW_constraint" in uvl_text:
+            features.append({"name": "Quantum_HW_constraint", "category": "HQCSPL"})
+
+        return {
+        "namespace": namespace,
+        "features": features,
+        "constraints": [],
+        "or_groups": {}
+        }

@@ -50,4 +50,3 @@ class LLMInteractionEngine(InteractionEngine):
                 ))
             
         return InteractionReport(questions=questions, proposals=[])
-    

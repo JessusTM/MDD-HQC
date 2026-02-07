@@ -6,6 +6,13 @@ services:
       - "8000:8000"
     volumes:
       - ./mdd-hqc-backend/app:/app/app
+      - ./mdd-hqc-backend/app/data:/app/data
+    environment:
+      OLLAMA_URL: "http://ollama:11434/api/generate"
+    depends_on:
+      - ollama
+    networks:
+      - appnet
 
   frontend:
     build: ./mdd-hqc-frontend
@@ -20,3 +27,22 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    networks:
+      - appnet
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  ollama_data:
