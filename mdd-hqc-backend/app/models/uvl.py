@@ -53,7 +53,12 @@ class UVL:
         # Ensure output directory exists
         self.FILE_NAME.parent.mkdir(parents=True, exist_ok=True)
 
-        logger.info("Writing UVL file: path=%s, features=%s, constraints=%s", self.FILE_NAME, len(self.features), len(self.constraints))
+        logger.info(
+            "Writing UVL file: path=%s, features=%s, constraints=%s",
+            self.FILE_NAME,
+            len(self.features),
+            len(self.constraints),
+        )
         # Write UVL deterministically
         with self.FILE_NAME.open("w", encoding="utf-8") as file:
             self._write_namespace_header(file)

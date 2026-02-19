@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class UvlService:
     BASE_PATH = Path(__file__).resolve().parent
-    CSV_PATH  = BASE_PATH / "uvl_category_keywords.csv"
+    CSV_PATH = BASE_PATH / "uvl_category_keywords.csv"
 
     def __init__(self):
         self.category_keywords: Dict[str, List[str]] = self.load_category_keywords()
@@ -25,14 +25,20 @@ class UvlService:
                 if not category or not keyword:
                     continue
                 categories.setdefault(category, []).append(keyword)
-        logger.debug("Loaded UVL category keywords: path=%s, categories=%s", self.CSV_PATH, list(categories.keys()))
+        logger.debug(
+            "Loaded UVL category keywords: path=%s, categories=%s",
+            self.CSV_PATH,
+            list(categories.keys()),
+        )
         return categories
 
     def format_feature_name(self, label: str) -> str:
         text = label.strip()
-        if not text : return ""
+        if not text:
+            return ""
         words = re.split(r"\s+", text)
-        if not words : return ""
+        if not words:
+            return ""
         result = words[0].capitalize()
         for word in words[1:]:
             if word:
@@ -50,5 +56,6 @@ class UvlService:
             "@Functionality",
         ]:
             for word in self.category_keywords.get(category, []):
-                if word in lower : return category
+                if word in lower:
+                    return category
         return "@Functionality"
