@@ -27,3 +27,20 @@ async def analyze_uvl(request: PathRequest):
 
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    
+@router.post("/functionality/names")
+async def get_functionality(request: PathRequest):
+    uvl_path = Path(request.path)
+    if not uvl_path.exists():
+        raise HTTPException(status_code=404, detail=f"No se encontró UVL en {uvl_path}")
+    
+    try:
+        uvl_content = uvl_path.read_text(encoding="utf-8")
+        service = UvlService()
+        subfunciones = service.extract_functionality_names(uvl_content)
+        return {f"subfuncion_{i+1}": nombre for i, nombre in enumerate(subfunciones)}
+    
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    
+
