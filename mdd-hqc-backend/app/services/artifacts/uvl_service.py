@@ -75,3 +75,37 @@ class UvlService:
         "constraints": [],
         "or_groups": {}
         }
+    
+    def extract_functionality_names(self, uvl_text: str) -> List[str]:
+        """
+        Extrae los nombres de las subfunciones dentro del bloque @Functionality.
+        Devuelve una lista con cada nombre encontrado.
+        """
+        inside_block = False
+        names = []
+        brace_level = 0
+
+        for line in uvl_text.splitlines():
+            if "@Functionality" in line:
+                inside_block = True
+                brace_level = 1
+                continue
+
+            if inside_block:
+                # Ajustamos el nivel de llaves
+                brace_level += line.count("{")
+                brace_level -= line.count("}")
+
+                # Si brace_level vuelve a 0, significa que cerramos el bloque principal
+                if brace_level <= 0:
+                    break
+
+            # Busca nombres de subfunciones (palabra seguida de '{')
+                match = re.match(r"\s*([^\s{]+)\s*{", line)
+                if match:
+                    names.append(match.group(1))
+
+        return names
+
+
+
