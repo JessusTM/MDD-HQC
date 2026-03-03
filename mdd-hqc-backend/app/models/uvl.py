@@ -1,12 +1,19 @@
+"""UVL in-memory model and file writer.
+
+This module contains the minimal data structures required to build an HQC-extended
+UVL model and write it to disk.
+"""
+
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from app.models.feature import Feature
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 
+# ============ CONSTANTS ============
 EXTENDED_FEATURE_MODEL_HQC: List[str] = [
     "@Functionality",
     "@Algorithm",
@@ -16,6 +23,16 @@ EXTENDED_FEATURE_MODEL_HQC: List[str] = [
 ]
 
 
+# ============ MODELS ============
+class Feature(BaseModel):
+    category: str
+    metadata: List[str] = Field(default_factory=list)
+    name: str
+    kind: Optional[str] = None
+    attributes: Dict[str, str] = Field(default_factory=dict)
+
+
+# ============ UVL MODEL ============
 class UVL:
     """
     In-memory representation of a UVL model (HQC extended feature model dialect).
@@ -37,7 +54,7 @@ class UVL:
         self.contributions: List[str] = []
         self.or_groups: Dict[str, List[str]] = {}
 
-    # ====== CREATE FILE ======
+    # ============ FILE OUTPUT ============
     def create_file(self) -> None:
         """
         Writes the final UVL file to `FILE_NAME`.
@@ -68,7 +85,7 @@ class UVL:
             self._write_or_groups(file)
             file.write("}\n")
 
-    # ====== PRIVATE: WRITERS ======
+    # ============ PRIVATE: WRITERS ============
     def _write_namespace_header(self, file) -> None:
         """Writes `namespace X {` header."""
         file.write(f"namespace {self.namespace} {{\n\n")
@@ -175,7 +192,7 @@ class UVL:
             file.write(f"  # {parent_name} -> {', '.join(children_names)}\n")
         file.write("\n")
 
-    # ====== PUBLIC API (used by other modules) ======
+    # ============ PUBLIC API ============
     def add_feature(
         self,
         category: str,
