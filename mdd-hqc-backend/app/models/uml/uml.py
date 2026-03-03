@@ -1,13 +1,27 @@
+"""UML class diagram in-memory model.
+
+This module defines a small set of models to represent a UML Class Diagram and a
+facade (`UML`) to build it.
+
+Conventions:
+- Names are kept as provided by transformations (prototype behavior).
+- PlantUML output uses quoted display names and generated aliases (C1, C2, ...).
+"""
+
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
+# ============ BASE MODEL ============
 class UmlBaseModel(BaseModel):
-    pass
+    """Base class for UML models."""
 
 
+# ============ HELPER MODELS ============
 class UmlAttribute(UmlBaseModel):
+    """Class attribute."""
+
     name: str
     type: str = "String"
     default: Optional[str] = None
@@ -16,11 +30,15 @@ class UmlAttribute(UmlBaseModel):
 
 
 class UmlMethodParameter(UmlBaseModel):
+    """Method parameter."""
+
     name: str
     type: str = "String"
 
 
 class UmlMethod(UmlBaseModel):
+    """Class method."""
+
     name: str
     parameters: list[UmlMethodParameter] = Field(default_factory=list)
     return_type: str = "void"
@@ -30,6 +48,8 @@ class UmlMethod(UmlBaseModel):
 
 
 class UmlClass(UmlBaseModel):
+    """UML class node."""
+
     name: str
     stereotypes: list[str] = Field(default_factory=list)
     attributes: list[UmlAttribute] = Field(default_factory=list)
@@ -56,6 +76,8 @@ class UmlClass(UmlBaseModel):
 
 
 class UmlDependency(UmlBaseModel):
+    """Dependency relationship (source ..> target)."""
+
     source: str
     target: str
     stereotype: Optional[str] = None
@@ -63,7 +85,16 @@ class UmlDependency(UmlBaseModel):
     comments: list[str] = Field(default_factory=list)
 
 
+# ============ DIAGRAM MODEL ============
 class UmlModel(UmlBaseModel):
+    """UML diagram container.
+
+    Data held in memory:
+    - classes: map of class name -> UmlClass
+    - dependencies: list of UmlDependency
+    - comments: free-form comment lines rendered at diagram top
+    """
+
     name: str
     classes: dict[str, UmlClass] = Field(default_factory=dict)
     dependencies: list[UmlDependency] = Field(default_factory=list)
@@ -91,6 +122,7 @@ class UmlModel(UmlBaseModel):
             self.comments.append(text)
 
 
+# ============ PUBLIC FACADE ============
 class UML(UmlModel):
     """Facade for building a UML class diagram.
 

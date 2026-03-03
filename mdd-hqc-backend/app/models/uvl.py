@@ -1,7 +1,15 @@
 """UVL in-memory model and file writer.
 
-This module contains the minimal data structures required to build an HQC-extended
-UVL model and write it to disk.
+This module defines a minimal representation of an HQC-extended UVL model and the
+logic required to write it to disk.
+
+Data held in memory:
+- Feature list (already classified by category)
+- Constraints (written under `constraints { ... }`)
+- Contributions and OR-groups (written as comments for traceability)
+
+Primary output:
+- `data/model.uvl` (see `UVL.FILE_NAME`)
 """
 
 import logging
@@ -25,6 +33,16 @@ EXTENDED_FEATURE_MODEL_HQC: List[str] = [
 
 # ============ MODELS ============
 class Feature(BaseModel):
+    """UVL feature node.
+
+    Fields:
+    - category: UVL category tag (e.g. `@Functionality`).
+    - metadata: comment lines emitted as `# ...` in the UVL output.
+    - name: feature name as written in UVL.
+    - kind: optional source kind (e.g. goal/task) used by transformations.
+    - attributes: key/value pairs written inside the feature block.
+    """
+
     category: str
     metadata: List[str] = Field(default_factory=list)
     name: str
@@ -43,6 +61,9 @@ class UVL:
     - constraints   : UVL expressions written under `constraints { ... }`.
     - contributions : informational lines written as comments (for now).
     - or_groups     : OR-group relationships stored as parent -> [children] (written as comments for now).
+
+    Files written:
+    - `data/model.uvl`
     """
 
     FILE_NAME = Path("data/model.uvl")
