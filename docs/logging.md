@@ -116,13 +116,13 @@ The system produces three complementary outputs:
 Example: console output
 
 ```text
-2026-01-27T21:12:33+0000 [INFO] app.api.metrics (metrics:18) - CIM metrics requested: input_path=app/data/model.xml
+2026-01-27T21:12:33+0000 [INFO] app.api.metrics (metrics:18) - CIM metrics requested: input_path=data/model.xml
 ```
 
 Example: `.jsonl` output (one line per event)
 
 ```json
-{"timestamp":"2026-01-27T21:12:33.123456+00:00","level":"INFO","logger":"app.api.metrics","module":"metrics","function":"get_cim_metrics","line":18,"thread":"MainThread","message":"CIM metrics requested: input_path=app/data/model.xml"}
+{"timestamp":"2026-01-27T21:12:33.123456+00:00","level":"INFO","logger":"app.api.metrics","module":"metrics","function":"get_cim_metrics","line":18,"thread":"MainThread","message":"CIM metrics requested: input_path=data/model.xml"}
 ```
 
 ### Supported environment variables

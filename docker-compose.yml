@@ -6,6 +6,7 @@ services:
       - "8000:8000"
     volumes:
       - ./mdd-hqc-backend/app:/app/app
+      - ./mdd-hqc-backend/data:/app/data
 
   frontend:
     build: ./mdd-hqc-frontend

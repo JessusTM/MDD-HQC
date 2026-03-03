@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class UploadService:
-    BASE_DIR = Path("app/data")
+    BASE_DIR = Path("data")
 
     async def upload_file(self, uploaded_file: UploadFile) -> Path:
         self.validate_extension(uploaded_file.filename)
@@ -24,5 +24,7 @@ class UploadService:
     def validate_extension(self, uploaded_file):
         extension = Path(uploaded_file).suffix.lower()
         if extension != ".xml":
-            logger.warning("Upload rejected: only .xml files allowed, got extension=%s", extension)
+            logger.warning(
+                "Upload rejected: only .xml files allowed, got extension=%s", extension
+            )
             raise ValueError("Solo se permiten archivos .xml")

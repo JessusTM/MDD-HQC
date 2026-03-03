@@ -98,7 +98,7 @@ async def transform_pim_psm(request: PathRequest):
 
         uml_metrics = UmlMetricsService(uml_model).calculate()
 
-        uml_output = Path("app/data/model.puml")
+        uml_output = Path("data/model.puml")
         uml_service = UmlService()
         uml_path = uml_service.render(uml_model, uml_output)
 

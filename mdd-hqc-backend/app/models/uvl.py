@@ -45,7 +45,7 @@ class UVL:
     - or_groups     : OR-group relationships stored as parent -> [children] (written as comments for now).
     """
 
-    FILE_NAME = Path("app/data/model.uvl")
+    FILE_NAME = Path("data/model.uvl")
 
     def __init__(self):
         self.namespace: str = "MDD-HQC"
