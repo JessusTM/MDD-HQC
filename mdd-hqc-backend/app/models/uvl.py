@@ -301,3 +301,54 @@ class UVL:
 
         if child_name not in self.or_groups[parent_name]:
             self.or_groups[parent_name].append(child_name)
+
+    # ============ PUBLIC GETTERS ============
+    def get_namespace(self) -> str:
+        """Return the UVL namespace."""
+        return self.namespace
+
+    def get_features(self) -> List[Feature]:
+        """Return all features."""
+        return self.features
+
+    def get_features_by_category(self, category: str) -> List[Feature]:
+        """Return features that match the given category."""
+        category = (category or "").strip()
+        result: List[Feature] = []
+        for feature in self.features:
+            if feature.category == category:
+                result.append(feature)
+        return result
+
+    def get_feature(
+        self, name: str, category: Optional[str] = None
+    ) -> Optional[Feature]:
+        """Return the first matching feature by name (and optional category)."""
+        name = (name or "").strip()
+        category = (category or "").strip() if category is not None else None
+        if not name:
+            return None
+
+        for feature in self.features:
+            if feature.name != name:
+                continue
+            if category is not None and feature.category != category:
+                continue
+            return feature
+        return None
+
+    def get_constraints(self) -> List[str]:
+        """Return UVL constraints lines."""
+        return self.constraints
+
+    def get_contributions(self) -> List[str]:
+        """Return contributions (stored as comments)."""
+        return self.contributions
+
+    def get_or_groups(self) -> Dict[str, List[str]]:
+        """Return OR-groups mapping (parent -> children)."""
+        return self.or_groups
+
+    def get_or_group_children(self, parent_name: str) -> List[str]:
+        """Return the children list for an OR-group parent."""
+        return self.or_groups.get(parent_name, [])

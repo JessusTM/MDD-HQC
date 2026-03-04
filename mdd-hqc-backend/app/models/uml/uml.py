@@ -9,8 +9,8 @@ Conventions:
 """
 
 from typing import Optional
-
 from pydantic import BaseModel, Field
+from .plantuml import render
 
 
 # ============ BASE MODEL ============
@@ -121,18 +121,11 @@ class UmlModel(UmlBaseModel):
         if text:
             self.comments.append(text)
 
+    def get_classes(self) -> dict[str, UmlClass]:
+        return self.classes
 
-# ============ PUBLIC FACADE ============
-class UML(UmlModel):
-    """Facade for building a UML class diagram.
-
-    This class centralizes class creation, relationship wiring, and PlantUML
-    rendering. Transformations should depend on this facade instead of
-    instantiating low-level helper models directly.
-    """
-
-    def add_class(self, label: str) -> UmlClass:
-        return self.get_or_create_class(label)
+    def get_dependencies(self) -> list[UmlDependency]:
+        return self.dependencies
 
     def add_dependency_by_label(
         self,
@@ -163,18 +156,20 @@ class UML(UmlModel):
         default: Optional[str] = None,
     ) -> UmlAttribute:
         uml_class = self.get_or_create_class(class_label)
-        attr = UmlAttribute(name=attribute_name, type=attribute_type, default=default)
-        uml_class.add_attribute(attr)
-        return attr
+        attribute = UmlAttribute(
+            name=attribute_name, type=attribute_type, default=default
+        )
+        uml_class.add_attribute(attribute)
+        return attribute
 
     def add_method_to_class(
         self,
-        class_label: str,
+        class_name: str,
         method_name: str,
         parameters: Optional[list[UmlMethodParameter]] = None,
         return_type: str = "void",
     ) -> UmlMethod:
-        uml_class = self.get_or_create_class(class_label)
+        uml_class = self.get_or_create_class(class_name)
         method = UmlMethod(
             name=method_name,
             parameters=parameters or [],
@@ -184,6 +179,4 @@ class UML(UmlModel):
         return method
 
     def to_plantuml(self) -> str:
-        from .plantuml import render
-
         return render(self)

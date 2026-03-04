@@ -19,9 +19,10 @@ class PimToPsm:
         self.uml_model = UmlModel(name=uvl_model.namespace)
         self.classes_by_name: Dict[str, UmlClass] = {}
 
-
     def transform(self) -> UmlModel:
-        logger.debug("PIM-to-PSM transform started: namespace=%s", self.uvl_model.namespace)
+        logger.debug(
+            "PIM-to-PSM transform started: namespace=%s", self.uvl_model.namespace
+        )
         self.apply_q2()
         self.apply_q3()
         self.apply_q4()
@@ -149,4 +150,3 @@ class PimToPsm:
                 )
                 target_class.add_attribute(uml_attribute)
                 target_class.add_tagged_value(attribute_name, attribute_value)
-
