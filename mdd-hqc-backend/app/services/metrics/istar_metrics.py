@@ -1,13 +1,13 @@
 import logging
 from typing import Any, Dict
 
-from app.services.artifacts.xml_service import XmlService
+from app.models.istar import IstarModel
 
 logger = logging.getLogger(__name__)
 
 
 class IstarMetricsService:
-    def __init__(self, xml_service: XmlService):
+    def __init__(self, xml_service: IstarModel):
         self.xml_service = xml_service
 
     def calculate(self) -> Dict[str, Any]:
@@ -89,5 +89,9 @@ class IstarMetricsService:
         )
         metrics["total_links"] = total_links
 
-        logger.debug("iStar metrics calculated: total_nodes=%s, total_links=%s", total_elements, total_links)
+        logger.debug(
+            "iStar metrics calculated: total_nodes=%s, total_links=%s",
+            total_elements,
+            total_links,
+        )
         return metrics

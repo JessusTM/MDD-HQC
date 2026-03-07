@@ -1,12 +1,12 @@
 import logging
-import re
-import html
 import xml.etree.ElementTree as ET
+
+from app.models.istar import IstarModel
 
 logger = logging.getLogger(__name__)
 
 
-class XmlService:
+class XmlService(IstarModel):
     """
     XmlService parses a draw.io XML export of an iStar 2.0 model and builds in-memory indexes.
 
@@ -19,13 +19,8 @@ class XmlService:
     """
 
     def __init__(self, file_path: str):
+        super().__init__()
         self.file_path = file_path
-
-        self._intentional_elements = {}
-        self._social_dependencies = {}
-        self._internal_links = {}
-        self._refinements = {}
-        self._element_to_actor = {}
 
         logger.debug("Parsing iStar XML: path=%s", file_path)
         self._build_indexes()
@@ -47,10 +42,17 @@ class XmlService:
             tree = ET.parse(self.file_path)
             return tree.getroot()
         except ET.ParseError as exc:
-            logger.error("XML parse error: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            logger.error(
+                "XML parse error: path=%s, error=%s", self.file_path, exc, exc_info=True
+            )
             raise
         except OSError as exc:
-            logger.error("Failed to read XML file: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            logger.error(
+                "Failed to read XML file: path=%s, error=%s",
+                self.file_path,
+                exc,
+                exc_info=True,
+            )
             raise
 
     def _get_raw_diagram_elements(self, root):
@@ -90,18 +92,6 @@ class XmlService:
         has_source = "source" in attrib
         has_target = "target" in attrib
         return is_mxcell and is_edge and has_source and has_target
-
-    # ============ LABEL NORMALIZATION ============
-    def _format_label(self, label):
-        """
-        Normalize a label by unescaping HTML, stripping markup, and collapsing whitespace.
-        """
-        if not label:
-            return label
-        unescaped = html.unescape(label)
-        text = re.sub(r"<.*?>", " ", unescaped)
-        text = re.sub(r"\s+", " ", text).strip()
-        return text
 
     # ============ INDEXERS (SELF-VALIDATING) ============
     def _index_intentional_element(self, tag, attrib):
@@ -324,59 +314,3 @@ class XmlService:
             self._index_internal_link(tag, attrib)
             self._index_refinement(tag, attrib)
         self._element_to_actor = self._index_element_to_actor(root)
-
-    # ============ PUBLIC GETTERS ============
-    def get_intentional_element_by_type(self, element_type):
-        """
-        Return all indexed intentional elements matching the requested iStar type.
-
-        Returns:
-            dict[str, dict] -> keyed by element id
-        """
-        return self._intentional_elements.get(element_type, {})
-
-    def get_social_dependencies(self):
-        """
-        Return the social dependency index (mxCell edges).
-        """
-        return self._social_dependencies
-
-    def get_refinements(self):
-        """
-        Return the refinement index (mxCell edges).
-        """
-        return self._refinements
-
-    def get_internal_links(self):
-        """
-        Return the internal links index (needed-by, qualification-link, contribution).
-        """
-        return self._internal_links
-
-    def get_element_to_actor_mapping(self):
-        """
-        Return the element -> actor ownership mapping.
-        """
-        return self._element_to_actor
-
-    def get_label_by_id(self, element_id: str) -> str:
-        """
-        Resolve an element label by its id.
-
-        In the XML export, relationships (e.g., internal links, social dependencies, refinements) are encoded as edges
-        that reference elements only through `source`/`target` ids. The human-readable text, however, is stored in the
-        intentional element nodes themselves (goal/task/softgoal/etc.) under their `label` field.
-
-        This helper exists to bridge that representation: given an element id coming from an edge, it searches the
-        indexed intentional elements (across all iStar types) and returns the corresponding label. If the id is unknown
-        or has no label, it returns an empty string.
-        """
-        if not element_id:
-            return ""
-
-        for elements in self._intentional_elements.values():
-            element = elements.get(element_id)
-            if element:
-                return element.get("label") or ""
-
-        return ""

@@ -1,14 +1,14 @@
 import logging
 
 from app.models.uvl import UVL
-from app.services.artifacts.xml_service import XmlService
+from app.models.istar import IstarModel
 from app.services.artifacts.uvl_service import UvlService
 
 logger = logging.getLogger(__name__)
 
 
 class CimToPim:
-    def __init__(self, xml_service: XmlService, uvl_service: UvlService, uvl: UVL):
+    def __init__(self, xml_service: IstarModel, uvl_service: UvlService, uvl: UVL):
         self.xml_service = xml_service
         self.uvl_service = uvl_service
         self.uvl = uvl
@@ -17,7 +17,10 @@ class CimToPim:
     # R1: Actors / Resources -> Metadata
     def apply_r1(self) -> None:
         self.elements_to_actors = self.xml_service.get_element_to_actor_mapping()
-        logger.debug("CIM-to-PIM R1 applied: element-to-actor mappings=%s", len(self.elements_to_actors))
+        logger.debug(
+            "CIM-to-PIM R1 applied: element-to-actor mappings=%s",
+            len(self.elements_to_actors),
+        )
 
     def _convert_intentional_element_in_feature(self, kind):
         elements = self.xml_service.get_intentional_element_by_type(kind)
@@ -93,7 +96,9 @@ class CimToPim:
                 attribute_name=attribute_name,
                 attribute_value="true",
             )
-        logger.debug("CIM-to-PIM R3 applied: softgoals -> attributes via qualification-link")
+        logger.debug(
+            "CIM-to-PIM R3 applied: softgoals -> attributes via qualification-link"
+        )
 
     # R4: Dependencias sociales -> requires
     def apply_r4(self) -> None:
@@ -129,7 +134,9 @@ class CimToPim:
                 continue
 
             self.uvl.add_constraint(f"{source_feature} -> {target_feature}")
-        logger.debug("CIM-to-PIM R4 applied: social dependencies -> requires constraints")
+        logger.debug(
+            "CIM-to-PIM R4 applied: social dependencies -> requires constraints"
+        )
 
     # R5: needed-by / qualification-link / contribution / refinement
     def apply_r5(self) -> None:
