@@ -1,7 +1,8 @@
 import logging
 
-from app.models.uml.uml import UML
+from app.models.uml import UmlModel
 from app.models.uvl import UVL
+from app.services.artifacts.plantuml_service import PlantumlService
 from app.services.artifacts.uvl_service import UvlService
 
 logger = logging.getLogger(__name__)
@@ -9,12 +10,16 @@ logger = logging.getLogger(__name__)
 
 class PimToPsm:
     def __init__(
-        self, uvl: UVL, uml: UML, uvl_service: UvlService, uml_service: UmlService
+        self,
+        uvl: UVL,
+        uml: UmlModel,
+        uvl_service: UvlService,
+        plantuml_service: PlantumlService,
     ):
         self.uvl = uvl
         self.uml = uml
         self.uvl_service = uvl_service
-        self.uml_service = uml_service
+        self.plantuml_service = plantuml_service
 
     # Metadata Agents + Contributions -> Comments UML
     def apply_q1(self):
@@ -35,8 +40,8 @@ class PimToPsm:
             if kind == "task":
                 parent_class = self.uml.get_or_create_class(feature.name)
                 self.uml.add_method_to_class(
-                    class_label=parent_class.name, method_name=feature.name
+                    class_name=parent_class.name, method_name=feature.name
                 )
 
     def apply_q3(self):
-        
+        pass

@@ -1,13 +1,9 @@
-"""PlantUML renderer for UML class diagrams.
+import logging
+from pathlib import Path
 
-This module converts `UmlModel` into a PlantUML class diagram string.
+from app.models.uml import UmlClass, UmlDependency, UmlModel
 
-Conventions:
-- Classes are always declared with a quoted display name and an alias (C1, C2, ...).
-- Relationships use aliases to avoid referencing names with spaces/accents/symbols.
-"""
-
-from .uml import UmlClass, UmlDependency, UmlModel
+logger = logging.getLogger(__name__)
 
 
 # ============ CLASS RENDERING ============
@@ -187,7 +183,6 @@ def _clean_line(text) -> str:
     return s.strip()
 
 
-# ============ PUBLIC API ============
 def render(model: UmlModel) -> str:
     lines: list[str] = []
     lines.append("@startuml")
@@ -222,3 +217,19 @@ def render(model: UmlModel) -> str:
 
     lines.append("@enduml")
     return "\n".join(lines) + "\n"
+
+
+class PlantumlService:
+    def render(self, uml_model: UmlModel) -> str:
+        return render(uml_model)
+
+    def write(self, uml_model: UmlModel, output_path: Path) -> Path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        content = self.render(uml_model)
+        output_path.write_text(content, encoding="utf-8")
+        logger.info(
+            "PlantUML artifact written: path=%s, bytes=%s",
+            output_path,
+            len(content),
+        )
+        return output_path

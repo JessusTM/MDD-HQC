@@ -1,16 +1,14 @@
 """UML class diagram in-memory model.
 
-This module defines a small set of models to represent a UML Class Diagram and a
-facade (`UML`) to build it.
+This module defines a small set of models to represent a UML Class Diagram.
 
 Conventions:
 - Names are kept as provided by transformations (prototype behavior).
-- PlantUML output uses quoted display names and generated aliases (C1, C2, ...).
 """
 
 from typing import Optional
+
 from pydantic import BaseModel, Field
-from .plantuml import render
 
 
 # ============ BASE MODEL ============
@@ -92,7 +90,7 @@ class UmlModel(UmlBaseModel):
     Data held in memory:
     - classes: map of class name -> UmlClass
     - dependencies: list of UmlDependency
-    - comments: free-form comment lines rendered at diagram top
+    - comments: free-form comment lines
     """
 
     name: str
@@ -177,6 +175,3 @@ class UmlModel(UmlBaseModel):
         )
         uml_class.add_method(method)
         return method
-
-    def to_plantuml(self) -> str:
-        return render(self)

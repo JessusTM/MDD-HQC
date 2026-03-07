@@ -8,7 +8,7 @@ from app.models.uvl import UVL
 
 from app.services.artifacts.xml_service import XmlService
 from app.services.artifacts.uvl_service import UvlService
-from app.services.artifacts.uml_service import UmlService
+from app.services.artifacts.plantuml_service import PlantumlService
 
 from app.services.transformations.cim_to_pim import CimToPim
 from app.services.transformations.pim_to_psm import PimToPsm
@@ -99,8 +99,8 @@ async def transform_pim_psm(request: PathRequest):
         uml_metrics = UmlMetricsService(uml_model).calculate()
 
         uml_output = Path("data/model.puml")
-        uml_service = UmlService()
-        uml_path = uml_service.render(uml_model, uml_output)
+        plantuml_service = PlantumlService()
+        uml_path = plantuml_service.write(uml_model, uml_output)
 
         uvl_content = ""
         if uvl.FILE_NAME.exists():
