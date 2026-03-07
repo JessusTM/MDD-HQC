@@ -1,17 +1,16 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/files", tags=["files"])
-upload_service = UploadService()
 
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile, upload_service: Annotated[UploadService, Depends(UploadService)]
+    file: UploadFile = File(...),
+    upload_service: UploadService = Depends(UploadService),
 ):
     logger.info("File upload requested: filename=%s", file.filename)
     try:

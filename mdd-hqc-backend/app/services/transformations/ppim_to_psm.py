@@ -44,4 +44,6 @@ class PimToPsm:
                 )
 
     def apply_q3(self):
-        pass
+        for feature in self.uvl.features:
+            if feature.category != "@Algorithm":
+                continue

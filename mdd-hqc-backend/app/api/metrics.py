@@ -2,14 +2,18 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
-from app.api.schemas.requests import PathRequest
 from app.models.istar import IstarModel
 from app.services.artifacts.xml_service import XmlService
 from app.services.metrics.istar_metrics import IstarMetricsService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/metrics", tags=["metrics"])
+
+
+class PathRequest(BaseModel):
+    path: str
 
 
 def get_xml_service(request: PathRequest) -> IstarModel:
