@@ -39,6 +39,7 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - appnet
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull mistral && tail -f /dev/null"]
 
 networks:
   appnet:
