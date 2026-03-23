@@ -1,16 +1,4 @@
-"""UVL in-memory model and file writer.
-
-This module defines a minimal representation of an HQC-extended UVL model and the
-logic required to write it to disk.
-
-Data held in memory:
-- Feature list (already classified by category)
-- Constraints (written under `constraints { ... }`)
-- Contributions and OR-groups (written as comments for traceability)
-
-Primary output:
-- `data/model.uvl` (see `UVL.FILE_NAME`)
-"""
+"""UVL in-memory model and file writer."""
 
 import logging
 from pathlib import Path
@@ -21,7 +9,6 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 
-# ============ CONSTANTS ============
 EXTENDED_FEATURE_MODEL_HQC: List[str] = [
     "@Functionality",
     "@Algorithm",
@@ -30,42 +17,27 @@ EXTENDED_FEATURE_MODEL_HQC: List[str] = [
     "@Quantum_HW_constraint",
 ]
 
+CATEGORY_LABELS: Dict[str, str] = {
+    "@Functionality": "Functionality",
+    "@Algorithm": "Algorithm",
+    "@Programming": "Programming",
+    "@Integration_model": "Integration_model",
+    "@Quantum_HW_constraint": "Quantum_HW_constraint",
+}
 
-# ============ MODELS ============
+
 class Feature(BaseModel):
-    """UVL feature node.
-
-    Fields:
-    - category: UVL category tag (e.g. `@Functionality`).
-    - metadata: comment lines emitted as `# ...` in the UVL output.
-    - name: feature name as written in UVL.
-    - kind: optional source kind (e.g. goal/task) used by transformations.
-    - attributes: key/value pairs written inside the feature block.
-    """
-
     category: str
     metadata: List[str] = Field(default_factory=list)
     name: str
     kind: Optional[str] = None
     attributes: Dict[str, str] = Field(default_factory=dict)
+    mandatory_children: List[str] = Field(default_factory=list)
+    or_children: List[str] = Field(default_factory=list)
+    subgroup: Optional[str] = None
 
 
-# ============ UVL MODEL ============
 class UVL:
-    """
-    In-memory representation of a UVL model (HQC extended feature model dialect).
-
-    Conventions used in this prototype:
-    - category      : UVL category tag (e.g., @Functionality).
-    - features      : collection of Feature objects already classified by category.
-    - constraints   : UVL expressions written under `constraints { ... }`.
-    - contributions : informational lines written as comments (for now).
-    - or_groups     : OR-group relationships stored as parent -> [children] (written as comments for now).
-
-    Files written:
-    - `data/model.uvl`
-    """
-
     FILE_NAME = Path("data/model.uvl")
 
     def __init__(self):
@@ -73,22 +45,10 @@ class UVL:
         self.features: List[Feature] = []
         self.constraints: List[str] = []
         self.contributions: List[str] = []
-        self.or_groups: Dict[str, List[str]] = {}
+        self.global_comments: List[str] = []
+        self.parent_by_child: Dict[str, str] = {}
 
-    # ============ FILE OUTPUT ============
     def create_file(self) -> None:
-        """
-        Writes the final UVL file to `FILE_NAME`.
-
-        High-level flow:
-        1) Namespace header
-        2) Categories and their features
-        3) Constraints block
-        4) Contributions (comments)
-        5) OR-groups (comments)
-        6) Namespace closing brace
-        """
-        # Ensure output directory exists
         self.FILE_NAME.parent.mkdir(parents=True, exist_ok=True)
 
         logger.info(
@@ -97,123 +57,157 @@ class UVL:
             len(self.features),
             len(self.constraints),
         )
-        # Write UVL deterministically
+
         with self.FILE_NAME.open("w", encoding="utf-8") as file:
-            self._write_namespace_header(file)
-            self._write_categories(file)
+            self._write_features(file)
             self._write_constraints(file)
-            self._write_contributions(file)
-            self._write_or_groups(file)
-            file.write("}\n")
 
-    # ============ PRIVATE: WRITERS ============
-    def _write_namespace_header(self, file) -> None:
-        """Writes `namespace X {` header."""
-        file.write(f"namespace {self.namespace} {{\n\n")
+    def _write_features(self, file) -> None:
+        file.write("features\n")
 
-    def _write_categories(self, file) -> None:
-        """
-        Writes HQC extended categories and their associated features.
-
-        Iterates over the allowed category set, then collects features belonging
-        to each category and writes them inside the category block.
-        """
         for category in EXTENDED_FEATURE_MODEL_HQC:
-            # Collect features for this category (expanded for readability)
-            category_features: List[Feature] = []
-            for feature in self.features:
-                if feature.category == category:
-                    category_features.append(feature)
-
-            # Skip empty categories
-            if not category_features:
+            if category == "@Algorithm":
+                self._write_algorithm_category(file)
                 continue
 
-            # Category block
-            file.write(f"  {category} {{\n")
-            for feature in category_features:
-                self._write_feature(file, feature)
-            file.write("  }\n\n")
+            features = self._get_root_features(category=category)
+            if not features:
+                continue
 
-    def _write_feature(self, file, feature: Feature) -> None:
-        """
-        Writes a single UVL feature.
+            file.write(f"    {CATEGORY_LABELS[category]}\n")
+            self._write_group_block(file, features, indent=8, group_name="mandatory")
 
-        Cases:
-        - No `kind` and no `attributes`: prints a single-line feature.
-        - Has `kind` and/or `attributes`: prints a feature block `{ ... }`.
-        """
-        # Feature comments (metadata): traceability, actor, resources, etc.
-        for line in feature.metadata:
-            file.write(f"    # {line}\n")
+    def _write_algorithm_category(self, file) -> None:
+        base_features = self._get_root_features(category="@Algorithm")
+        classical_features = self._get_root_features(
+            category="@Algorithm",
+            subgroup="Classical",
+        )
+        quantum_features = self._get_root_features(
+            category="@Algorithm",
+            subgroup="Quantum",
+        )
 
-        has_kind = bool(feature.kind)
-        has_attributes = bool(feature.attributes)
-
-        # Simple feature line (no block)
-        if not has_kind and not has_attributes:
-            file.write(f"    {feature.name}\n")
+        if not base_features and not classical_features and not quantum_features:
             return
 
-        # Block feature (kind + attributes)
-        file.write(f"    {feature.name} {{\n")
+        file.write("    Algorithm\n")
 
-        if feature.kind:
-            file.write(f'      kind "{feature.kind}"\n')
+        if base_features:
+            self._write_group_block(
+                file,
+                base_features,
+                indent=8,
+                group_name="mandatory",
+            )
 
-        # Write feature attributes
-        for attribute_name, attribute_value in feature.attributes.items():
-            file.write(f'      {attribute_name} "{attribute_value}"\n')
+        if classical_features:
+            file.write("        Classical\n")
+            self._write_group_block(
+                file,
+                classical_features,
+                indent=12,
+                group_name="mandatory",
+            )
 
-        file.write("    }\n")
+        if quantum_features:
+            file.write("        Quantum\n")
+            self._write_group_block(
+                file,
+                quantum_features,
+                indent=12,
+                group_name="mandatory",
+            )
+
+    def _write_group_block(
+        self,
+        file,
+        features: List[Feature],
+        indent: int,
+        group_name: str,
+    ) -> None:
+        indentation = " " * indent
+        file.write(f"{indentation}{group_name}\n")
+
+        for feature in features:
+            self._write_feature(file, feature, indent=indent + 4)
+
+    def _write_feature(self, file, feature: Feature, indent: int) -> None:
+        indentation = " " * indent
+
+        for line in feature.metadata:
+            file.write(f"{indentation}# {line}\n")
+
+        file.write(f"{indentation}{feature.name}\n")
+
+        if feature.kind or feature.attributes:
+            file.write(f"{indentation}{{\n")
+
+            if feature.kind:
+                file.write(f'{indentation}    kind "{feature.kind}"\n')
+
+            for attribute_name, attribute_value in feature.attributes.items():
+                file.write(f'{indentation}    {attribute_name} "{attribute_value}"\n')
+
+            file.write(f"{indentation}}}\n")
+
+        if feature.mandatory_children:
+            child_features = self._get_child_features(feature.mandatory_children)
+            self._write_group_block(
+                file,
+                child_features,
+                indent=indent + 4,
+                group_name="mandatory",
+            )
+
+        if feature.or_children:
+            child_features = self._get_child_features(feature.or_children)
+            self._write_group_block(
+                file,
+                child_features,
+                indent=indent + 4,
+                group_name="or",
+            )
 
     def _write_constraints(self, file) -> None:
-        """
-        Writes the `constraints { ... }` block if any constraints exist.
-
-        Each string in `self.constraints` is written as a UVL line.
-        """
         if not self.constraints:
             return
 
-        file.write("  constraints {\n")
+        file.write("\nconstraints\n")
         for constraint in self.constraints:
             file.write(f"    {constraint}\n")
-        file.write("  }\n\n")
 
-    def _write_contributions(self, file) -> None:
-        """
-        Writes contributions as comments (not executable UVL syntax).
+    def _get_root_features(
+        self,
+        category: str,
+        subgroup: Optional[str] = None,
+    ) -> List[Feature]:
+        result: List[Feature] = []
 
-        This keeps the file readable without enforcing an additional grammar
-        while the prototype evolves.
-        """
-        if not self.contributions:
-            return
-
-        file.write("  # Contributions\n")
-        for contribution in self.contributions:
-            file.write(f"  # {contribution}\n")
-        file.write("\n")
-
-    def _write_or_groups(self, file) -> None:
-        """
-        Writes OR-groups as comments (parent -> children).
-
-        Note: if you later define a concrete UVL syntax for OR-groups,
-        this is the natural place to change the output format.
-        """
-        if not self.or_groups:
-            return
-
-        file.write("  # OR-groups\n")
-        for parent_name, children_names in self.or_groups.items():
-            if not children_names:
+        for feature in self.features:
+            if feature.category != category:
                 continue
-            file.write(f"  # {parent_name} -> {', '.join(children_names)}\n")
-        file.write("\n")
+            if subgroup is not None and feature.subgroup != subgroup:
+                continue
+            if subgroup is None and feature.subgroup is not None:
+                continue
+            if feature.name in self.parent_by_child:
+                continue
+            result.append(feature)
 
-    # ============ PUBLIC API ============
+        return result
+
+    def _get_child_features(self, child_names: List[str]) -> List[Feature]:
+        result: List[Feature] = []
+
+        for child_name in child_names:
+            child_feature = self.get_feature(child_name)
+            if child_feature is None:
+                continue
+            result.append(child_feature)
+
+        return result
+
     def add_feature(
         self,
         category: str,
@@ -221,28 +215,33 @@ class UVL:
         name: str,
         kind: Optional[str],
         attributes: Optional[Dict[str, str]] = None,
+        subgroup: Optional[str] = None,
     ) -> Feature:
-        """
-        Adds a feature to the model.
-
-        Behavior:
-        - Normalizes `category` (strip) and falls back to @Functionality if invalid.
-        - Enforces invariants: `metadata` is always List[str], `attributes` always Dict[str, str].
-        """
-        # Normalize to avoid common issues (spaces, None, etc.)
         category = (category or "").strip()
-
-        # Fallback if category is not part of the HQC extended feature model
         if category not in EXTENDED_FEATURE_MODEL_HQC:
             category = "@Functionality"
 
-        # Invariants: never store None
+        existing_feature = self.get_feature(name=name, category=category)
+        if existing_feature is not None:
+            if metadata:
+                for comment in metadata:
+                    if comment not in existing_feature.metadata:
+                        existing_feature.metadata.append(comment)
+            if kind and not existing_feature.kind:
+                existing_feature.kind = kind
+            if attributes:
+                existing_feature.attributes.update(attributes)
+            if subgroup and not existing_feature.subgroup:
+                existing_feature.subgroup = subgroup
+            return existing_feature
+
         feature = Feature(
             category=category,
             metadata=metadata or [],
             name=name,
             kind=kind,
             attributes=attributes or {},
+            subgroup=subgroup,
         )
         self.features.append(feature)
         return feature
@@ -250,14 +249,19 @@ class UVL:
     def add_comment_to_feature(
         self, feature_name: str, category: str, comment: str
     ) -> None:
-        """Adds one comment line (metadata) to an existing feature."""
-        category = (category or "").strip()
+        feature = self.get_feature(name=feature_name, category=category)
+        if feature is None:
+            return
+        if comment and comment not in feature.metadata:
+            feature.metadata.append(comment)
 
-        for feature in self.features:
-            if feature.name == feature_name and feature.category == category:
-                if comment:
-                    feature.metadata.append(comment)
-                return
+    def add_global_comment(self, comment: str) -> None:
+        comment = comment.strip()
+        if not comment:
+            return
+        if comment in self.global_comments:
+            return
+        self.global_comments.append(comment)
 
     def add_attribute_to_feature(
         self,
@@ -266,54 +270,65 @@ class UVL:
         attribute_name: str,
         attribute_value: str,
     ) -> None:
-        """Adds (or overwrites) one attribute inside the feature's attribute block."""
-        category = (category or "").strip()
-
-        for feature in self.features:
-            if feature.name == feature_name and feature.category == category:
-                feature.attributes[attribute_name] = attribute_value
-                return
+        feature = self.get_feature(name=feature_name, category=category)
+        if feature is None:
+            return
+        feature.attributes[attribute_name] = attribute_value
 
     def add_constraint(self, expr: str) -> None:
-        """
-        Adds a UVL constraint line to the `constraints` block.
-
-        The expression is stored as-is after stripping whitespace.
-        """
         expr = expr.strip()
-        if expr:
-            self.constraints.append(expr)
+        if not expr:
+            return
+        if expr in self.constraints:
+            return
+        self.constraints.append(expr)
 
     def add_contribution(self, comment: str) -> None:
-        """Adds a contribution line that will be written as a comment."""
         comment = comment.strip()
-        if comment:
-            self.contributions.append(comment)
+        if not comment:
+            return
+        if comment in self.contributions:
+            return
+        self.contributions.append(comment)
 
-    def add_or_group(self, parent_name: str, child_name: str) -> None:
-        """
-        Adds an OR-group relationship in memory: parent -> child.
+    def add_mandatory_child(self, parent_name: str, child_name: str) -> None:
+        parent_feature = self.get_feature(parent_name)
+        child_feature = self.get_feature(child_name)
 
-        It is currently written as a comment for traceability/debugging.
-        """
-        if parent_name not in self.or_groups:
-            self.or_groups[parent_name] = []
+        if parent_feature is None or child_feature is None:
+            return
 
-        if child_name not in self.or_groups[parent_name]:
-            self.or_groups[parent_name].append(child_name)
+        previous_parent = self.parent_by_child.get(child_name)
+        if previous_parent and previous_parent != parent_name:
+            return
 
-    # ============ PUBLIC GETTERS ============
-    def get_namespace(self) -> str:
-        """Return the UVL namespace."""
-        return self.namespace
+        if child_name in parent_feature.or_children:
+            parent_feature.or_children.remove(child_name)
+        if child_name not in parent_feature.mandatory_children:
+            parent_feature.mandatory_children.append(child_name)
+        self.parent_by_child[child_name] = parent_name
+
+    def add_or_child(self, parent_name: str, child_name: str) -> None:
+        parent_feature = self.get_feature(parent_name)
+        child_feature = self.get_feature(child_name)
+
+        if parent_feature is None or child_feature is None:
+            return
+
+        previous_parent = self.parent_by_child.get(child_name)
+        if previous_parent and previous_parent != parent_name:
+            return
+
+        if child_name in parent_feature.mandatory_children:
+            parent_feature.mandatory_children.remove(child_name)
+        if child_name not in parent_feature.or_children:
+            parent_feature.or_children.append(child_name)
+        self.parent_by_child[child_name] = parent_name
 
     def get_features(self) -> List[Feature]:
-        """Return all features."""
         return self.features
 
     def get_features_by_category(self, category: str) -> List[Feature]:
-        """Return features that match the given category."""
-        category = (category or "").strip()
         result: List[Feature] = []
         for feature in self.features:
             if feature.category == category:
@@ -323,32 +338,31 @@ class UVL:
     def get_feature(
         self, name: str, category: Optional[str] = None
     ) -> Optional[Feature]:
-        """Return the first matching feature by name (and optional category)."""
         name = (name or "").strip()
-        category = (category or "").strip() if category is not None else None
+        normalized_category = None
+        if category is not None:
+            normalized_category = (category or "").strip()
+
         if not name:
             return None
 
         for feature in self.features:
             if feature.name != name:
                 continue
-            if category is not None and feature.category != category:
+            if (
+                normalized_category is not None
+                and feature.category != normalized_category
+            ):
                 continue
             return feature
+
         return None
 
     def get_constraints(self) -> List[str]:
-        """Return UVL constraints lines."""
         return self.constraints
 
     def get_contributions(self) -> List[str]:
-        """Return contributions (stored as comments)."""
         return self.contributions
 
-    def get_or_groups(self) -> Dict[str, List[str]]:
-        """Return OR-groups mapping (parent -> children)."""
-        return self.or_groups
-
-    def get_or_group_children(self, parent_name: str) -> List[str]:
-        """Return the children list for an OR-group parent."""
-        return self.or_groups.get(parent_name, [])
+    def get_global_comments(self) -> List[str]:
+        return self.global_comments
