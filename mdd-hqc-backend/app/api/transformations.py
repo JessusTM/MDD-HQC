@@ -39,9 +39,9 @@ async def transform_cim_pim(request: PathRequest):
         cim_to_pim = CimToPim(xml_service=xml_service, uvl_service=uvl_service, uvl=uvl)
         cim_to_pim.apply_r1()
         cim_to_pim.apply_r2()
-        cim_to_pim.apply_r3()
         cim_to_pim.apply_r4()
         cim_to_pim.apply_r5()
+        cim_to_pim.apply_r3()
         uvl.create_file()
 
         uvl_metrics = UvlMetricsService(uvl).calculate()
@@ -86,9 +86,9 @@ async def transform_pim_psm(request: PathRequest):
         cim_to_pim = CimToPim(xml_service=xml_service, uvl_service=uvl_service, uvl=uvl)
         cim_to_pim.apply_r1()
         cim_to_pim.apply_r2()
-        cim_to_pim.apply_r3()
         cim_to_pim.apply_r4()
         cim_to_pim.apply_r5()
+        cim_to_pim.apply_r3()
         uvl.create_file()
 
         uvl_metrics = UvlMetricsService(uvl).calculate()

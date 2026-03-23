@@ -84,14 +84,23 @@ class XmlService(IstarModel):
     # ============ VALIDATIONS ============
     def _verify_social_dependency(self, tag: str, attrib: dict) -> bool:
         """
-        Return True if the given node represents a social dependency edge:
-        an mxCell edge with both source and target attributes.
+        Return True if the given node represents a social dependency link.
+
+        In the draw.io export used by this prototype, social dependencies are
+        stored as edges with `type="dependency-link"` and both endpoints.
         """
         is_mxcell = tag == "mxCell"
         is_edge = attrib.get("edge") == "1"
         has_source = "source" in attrib
         has_target = "target" in attrib
-        return is_mxcell and is_edge and has_source and has_target
+        link_type = attrib.get("type")
+        return (
+            is_mxcell
+            and is_edge
+            and has_source
+            and has_target
+            and link_type == "dependency-link"
+        )
 
     # ============ INDEXERS (SELF-VALIDATING) ============
     def _index_intentional_element(self, tag, attrib):
@@ -126,11 +135,12 @@ class XmlService(IstarModel):
 
     def _index_social_dependency(self, tag, attrib):
         """
-        Index a social dependency edge (mxCell) by its id.
+        Index a social dependency edge (dependency-link) by its id.
         """
         id = attrib.get("id")
         source = attrib.get("source")
         target = attrib.get("target")
+        label = attrib.get("label")
 
         if id is None:
             return
@@ -141,6 +151,7 @@ class XmlService(IstarModel):
             "id": id,
             "source": source,
             "target": target,
+            "label": self._format_label(label),
         }
 
     def _index_internal_link(self, tag, attrib):
@@ -210,7 +221,8 @@ class XmlService(IstarModel):
 
         Steps:
         1) Read all <object> nodes and collect quick indexes: type, label, and mxCell parent.
-        2) For each target element (goal/task), walk its parent chain until an agent is found.
+        2) Resolve which actor owns each boundary through `owns` links.
+        3) For each target element (goal/task/resource), walk its parent chain until an owned boundary is found.
         """
         objects = root.findall("./diagram/mxGraphModel/root/object")
         if not objects:
@@ -219,12 +231,14 @@ class XmlService(IstarModel):
         parent_by_id = {}
         type_by_id = {}
         label_by_id = {}
+        actor_by_boundary = {}
 
         self._collect_object_indexes(
             objects=objects,
             parent_by_id=parent_by_id,
             type_by_id=type_by_id,
             label_by_id=label_by_id,
+            actor_by_boundary=actor_by_boundary,
         )
 
         element_to_actor = {}
@@ -232,15 +246,14 @@ class XmlService(IstarModel):
         self._assign_element_to_actor(
             objects=objects,
             parent_by_id=parent_by_id,
-            type_by_id=type_by_id,
-            label_by_id=label_by_id,
+            actor_by_boundary=actor_by_boundary,
             element_to_actor=element_to_actor,
         )
 
         return element_to_actor
 
     def _collect_object_indexes(
-        self, objects, parent_by_id, type_by_id, label_by_id
+        self, objects, parent_by_id, type_by_id, label_by_id, actor_by_boundary
     ) -> None:
         """
         Fill lookup dicts keyed by object id:
@@ -248,7 +261,10 @@ class XmlService(IstarModel):
         - type_by_id[id]  : element kind (goal, task, agent, ...)
         - label_by_id[id] : raw label (later formatted when needed)
         - parent_by_id[id]: mxCell parent id (used to walk "who contains who")
+        - actor_by_boundary[boundary_id]: actor label owning the boundary
         """
+        owns_links = []
+
         for object in objects:
             id = object.attrib.get("id")
             if id is None:
@@ -261,37 +277,60 @@ class XmlService(IstarModel):
             if mxcell is not None:
                 parent_by_id[id] = mxcell.attrib.get("parent")
 
+            if object.attrib.get("type") == "owns":
+                owns_links.append(object)
+
+        for object in owns_links:
+            mxcell = object.find("mxCell")
+            if mxcell is None:
+                continue
+
+            source_id = mxcell.attrib.get("source")
+            target_id = mxcell.attrib.get("target")
+            if not source_id or not target_id:
+                continue
+            if type_by_id.get(source_id) != "agent":
+                continue
+
+            raw_actor_label = label_by_id.get(source_id)
+            if not raw_actor_label:
+                continue
+
+            actor_label = self._format_label(raw_actor_label)
+            actor_by_boundary[target_id] = actor_label
+
+            target_parent = parent_by_id.get(target_id)
+            if target_parent:
+                actor_by_boundary[target_parent] = actor_label
+
     def _assign_element_to_actor(
         self,
         objects,
         parent_by_id,
-        type_by_id,
-        label_by_id,
+        actor_by_boundary,
         element_to_actor,
     ) -> None:
         """
         Populate element_to_actor in-place.
 
-        For each goal/task:
+        For each goal/task/resource:
         - Start from its parent
         - Move up parent -> parent -> parent
-        - Stop when an 'agent' is reached, and assign that agent's label as the owner
+        - Stop when an owned boundary is reached, and assign that actor label as the owner
         """
         for object in objects:
             id = object.attrib.get("id")
             if id is None:
                 continue
 
-            if object.attrib.get("type") not in {"goal", "task"}:
+            if object.attrib.get("type") not in {"goal", "task", "resource"}:
                 continue
 
             current_parent = parent_by_id.get(id)
             while current_parent:
-                if type_by_id.get(current_parent) == "agent":
-                    raw_label = label_by_id.get(current_parent)
-                    element_to_actor[id] = (
-                        self._format_label(raw_label) if raw_label else ""
-                    )
+                actor_label = actor_by_boundary.get(current_parent)
+                if actor_label:
+                    element_to_actor[id] = actor_label
                     break
                 current_parent = parent_by_id.get(current_parent)
 
