@@ -1,6 +1,5 @@
 import logging
 from typing import Any, Dict
-
 from app.models.uml import UmlModel, UmlClass, UmlDependency
 
 logger = logging.getLogger(__name__)
@@ -25,10 +24,8 @@ class UmlMetricsService:
         algorithm_classes = 0
         quantum_driver_classes = 0
         other_stereotyped_classes = 0
-        classes_with_comments = 0
-        total_comments = 0
-        classes_with_tagged_values = 0
-        total_tagged_values = 0
+        classes_with_notes = 0
+        total_notes = 0
 
         for uml_class in classes.values():
             attributes_size = len(uml_class.attributes)
@@ -47,15 +44,10 @@ class UmlMetricsService:
             ):
                 other_stereotyped_classes += 1
 
-            comments_size = len(uml_class.comments)
-            total_comments += comments_size
-            if comments_size > 0:
-                classes_with_comments += 1
-
-            tagged_values_size = len(uml_class.tagged_values)
-            total_tagged_values += tagged_values_size
-            if tagged_values_size > 0:
-                classes_with_tagged_values += 1
+            notes_size = len(uml_class.notes)
+            total_notes += notes_size
+            if notes_size > 0:
+                classes_with_notes += 1
 
         metrics["attributes"] = total_attributes
         metrics["methods"] = total_methods
@@ -67,10 +59,8 @@ class UmlMetricsService:
         }
 
         metrics["semantic_preservation"] = {
-            "classes_with_comments": classes_with_comments,
-            "total_comments": total_comments,
-            "classes_with_tagged_values": classes_with_tagged_values,
-            "total_tagged_values": total_tagged_values,
+            "classes_with_notes": classes_with_notes,
+            "total_notes": total_notes,
         }
 
         if total_classes > 0:

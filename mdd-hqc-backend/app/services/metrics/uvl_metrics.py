@@ -1,6 +1,5 @@
 import logging
 from typing import Any, Dict, List
-
 from app.models.uvl import Feature, UVL
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,5 @@
 import logging
 from typing import Any, Dict
-
 from app.models.istar import IstarModel
 
 logger = logging.getLogger(__name__)
