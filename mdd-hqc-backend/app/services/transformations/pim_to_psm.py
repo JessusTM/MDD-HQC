@@ -315,6 +315,11 @@ class PimToPsm:
             helper_class = self._get_or_create_helper_class_for_task(feature)
 
             if helper_root.name == feature.name:
+                logger.debug(
+                    "PIM-to-PSM R2 helper class created: task=%s, class=%s",
+                    feature.name,
+                    helper_class.name,
+                )
                 self._store_class_location(feature.name, helper_class.name)
                 self._add_helper_resource_attributes(feature)
                 continue
@@ -344,6 +349,11 @@ class PimToPsm:
 
             if feature.subgroup == "Quantum" and "Quantum" not in uml_class.stereotypes:
                 uml_class.stereotypes.append("Quantum")
+                logger.debug(
+                    "PIM-to-PSM R3 quantum stereotype applied: feature=%s, class=%s",
+                    feature.name,
+                    uml_class.name,
+                )
 
         logger.debug(
             "PIM-to-PSM R3 applied: algorithm features converted to UML classes"
