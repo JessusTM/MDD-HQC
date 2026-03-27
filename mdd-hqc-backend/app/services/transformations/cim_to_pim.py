@@ -97,7 +97,7 @@ class CimToPim:
         return self._get_or_create_feature_location(
             element_id=resource_id,
             label=resource_label,
-            kind=None,
+            kind="resource",
             category=task_location.category,
             subgroup=task_location.subgroup,
         )
