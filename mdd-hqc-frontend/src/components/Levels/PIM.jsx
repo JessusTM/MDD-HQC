@@ -20,7 +20,7 @@ export const PIM = ({ uvlContent, metrics }) => {
 
         {hasContent && (
           <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm">
-            <CheckCircle className="w-4 h-4" /> Listo
+            <CheckCircle className="w-4 h-4" /> Ready
           </span>
         )}
       </div>
@@ -35,7 +35,7 @@ export const PIM = ({ uvlContent, metrics }) => {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
             <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
-              Esperando transformación de i* a UVL…
+              Waiting for i* to UVL transformation...
             </p>
           </div>
         )}
@@ -45,7 +45,7 @@ export const PIM = ({ uvlContent, metrics }) => {
         <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
           {metrics ? (
             <div className="space-y-2">
-              <h4 className="text-ctp-text font-bold text-sm mb-3">Métricas PIM</h4>
+              <h4 className="text-ctp-text font-bold text-sm mb-3">PIM Metrics</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
                   <span className="text-ctp-subtext0">Total Features:</span>
@@ -56,7 +56,7 @@ export const PIM = ({ uvlContent, metrics }) => {
 
                 {metrics.features_by_category && Object.keys(metrics.features_by_category).length > 0 && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0 font-semibold">Por Categoría:</span>
+                    <span className="text-ctp-subtext0 font-semibold">By Category:</span>
                     <div className="mt-1 space-y-1">
                       {Object.entries(metrics.features_by_category).map(([cat, count]) => (
                         <div key={cat} className="text-ctp-text text-xs">
@@ -76,10 +76,10 @@ export const PIM = ({ uvlContent, metrics }) => {
 
                 {metrics.semantic_preservation && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0 font-semibold">Preservación Semántica:</span>
+                    <span className="text-ctp-subtext0 font-semibold">Semantic Preservation:</span>
                     <div className="mt-1 space-y-1 text-xs">
                       <div className="text-ctp-text">
-                        Features con metadata:{" "}
+                        Features with metadata:{" "}
                         <span className="font-semibold">
                           {metrics.semantic_preservation.features_with_metadata || 0}
                         </span>{" "}
@@ -94,7 +94,7 @@ export const PIM = ({ uvlContent, metrics }) => {
                       </div>
 
                       <div className="text-ctp-text">
-                        Features con atributos:{" "}
+                        Features with attributes:{" "}
                         <span className="font-semibold">
                           {metrics.semantic_preservation.features_with_attributes || 0}
                         </span>{" "}
@@ -102,7 +102,7 @@ export const PIM = ({ uvlContent, metrics }) => {
                       </div>
 
                       <div className="text-ctp-text">
-                        Total atributos:{" "}
+                        Total attributes:{" "}
                         <span className="font-semibold">
                           {metrics.semantic_preservation.total_attributes || 0}
                         </span>
@@ -114,7 +114,7 @@ export const PIM = ({ uvlContent, metrics }) => {
             </div>
           ) : (
             <span className="text-ctp-subtext0 text-xl font-semibold italic">
-              Sin métricas disponibles
+               No metrics available
             </span>
           )}
         </div>

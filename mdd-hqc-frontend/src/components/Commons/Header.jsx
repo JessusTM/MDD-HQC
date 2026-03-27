@@ -7,7 +7,7 @@ export const Header = () => {
             MDD-HQC
           </h1>
           <p className="text-xl text-ctp-subtext0 font-semibold mt-1">
-            Prototipo orientado a agentes para sistemas híbridos
+            Agent-oriented prototype for hybrid systems
           </p>
         </div>
 

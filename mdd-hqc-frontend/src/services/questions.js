@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000/interactions/interaction";
+const API_BASE = "http://localhost:8000/interactions";
 
 export const fetchQuestions = async (path) => {
     try {
@@ -17,7 +17,7 @@ export const sendAnswers = async (answers) => {
     const response = await axios.post(`${API_BASE}/answers`, { answers });
     return response.data;
   } catch (error) {
-    console.error("Error al enviar respuestas:", error);
+    console.error("Error sending answers:", error);
     throw error;
   }
 };
@@ -27,7 +27,7 @@ export const confirmUvl = async (path) => {
     const response = await axios.post(`${API_BASE}/confirm`, { path });
     return response.data;
   } catch (error) {
-    console.error("Error al confirmar UVL:", error);
+    console.error("Error confirming UVL:", error);
     throw error;
   }
 };

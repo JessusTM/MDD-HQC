@@ -26,14 +26,14 @@ export const PSM = ({ pumlContent, metrics }) => {
           <button
             onClick={() => setIsFullscreen(false)}
             className="absolute top-4 right-4 p-2 bg-ctp-surface0 hover:bg-ctp-surface1 rounded-lg transition-colors z-10"
-            aria-label="Cerrar fullscreen"
+            aria-label="Close fullscreen"
           >
             <X className="w-6 h-6 text-ctp-text" />
           </button>
           {plantUmlUrl && (
             <img
               src={plantUmlUrl}
-              alt="Diagrama UML Cuántico"
+              alt="Quantum UML diagram"
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />
@@ -64,13 +64,13 @@ export const PSM = ({ pumlContent, metrics }) => {
               <button
                 onClick={() => setIsFullscreen(true)}
                 className="px-3 py-1.5 bg-ctp-blue/20 hover:bg-ctp-blue/30 text-ctp-blue border border-ctp-blue/30 text-sm font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors"
-                title="Ver en pantalla completa"
+                title="View fullscreen"
               >
                 <Maximize2 className="w-4 h-4" />
                 Fullscreen
               </button>
               <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm">
-                <CheckCircle className="w-4 h-4" /> Listo
+                <CheckCircle className="w-4 h-4" /> Ready
               </span>
             </div>
           )}
@@ -81,14 +81,14 @@ export const PSM = ({ pumlContent, metrics }) => {
             <div className="w-full h-full p-6 flex items-center justify-center">
               <img
                 src={plantUmlUrl}
-                alt="Diagrama UML Cuántico"
+                alt="Quantum UML diagram"
                 className="max-w-full h-auto"
               />
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
               <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
-                Esperando transformación de UVL a UML…
+                Waiting for UVL to UML transformation...
               </p>
             </div>
           )}
@@ -98,22 +98,22 @@ export const PSM = ({ pumlContent, metrics }) => {
           <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
             {metrics ? (
               <div className="space-y-2">
-                <h4 className="text-ctp-text font-bold text-sm mb-3">Métricas PSM</h4>
+                <h4 className="text-ctp-text font-bold text-sm mb-3">PSM Metrics</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Total Clases:</span>
+                    <span className="text-ctp-subtext0">Total classes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_classes || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Dependencias:</span>
+                    <span className="text-ctp-subtext0">Dependencies:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_dependencies || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Atributos:</span>
+                    <span className="text-ctp-subtext0">Attributes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.attributes || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Métodos:</span>
+                    <span className="text-ctp-subtext0">Methods:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.methods || 0}</span>
                   </div>
                   {metrics.stereotypes && (
@@ -130,16 +130,16 @@ export const PSM = ({ pumlContent, metrics }) => {
                   )}
                   {metrics.semantic_preservation && (
                     <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                      <span className="text-ctp-subtext0 font-semibold">Preservación Semántica:</span>
+                      <span className="text-ctp-subtext0 font-semibold">Semantic Preservation:</span>
                       <div className="mt-1 space-y-1 text-xs">
                         <div className="text-ctp-text">
-                          Clases con comentarios: <span className="font-semibold">{metrics.semantic_preservation.classes_with_comments || 0}</span>
+                          Classes with comments: <span className="font-semibold">{metrics.semantic_preservation.classes_with_comments || 0}</span>
                         </div>
                         <div className="text-ctp-text">
-                          Total comentarios: <span className="font-semibold">{metrics.semantic_preservation.total_comments || 0}</span>
+                          Total comments: <span className="font-semibold">{metrics.semantic_preservation.total_comments || 0}</span>
                         </div>
                         <div className="text-ctp-text">
-                          Clases con tagged values: <span className="font-semibold">{metrics.semantic_preservation.classes_with_tagged_values || 0}</span>
+                          Classes with tagged values: <span className="font-semibold">{metrics.semantic_preservation.classes_with_tagged_values || 0}</span>
                         </div>
                         <div className="text-ctp-text">
                           Total tagged values: <span className="font-semibold">{metrics.semantic_preservation.total_tagged_values || 0}</span>
@@ -151,7 +151,7 @@ export const PSM = ({ pumlContent, metrics }) => {
               </div>
             ) : (
               <span className="text-ctp-subtext0 text-xl font-semibold italic">
-                Sin métricas disponibles
+                 No metrics available
               </span>
             )}
           </div>

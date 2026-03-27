@@ -29,7 +29,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
     }
 
     setFile(selected)
-    setInfoMessage("Subiendo archivo…")
+    setInfoMessage("Uploading file...")
     setErrorMessage("")
     setLoading(true)
     await processFile(selected)
@@ -40,15 +40,15 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
       const uploadResponse = await uploadFile(fileToRead)
       const path = uploadResponse.path
       setFilePath(path)
-      setInfoMessage("Archivo subido correctamente")
+      setInfoMessage("File uploaded successfully")
       onFileUploaded?.(path)
-      setInfoMessage("Calculando métricas CIM…")
+      setInfoMessage("Calculating CIM metrics...")
       const metricsResponse = await getCimMetrics(path)
       onMetricsLoaded?.(metricsResponse.metrics?.cim)
-      setInfoMessage("Métricas calculadas")
+      setInfoMessage("Metrics calculated")
     } catch (error) {
-      console.error("Error procesando archivo", error)
-      setErrorMessage(error.response?.data?.detail || "Error al procesar el archivo")
+      console.error("Error processing file", error)
+      setErrorMessage(error.response?.data?.detail || "Error processing file")
       setInfoMessage("")
       reset({ clearError: false })
     } finally {
@@ -73,7 +73,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
 
         {file && !errorMessage && (
           <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm">
-            <CheckCircle className="w-4 h-4" /> Listo
+            <CheckCircle className="w-4 h-4" /> Ready
           </span>
         )}
       </div>
@@ -81,7 +81,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
         <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
           <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
-            Sube tu archivo i* 2.0 (XML) aquí…
+            Upload your i* 2.0 (XML) file here...
           </p>
 
           <input
@@ -98,7 +98,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
             className="flex items-center gap-3 px-6 py-3 bg-ctp-mauve hover:bg-ctp-pink text-ctp-base rounded-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-ctp-mauve/20 text-base"
           >
             <Upload className="w-5 h-5" />
-            Subir Archivo
+            Upload File
           </button>
 
           <div className="mt-4 text-sm">
@@ -122,11 +122,11 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
           {loading ? (
             <div className="flex items-center justify-center gap-2 text-ctp-subtext0">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm font-semibold">Calculando métricas...</span>
+              <span className="text-sm font-semibold">Calculating metrics...</span>
             </div>
           ) : metrics ? (
             <div className="space-y-2">
-              <h4 className="text-ctp-text font-bold text-sm mb-3">Métricas CIM</h4>
+              <h4 className="text-ctp-text font-bold text-sm mb-3">CIM Metrics</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
                   <span className="text-ctp-subtext0">Goals:</span>
@@ -157,7 +157,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
                   <span className="text-ctp-text font-semibold ml-2">{metrics.roles || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Dependencias:</span>
+                  <span className="text-ctp-subtext0">Dependencies:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.social_dependencies || 0}</span>
                 </div>
                 {metrics.internal_links && (
@@ -190,7 +190,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
                 )}
                 {metrics.total_nodes !== undefined && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0">Total nodos:</span>
+                    <span className="text-ctp-subtext0">Total nodes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_nodes}</span>
                   </div>
                 )}
@@ -198,7 +198,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
             </div>
           ) : (
             <span className="text-ctp-subtext0 text-xl font-semibold italic">
-              Sin métricas disponibles
+              No metrics available
             </span>
           )}
         </div>

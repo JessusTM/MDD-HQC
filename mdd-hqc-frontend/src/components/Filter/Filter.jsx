@@ -1,6 +1,5 @@
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
-import { transformCimToPim } from "../../services/transformations"
 import { transformPimToPsm } from "../../services/transformations"
 
 export const Filter = ({
@@ -28,15 +27,15 @@ export const Filter = ({
       
       if (source === "PIM" && target === "PSM") {
         if (!uvlContent) {
-          alert("Primero debes completar la transformación CIM → PIM")
+          alert("You must complete the CIM -> PIM transformation first")
           return
         }
         const response = await transformPimToPsm(uploadedFilePath)
         onTransformPimToPsm?.(response)
       }
     } catch (error) {
-      console.error("Error en transformación:", error)
-      alert(error.response?.data?.detail || "Error al realizar la transformación")
+      console.error("Transformation error:", error)
+      alert(error.response?.data?.detail || "Error running the transformation")
     } finally {
       setLoading(false)
     }
@@ -53,12 +52,12 @@ export const Filter = ({
           <div className="flex items-center gap-3 text-ctp-overlay1 mr-4">
             <Settings2 className="w-6 h-6" />
             <span className="text-lg font-semibold uppercase tracking-wider hidden md:inline">
-              Transformación
+              Transformation
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">De</span>
+            <span className="text-base font-bold text-ctp-overlay0 uppercase">From</span>
             <div className="relative">
               <select
                 value={source}
@@ -75,7 +74,7 @@ export const Filter = ({
           <ArrowRight className="text-ctp-surface2 w-6 h-6" />
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">A</span>
+            <span className="text-base font-bold text-ctp-overlay0 uppercase">To</span>
             <div className="relative">
               <select
                 value={target}
@@ -106,12 +105,12 @@ export const Filter = ({
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-ctp-base border-t-transparent rounded-full animate-spin" />
-                Transformando...
+                Transforming...
               </>
             ) : (
               <>
                 <Play className="w-5 h-5 fill-current" />
-                Ejecutar
+                Run
               </>
             )}
           </button>
@@ -120,12 +119,12 @@ export const Filter = ({
 
       {sameLevel && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
-          Origen y Destino no pueden ser iguales.
+          Source and target cannot be the same.
         </div>
       )}
       {source === "PIM" && target === "PSM" && !uvlContent && uploadedFilePath && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
-          Primero completa la transformación CIM → PIM.
+          Complete the CIM -> PIM transformation first.
         </div>
       )}
     </div>

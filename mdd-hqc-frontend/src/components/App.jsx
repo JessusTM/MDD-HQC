@@ -1,4 +1,4 @@
-import { useState, useEffect} from "react"
+import { useState, useEffect } from "react"
 import { CIM } from "./Levels/CIM"
 import { PIM } from "./Levels/PIM"
 import { PSM } from "./Levels/PSM"
@@ -10,11 +10,11 @@ import { fetchQuestions } from "../services/questions"
 
 export const App = () => {
   const [uploadedFilePath, setUploadedFilePath] = useState(null)
-  const [cimMetrics, setCimMetrics]             = useState(null)
-  const [pimMetrics, setPimMetrics]             = useState(null)
-  const [psmMetrics, setPsmMetrics]             = useState(null)
-  const [uvlContent, setUvlContent]             = useState(null)
-  const [pumlContent, setPumlContent]           = useState(null)
+  const [cimMetrics, setCimMetrics] = useState(null)
+  const [pimMetrics, setPimMetrics] = useState(null)
+  const [psmMetrics, setPsmMetrics] = useState(null)
+  const [uvlContent, setUvlContent] = useState(null)
+  const [pumlContent, setPumlContent] = useState(null)
 
   const handleFileUploaded = (path) => {
     setUploadedFilePath(path)
@@ -48,7 +48,7 @@ export const App = () => {
   const openQuestionsModal = async () => {
     if (!uploadedFilePath) return;
 
-    alert("Espere un momento, cargando preguntas...");
+    alert("Please wait, loading questions...");
 
     try {
 
@@ -57,7 +57,7 @@ export const App = () => {
       setIsQuestionsModalOpen(true);
 
     } catch (error) {
-      alert("Error al cargar preguntas. Intente nuevamente.");
+      alert("Error loading questions. Please try again.");
       console.error("Error fetching questions:", error);
     }
 
@@ -100,73 +100,73 @@ export const App = () => {
             />
           </div>
 
-          <div className="col-span-1 flex flex-col items-center justify-center"> 
+          <div className="col-span-1 flex flex-col items-center justify-center">
 
             <button className="bg-gray-700 text-white px-3 py-1 rounded-lg flex flex-col items-center mb-10">
               <span className="text-white px-3 py-1 rounded-md mb-2">
                 “ ”
               </span>
               <div className="text-sm tracking-wide text-blue-300">DEBUG</div>
-          </button>
+            </button>
 
             <button onClick={() => setIsQuestionsModalOpen(true)} className="bg-gray-700 text-white px-3 py-1 rounded-lg flex flex-col items-center">
               <span className="text-white px-3 py-1 rounded-md mb-2">
                 “ ”
               </span>
-              <div className="text-sm tracking-wide text-blue-300">INTERACC.</div>
-          </button>
+              <div className="text-sm tracking-wide text-blue-300">INTERACT.</div>
+            </button>
 
           </div>
 
           <QuestionsModal isOpen={isQuestionsModalOpen} onClose={() => setIsQuestionsModalOpen(false)}>
             <div className="flex items-center mb-4">
-            
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6 text-purple-400 mr-2"
-              viewBox="0 0 24 24"
-              fill="currentColor"
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6 text-purple-400 mr-2"
+                viewBox="0 0 24 24"
+                fill="currentColor"
               >
-              <path d="M7 17h3l2-4V7H7v6h2l-2 4zm7 0h3l2-4V7h-5v6h2l-2 4z" />
-            </svg>
-   
-              <h2 className="text-xl font-bold text-white">Interacción Guiada: CIM a PIM</h2>
-              </div>
+                <path d="M7 17h3l2-4V7H7v6h2l-2 4zm7 0h3l2-4V7h-5v6h2l-2 4z" />
+              </svg>
+
+              <h2 className="text-xl font-bold text-white">Guided Interaction: CIM to PIM</h2>
+            </div>
 
             <div className="bg-gray-900 p-4 mb-4 -mx-6">
-              <p className="text-gray-300">Responde a las siguientes preguntas para refinar la transformación semiautomática de <span className="font-bold text-blue-200">CIM a PIM</span></p>
+              <p className="text-gray-300">Answer the following questions to refine the semi-automatic <span className="font-bold text-blue-200">CIM to PIM</span> transformation.</p>
 
               {questions.map((q) => (
-              <div key={q.id} className="mt-6 bg-gray-700 p-4 rounded-lg">
-                <h3 className="text-white font-semibold mb-2">{q.text}</h3>
+                <div key={q.id} className="mt-6 bg-gray-700 p-4 rounded-lg">
+                  <h3 className="text-white font-semibold mb-2">{q.text}</h3>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {q.options?.map((opt, i) => (
-                      <button 
-                      key={i} 
-                      className="bg-gray-900 text-white px-3 py-2 rounded hover:bg-blue-600"
+                      <button
+                        key={i}
+                        className="bg-gray-900 text-white px-3 py-2 rounded hover:bg-blue-600"
                       >
                         {opt}
                       </button>
                     ))}
                   </div>
-              </div>
+                </div>
               ))}
 
             </div>
 
 
             <div className="flex justify-end">
-            <button
-            onClick={async () => {
-              setIsQuestionsModalOpen(false)
-              const response = await transformCimToPim(uploadedFilePath)
-              handlePimTransformed(response)
-            }}
-            className="bg-gray-700 text-white px-4 py-2 rounded"
-          >
-            Cerrar
-          </button>
-          </div>
+              <button
+                onClick={async () => {
+                  setIsQuestionsModalOpen(false)
+                  const response = await transformCimToPim(uploadedFilePath)
+                  handlePimTransformed(response)
+                }}
+                className="bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
           </QuestionsModal>
 
 
@@ -184,13 +184,13 @@ export const App = () => {
                 “ ”
               </span>
               <div className="text-sm tracking-wide text-blue-300">DEBUG</div>
-          </button>
+            </button>
 
             <button className="bg-gray-700 text-white px-3 py-1 rounded-lg flex flex-col items-center">
               <span className="text-white px-3 py-1 rounded-md mb-2">
                 “ ”
               </span>
-              <div className="text-sm tracking-wide text-blue-300">INTERACC.</div>
+              <div className="text-sm tracking-wide text-blue-300">INTERACT.</div>
             </button>
           </div>
 
