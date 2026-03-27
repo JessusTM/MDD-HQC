@@ -11,7 +11,7 @@
   },
   "formatters": {
     "console": {
-      "format": "%(asctime)s  [%(levelname)s]  %(name)-28.28s  (%(module)-10.16s:%(lineno)4d)  -  %(message)s",
+      "format": "%(asctime)s [%(levelname)s] %(name)s (%(module)s:%(lineno)d) - %(message)s",
       "datefmt": "%Y-%m-%dT%H:%M:%S%z"
     },
     "json": {
