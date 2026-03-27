@@ -1,12 +1,12 @@
 import logging
-import re
-import html
 import xml.etree.ElementTree as ET
+
+from app.models.istar import IstarModel
 
 logger = logging.getLogger(__name__)
 
 
-class XmlService:
+class XmlService(IstarModel):
     """
     XmlService parses a draw.io XML export of an iStar 2.0 model and builds in-memory indexes.
 
@@ -19,13 +19,8 @@ class XmlService:
     """
 
     def __init__(self, file_path: str):
+        super().__init__()
         self.file_path = file_path
-
-        self._intentional_elements = {}
-        self._social_dependencies = {}
-        self._internal_links = {}
-        self._refinements = {}
-        self._element_to_actor = {}
 
         logger.debug("Parsing iStar XML: path=%s", file_path)
         self._build_indexes()
@@ -47,10 +42,17 @@ class XmlService:
             tree = ET.parse(self.file_path)
             return tree.getroot()
         except ET.ParseError as exc:
-            logger.error("XML parse error: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            logger.error(
+                "XML parse error: path=%s, error=%s", self.file_path, exc, exc_info=True
+            )
             raise
         except OSError as exc:
-            logger.error("Failed to read XML file: path=%s, error=%s", self.file_path, exc, exc_info=True)
+            logger.error(
+                "Failed to read XML file: path=%s, error=%s",
+                self.file_path,
+                exc,
+                exc_info=True,
+            )
             raise
 
     def _get_raw_diagram_elements(self, root):
@@ -82,26 +84,23 @@ class XmlService:
     # ============ VALIDATIONS ============
     def _verify_social_dependency(self, tag: str, attrib: dict) -> bool:
         """
-        Return True if the given node represents a social dependency edge:
-        an mxCell edge with both source and target attributes.
+        Return True if the given node represents a social dependency link.
+
+        In the draw.io export used by this prototype, social dependencies are
+        stored as edges with `type="dependency-link"` and both endpoints.
         """
         is_mxcell = tag == "mxCell"
         is_edge = attrib.get("edge") == "1"
         has_source = "source" in attrib
         has_target = "target" in attrib
-        return is_mxcell and is_edge and has_source and has_target
-
-    # ============ LABEL NORMALIZATION ============
-    def _format_label(self, label):
-        """
-        Normalize a label by unescaping HTML, stripping markup, and collapsing whitespace.
-        """
-        if not label:
-            return label
-        unescaped = html.unescape(label)
-        text = re.sub(r"<.*?>", " ", unescaped)
-        text = re.sub(r"\s+", " ", text).strip()
-        return text
+        link_type = attrib.get("type")
+        return (
+            is_mxcell
+            and is_edge
+            and has_source
+            and has_target
+            and link_type == "dependency-link"
+        )
 
     # ============ INDEXERS (SELF-VALIDATING) ============
     def _index_intentional_element(self, tag, attrib):
@@ -136,11 +135,12 @@ class XmlService:
 
     def _index_social_dependency(self, tag, attrib):
         """
-        Index a social dependency edge (mxCell) by its id.
+        Index a social dependency edge (dependency-link) by its id.
         """
         id = attrib.get("id")
         source = attrib.get("source")
         target = attrib.get("target")
+        label = attrib.get("label")
 
         if id is None:
             return
@@ -151,6 +151,7 @@ class XmlService:
             "id": id,
             "source": source,
             "target": target,
+            "label": self._format_label(label),
         }
 
     def _index_internal_link(self, tag, attrib):
@@ -220,7 +221,8 @@ class XmlService:
 
         Steps:
         1) Read all <object> nodes and collect quick indexes: type, label, and mxCell parent.
-        2) For each target element (goal/task), walk its parent chain until an agent is found.
+        2) Resolve which actor owns each boundary through `owns` links.
+        3) For each target element (goal/task/resource), walk its parent chain until an owned boundary is found.
         """
         objects = root.findall("./diagram/mxGraphModel/root/object")
         if not objects:
@@ -229,12 +231,14 @@ class XmlService:
         parent_by_id = {}
         type_by_id = {}
         label_by_id = {}
+        actor_by_boundary = {}
 
         self._collect_object_indexes(
             objects=objects,
             parent_by_id=parent_by_id,
             type_by_id=type_by_id,
             label_by_id=label_by_id,
+            actor_by_boundary=actor_by_boundary,
         )
 
         element_to_actor = {}
@@ -242,15 +246,14 @@ class XmlService:
         self._assign_element_to_actor(
             objects=objects,
             parent_by_id=parent_by_id,
-            type_by_id=type_by_id,
-            label_by_id=label_by_id,
+            actor_by_boundary=actor_by_boundary,
             element_to_actor=element_to_actor,
         )
 
         return element_to_actor
 
     def _collect_object_indexes(
-        self, objects, parent_by_id, type_by_id, label_by_id
+        self, objects, parent_by_id, type_by_id, label_by_id, actor_by_boundary
     ) -> None:
         """
         Fill lookup dicts keyed by object id:
@@ -258,7 +261,10 @@ class XmlService:
         - type_by_id[id]  : element kind (goal, task, agent, ...)
         - label_by_id[id] : raw label (later formatted when needed)
         - parent_by_id[id]: mxCell parent id (used to walk "who contains who")
+        - actor_by_boundary[boundary_id]: actor label owning the boundary
         """
+        owns_links = []
+
         for object in objects:
             id = object.attrib.get("id")
             if id is None:
@@ -271,37 +277,60 @@ class XmlService:
             if mxcell is not None:
                 parent_by_id[id] = mxcell.attrib.get("parent")
 
+            if object.attrib.get("type") == "owns":
+                owns_links.append(object)
+
+        for object in owns_links:
+            mxcell = object.find("mxCell")
+            if mxcell is None:
+                continue
+
+            source_id = mxcell.attrib.get("source")
+            target_id = mxcell.attrib.get("target")
+            if not source_id or not target_id:
+                continue
+            if type_by_id.get(source_id) != "agent":
+                continue
+
+            raw_actor_label = label_by_id.get(source_id)
+            if not raw_actor_label:
+                continue
+
+            actor_label = self._format_label(raw_actor_label)
+            actor_by_boundary[target_id] = actor_label
+
+            target_parent = parent_by_id.get(target_id)
+            if target_parent:
+                actor_by_boundary[target_parent] = actor_label
+
     def _assign_element_to_actor(
         self,
         objects,
         parent_by_id,
-        type_by_id,
-        label_by_id,
+        actor_by_boundary,
         element_to_actor,
     ) -> None:
         """
         Populate element_to_actor in-place.
 
-        For each goal/task:
+        For each goal/task/resource:
         - Start from its parent
         - Move up parent -> parent -> parent
-        - Stop when an 'agent' is reached, and assign that agent's label as the owner
+        - Stop when an owned boundary is reached, and assign that actor label as the owner
         """
         for object in objects:
             id = object.attrib.get("id")
             if id is None:
                 continue
 
-            if object.attrib.get("type") not in {"goal", "task"}:
+            if object.attrib.get("type") not in {"goal", "task", "resource"}:
                 continue
 
             current_parent = parent_by_id.get(id)
             while current_parent:
-                if type_by_id.get(current_parent) == "agent":
-                    raw_label = label_by_id.get(current_parent)
-                    element_to_actor[id] = (
-                        self._format_label(raw_label) if raw_label else ""
-                    )
+                actor_label = actor_by_boundary.get(current_parent)
+                if actor_label:
+                    element_to_actor[id] = actor_label
                     break
                 current_parent = parent_by_id.get(current_parent)
 
@@ -324,59 +353,3 @@ class XmlService:
             self._index_internal_link(tag, attrib)
             self._index_refinement(tag, attrib)
         self._element_to_actor = self._index_element_to_actor(root)
-
-    # ============ PUBLIC GETTERS ============
-    def get_intentional_element_by_type(self, element_type):
-        """
-        Return all indexed intentional elements matching the requested iStar type.
-
-        Returns:
-            dict[str, dict] -> keyed by element id
-        """
-        return self._intentional_elements.get(element_type, {})
-
-    def get_social_dependencies(self):
-        """
-        Return the social dependency index (mxCell edges).
-        """
-        return self._social_dependencies
-
-    def get_refinements(self):
-        """
-        Return the refinement index (mxCell edges).
-        """
-        return self._refinements
-
-    def get_internal_links(self):
-        """
-        Return the internal links index (needed-by, qualification-link, contribution).
-        """
-        return self._internal_links
-
-    def get_element_to_actor_mapping(self):
-        """
-        Return the element -> actor ownership mapping.
-        """
-        return self._element_to_actor
-
-    def get_label_by_id(self, element_id: str) -> str:
-        """
-        Resolve an element label by its id.
-
-        In the XML export, relationships (e.g., internal links, social dependencies, refinements) are encoded as edges
-        that reference elements only through `source`/`target` ids. The human-readable text, however, is stored in the
-        intentional element nodes themselves (goal/task/softgoal/etc.) under their `label` field.
-
-        This helper exists to bridge that representation: given an element id coming from an edge, it searches the
-        indexed intentional elements (across all iStar types) and returns the corresponding label. If the id is unknown
-        or has no label, it returns an empty string.
-        """
-        if not element_id:
-            return ""
-
-        for elements in self._intentional_elements.values():
-            element = elements.get(element_id)
-            if element:
-                return element.get("label") or ""
-
-        return ""

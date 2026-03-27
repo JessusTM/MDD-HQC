@@ -1,15 +1,18 @@
+import os
 import requests
-from typing import List, Dict
+from typing import Dict, List
+
+from app.models.llm_contract import CimNode
 from app.services.interaction.llm.base import LLMInterface
 import json
 import re
 import logging
+
 logger = logging.getLogger(__name__)
 
 
-
-OLLAMA_URL = "http://ollama:11434/api/generate"
-OLLAMA_MODEL = "mistral:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:latest")
 
 SYSTEM_INSTRUCTIONS = (
     "Analiza los elementos UVL/iStar y responde SOLO con un JSON válido con las claves exactas: "
@@ -26,11 +29,11 @@ SYSTEM_INSTRUCTIONS = (
     "- La clave missing debe contener TODAS las claves que estén en false. \n"
     "- Responde SOLO con el JSON. \n"
     "No incluyas explicaciones, comentarios ni texto adicional fuera del JSON. \n"
-    
 )
 
-def build_prompt(elements: List[Dict]) -> str:
-    lines = [f"- {el.get('type', 'unknown')}: {el.get('text','')}" for el in elements]
+
+def build_prompt(elements: List[CimNode]) -> str:
+    lines = [f"- {element.type}: {element.label_raw}" for element in elements]
     return (
         f"{SYSTEM_INSTRUCTIONS}\n\n"
         "Elementos iStar:\n" + "\n".join(lines) + "\n\n"
@@ -67,11 +70,11 @@ def build_prompt(elements: List[Dict]) -> str:
 
 
 class OllamaClient(LLMInterface):
-    def __init__(self, model_name = OLLAMA_MODEL, temperature: float = 0.0):
+    def __init__(self, model_name=OLLAMA_MODEL, temperature: float = 0.0):
         self.model_name = model_name
         self.temperature = temperature
-    
-    def analyze_istar_elements(self, elements: List[Dict]) -> Dict:
+
+    def analyze_istar_elements(self, elements: List[CimNode]) -> Dict:
         prompt = build_prompt(elements)
         logger.debug("Prompt enviado a Ollama:\n%s", prompt)
         resp = requests.post(
@@ -80,16 +83,16 @@ class OllamaClient(LLMInterface):
                 "model": self.model_name,
                 "prompt": prompt,
                 "options": {"temperature": self.temperature},
-                "stream": False
+                "stream": False,
             },
-            timeout=180
+            timeout=180,
         )
         resp.raise_for_status()
         data = resp.json()
         raw = data.get("response", "").strip()
         logger.debug("Respuesta cruda de Ollama:\n%s", raw)
 
-        parsed = self._safe_parse_json(raw) 
+        parsed = self._safe_parse_json(raw)
         logger.debug("Resultado parseado:\n%s", parsed)
         return parsed
 
@@ -115,15 +118,22 @@ class OllamaClient(LLMInterface):
             return {}
 
         keys = [
-        "Functionality", "Algorithm", "Programming",
-        "Integration_model", "Quantum_HW_constraint"
-     ]
+            "Functionality",
+            "Algorithm",
+            "Programming",
+            "Integration_model",
+            "Quantum_HW_constraint",
+        ]
 
         # 👇 Aquí añades tu chequeo
         if not all(k in parsed for k in keys):
-            logger.warning("JSON no contiene todas las claves esperadas: %s", parsed.keys())
+            logger.warning(
+                "JSON no contiene todas las claves esperadas: %s", parsed.keys()
+            )
             return {}
 
         result = {k: bool(parsed.get(k, False)) for k in keys}
-        result["missing"] = parsed.get("missing", [k for k, v in result.items() if not v])
+        result["missing"] = parsed.get(
+            "missing", [k for k, v in result.items() if not v]
+        )
         return result

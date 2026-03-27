@@ -11,11 +11,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef(null)
 
-  const reset = () => {
+  const reset = ({ clearError = true } = {}) => {
     setFile(null)
     setFilePath(null)
-    setErrorMessage("")
+    if (clearError) setErrorMessage("")
     setInfoMessage("")
+    onFileUploaded?.(null)
     onMetricsLoaded?.(null)
   }
 
@@ -49,7 +50,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
       console.error("Error procesando archivo", error)
       setErrorMessage(error.response?.data?.detail || "Error al procesar el archivo")
       setInfoMessage("")
-      reset()
+      reset({ clearError: false })
     } finally {
       setLoading(false)
     }
@@ -87,7 +88,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept=".xml,.istar,.txt"
+            accept=".xml"
             onChange={handleFile}
           />
 

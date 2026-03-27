@@ -81,7 +81,7 @@ class UmlMetricsService:
         )
 
         logger.debug(
-            "UML metrics calculated: total_classes=%s, total_dependencies=%s",
+            "PlantUML metrics calculated: total_classes=%s, total_dependencies=%s",
             total_classes,
             len(dependencies),
         )

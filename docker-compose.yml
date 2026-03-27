@@ -6,7 +6,7 @@ services:
       - "8000:8000"
     volumes:
       - ./mdd-hqc-backend/app:/app/app
-      - ./mdd-hqc-backend/app/data:/app/data
+      - ./mdd-hqc-backend/data:/app/data
     environment:
       OLLAMA_URL: "http://ollama:11434/api/generate"
     depends_on:
