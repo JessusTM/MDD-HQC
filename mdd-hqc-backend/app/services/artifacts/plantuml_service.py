@@ -1,62 +1,70 @@
 import logging
 from pathlib import Path
-
 from app.models.uml import UmlClass, UmlDependency, UmlModel
 
 logger = logging.getLogger(__name__)
 
 
-# ============ CLASS RENDERING ============
+# ------------ Class Rendering ------------
 def _render_class(uml_class: UmlClass, alias: str) -> list[str]:
+    """Renders one UML class block and its visible notes."""
     lines: list[str] = []
 
     header = _render_class_header(uml_class, alias)
     lines.append(header)
 
-    lines.extend(_render_class_comments(uml_class))
-    lines.extend(_render_class_tagged_values(uml_class))
     lines.extend(_render_class_attributes(uml_class))
     lines.extend(_render_class_methods(uml_class))
 
     lines.append("}")
+    lines.extend(_render_class_notes(uml_class, alias))
     return lines
 
 
 def _render_class_header(uml_class: UmlClass, alias: str) -> str:
+    """Builds the PlantUML header line for one class."""
     name = _escape_quoted(uml_class.name)
     stereotypes = _format_stereotypes(uml_class.stereotypes)
     return f'class "{name}" as {alias}{stereotypes} {{'
 
 
-def _render_class_comments(uml_class: UmlClass) -> list[str]:
+def _render_class_notes(uml_class: UmlClass, alias: str) -> list[str]:
+    """Renders the UML notes attached to one class."""
     lines: list[str] = []
-    for comment in uml_class.comments:
-        text = _clean_line(comment)
-        if text:
-            lines.append(f"  ' {text}")
+    note_lines = _get_class_note_lines(uml_class)
+    if not note_lines:
+        return lines
+
+    lines.append(f"note right of {alias}")
+    for note_line in note_lines:
+        lines.append(f"  {note_line}")
+    lines.append("end note")
     return lines
 
 
-def _render_class_tagged_values(uml_class: UmlClass) -> list[str]:
+def _get_class_note_lines(uml_class: UmlClass) -> list[str]:
+    """Returns the note lines that must be attached to one class."""
     lines: list[str] = []
 
-    keys = list(uml_class.tagged_values.keys())
-    keys.sort()
+    lines.extend(_get_note_lines(uml_class.notes))
 
-    for key in keys:
-        value = uml_class.tagged_values.get(key)
-        if value is None:
+    method_contributions = _get_method_contribution_lines(uml_class)
+    for contribution in method_contributions:
+        if contribution in lines:
             continue
+        lines.append(contribution)
 
-        k = _clean_line(key)
-        v = _clean_line(value)
-        if k and v:
-            lines.append(f"  ' {k}={v}")
+    method_groups = _get_method_group_lines(uml_class)
+    for group_line in method_groups:
+        if group_line in lines:
+            continue
+        lines.append(group_line)
 
     return lines
 
 
 def _render_class_attributes(uml_class: UmlClass) -> list[str]:
+    """Renders the attributes declared in one UML class."""
     lines: list[str] = []
 
     for attr in uml_class.attributes:
@@ -80,6 +88,7 @@ def _render_class_attributes(uml_class: UmlClass) -> list[str]:
 
 
 def _render_class_methods(uml_class: UmlClass) -> list[str]:
+    """Renders the methods declared in one UML class."""
     lines: list[str] = []
 
     for method in uml_class.methods:
@@ -99,8 +108,67 @@ def _render_class_methods(uml_class: UmlClass) -> list[str]:
     return lines
 
 
-# ============ PARAMETERS / STEREOTYPES ============
+def _get_note_lines(notes) -> list[str]:
+    """Returns the visible note lines stored in one notes collection."""
+    lines: list[str] = []
+
+    for note in notes:
+        text = _clean_line(note)
+        if text:
+            lines.append(text)
+
+    return lines
+
+
+def _get_method_contribution_lines(uml_class: UmlClass) -> list[str]:
+    """Returns contribution notes declared by the methods of one class."""
+    lines: list[str] = []
+
+    for method in uml_class.methods:
+        for note in method.notes:
+            text = _clean_line(note)
+            if not text:
+                continue
+            if not text.startswith("contribution:"):
+                continue
+            lines.append(text)
+
+    return lines
+
+
+def _get_method_group_lines(uml_class: UmlClass) -> list[str]:
+    """Returns group notes for methods so they can be shown in the class note."""
+    lines: list[str] = []
+
+    for method in uml_class.methods:
+        method_name = _clean_line(method.name)
+        if not method_name:
+            continue
+
+        group_lines = _get_group_note_lines(method.notes)
+        for group_line in group_lines:
+            lines.append(f"{method_name}(): {group_line}")
+
+    return lines
+
+
+def _get_group_note_lines(notes) -> list[str]:
+    """Returns only the mandatory/or notes that should stay visible in UML notes."""
+    lines: list[str] = []
+
+    for note in notes:
+        text = _clean_line(note)
+        if not text:
+            continue
+        if text.startswith("mandatory:") or text.startswith("or:"):
+            lines.append(text)
+
+    return lines
+
+
+# ------------ Parameters and Stereotypes ------------
 def _render_parameters(parameters) -> str:
+    """Renders the textual parameter list of one UML method."""
     parts: list[str] = []
 
     for p in parameters:
@@ -118,6 +186,7 @@ def _render_parameters(parameters) -> str:
 
 
 def _format_stereotypes(stereotypes) -> str:
+    """Formats a stereotype list using PlantUML class/method syntax."""
     cleaned: list[str] = []
 
     if stereotypes is None:
@@ -135,8 +204,9 @@ def _format_stereotypes(stereotypes) -> str:
     return f" <<{joined}>>"
 
 
-# ============ DEPENDENCY RENDERING ============
+# ------------ Dependency Rendering ------------
 def _render_dependency(dep: UmlDependency, alias_by_name: dict[str, str]) -> str:
+    """Renders one UML dependency between two previously rendered classes."""
     source = _clean_line(dep.source)
     target = _clean_line(dep.target)
     if not source or not target:
@@ -162,8 +232,9 @@ def _render_dependency(dep: UmlDependency, alias_by_name: dict[str, str]) -> str
     return f"{source_alias} ..> {target_alias}{label_suffix}"
 
 
-# ============ TEXT HELPERS ============
+# ------------ Text Helpers ------------
 def _escape_quoted(text) -> str:
+    """Escapes text that will be written inside double quotes in PlantUML."""
     if text is None:
         return ""
     s = str(text)
@@ -175,6 +246,7 @@ def _escape_quoted(text) -> str:
 
 
 def _clean_line(text) -> str:
+    """Normalizes one text fragment into a single safe PlantUML line."""
     if text is None:
         return ""
     s = str(text)
@@ -184,6 +256,7 @@ def _clean_line(text) -> str:
 
 
 def render(model: UmlModel) -> str:
+    """Renders the complete UML model as PlantUML text."""
     lines: list[str] = []
     lines.append("@startuml")
 
@@ -191,8 +264,8 @@ def render(model: UmlModel) -> str:
     if title:
         lines.append(f"title {title}")
 
-    for comment in model.comments:
-        text = _clean_line(comment)
+    for note in model.notes:
+        text = _clean_line(note)
         if text:
             lines.append(f"' {text}")
 
@@ -221,9 +294,11 @@ def render(model: UmlModel) -> str:
 
 class PlantumlService:
     def render(self, uml_model: UmlModel) -> str:
+        """Returns the PlantUML text generated from one UML model."""
         return render(uml_model)
 
     def write(self, uml_model: UmlModel, output_path: Path) -> Path:
+        """Writes the rendered PlantUML artifact to disk and returns its path."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
         content = self.render(uml_model)
         output_path.write_text(content, encoding="utf-8")

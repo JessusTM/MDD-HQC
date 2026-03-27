@@ -1,59 +1,59 @@
 """UML class diagram in-memory model.
 
-This module defines a small set of models to represent a UML Class Diagram.
-
-Conventions:
-- Names are kept as provided by transformations (prototype behavior).
+This module defines a compact set of models used by the PIM->PSM
+transformation to represent classes, methods, attributes, notes, and
+dependencies before rendering PlantUML.
 """
 
 from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
-# ============ BASE MODEL ============
+# ------------ BASE MODEL ------------
 class UmlBaseModel(BaseModel):
     """Base class for UML models."""
 
 
-# ============ HELPER MODELS ============
+# ------------ HELPER MODELS ------------
 class UmlAttribute(UmlBaseModel):
-    """Class attribute."""
+    """Attribute owned by one UML class."""
 
     name: str
     type: str = "String"
     default: Optional[str] = None
-    tagged_values: dict[str, str] = Field(default_factory=dict)
-    comments: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
 
 
 class UmlMethodParameter(UmlBaseModel):
-    """Method parameter."""
+    """Parameter declared by one UML method."""
 
     name: str
     type: str = "String"
 
 
 class UmlMethod(UmlBaseModel):
-    """Class method."""
+    """Method owned by one UML class."""
 
     name: str
     parameters: list[UmlMethodParameter] = Field(default_factory=list)
     return_type: str = "void"
     stereotypes: list[str] = Field(default_factory=list)
-    tagged_values: dict[str, str] = Field(default_factory=dict)
-    comments: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
+
+    def add_note(self, note: str):
+        text = (note or "").strip()
+        if text:
+            self.notes.append(text)
 
 
 class UmlClass(UmlBaseModel):
-    """UML class node."""
+    """UML class node with members and notes."""
 
     name: str
     stereotypes: list[str] = Field(default_factory=list)
     attributes: list[UmlAttribute] = Field(default_factory=list)
     methods: list[UmlMethod] = Field(default_factory=list)
-    tagged_values: dict[str, str] = Field(default_factory=dict)
-    comments: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
 
     def add_attribute(self, attr: UmlAttribute):
         self.attributes.append(attr)
@@ -61,42 +61,36 @@ class UmlClass(UmlBaseModel):
     def add_method(self, method: UmlMethod):
         self.methods.append(method)
 
-    def add_comment(self, comment: str):
-        text = (comment or "").strip()
+    def add_note(self, note: str):
+        text = (note or "").strip()
         if text:
-            self.comments.append(text)
-
-    def add_tagged_value(self, key: str, value: str):
-        k = (key or "").strip()
-        v = (value or "").strip()
-        if k and v:
-            self.tagged_values[k] = v
+            self.notes.append(text)
 
 
 class UmlDependency(UmlBaseModel):
-    """Dependency relationship (source ..> target)."""
+    """Dependency relationship between two UML classes."""
 
     source: str
     target: str
     stereotype: Optional[str] = None
     label: Optional[str] = None
-    comments: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
 
 
-# ============ DIAGRAM MODEL ============
+# ------------ DIAGRAM MODEL ------------
 class UmlModel(UmlBaseModel):
     """UML diagram container.
 
     Data held in memory:
     - classes: map of class name -> UmlClass
     - dependencies: list of UmlDependency
-    - comments: free-form comment lines
+    - notes: free-form diagram-level notes
     """
 
     name: str
     classes: dict[str, UmlClass] = Field(default_factory=dict)
     dependencies: list[UmlDependency] = Field(default_factory=list)
-    comments: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
 
     def get_or_create_class(self, label: str) -> UmlClass:
         name = (label or "").strip()
@@ -111,13 +105,19 @@ class UmlModel(UmlBaseModel):
         self.classes[name] = uml_class
         return uml_class
 
+    def get_class(self, label: str) -> Optional[UmlClass]:
+        name = (label or "").strip()
+        if not name:
+            return None
+        return self.classes.get(name)
+
     def add_dependency(self, dep: UmlDependency) -> None:
         self.dependencies.append(dep)
 
-    def add_comment(self, comment: str) -> None:
-        text = (comment or "").strip()
+    def add_note(self, note: str) -> None:
+        text = (note or "").strip()
         if text:
-            self.comments.append(text)
+            self.notes.append(text)
 
     def get_classes(self) -> dict[str, UmlClass]:
         return self.classes
@@ -131,7 +131,7 @@ class UmlModel(UmlBaseModel):
         target_label: str,
         stereotype: Optional[str] = None,
         label: Optional[str] = None,
-        comments: Optional[list[str]] = None,
+        notes: Optional[list[str]] = None,
     ) -> UmlDependency:
         source = self.get_or_create_class(source_label)
         target = self.get_or_create_class(target_label)
@@ -141,7 +141,7 @@ class UmlModel(UmlBaseModel):
             target=target.name,
             stereotype=stereotype,
             label=label,
-            comments=comments or [],
+            notes=notes or [],
         )
         self.add_dependency(dep)
         return dep
@@ -175,3 +175,22 @@ class UmlModel(UmlBaseModel):
         )
         uml_class.add_method(method)
         return method
+
+    def get_method_from_class(
+        self,
+        class_name: str,
+        method_name: str,
+    ) -> Optional[UmlMethod]:
+        uml_class = self.get_class(class_name)
+        if uml_class is None:
+            return None
+
+        normalized_method_name = (method_name or "").strip()
+        if not normalized_method_name:
+            return None
+
+        for method in uml_class.methods:
+            if method.name == normalized_method_name:
+                return method
+
+        return None
