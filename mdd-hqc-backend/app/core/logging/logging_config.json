@@ -53,6 +53,23 @@
       "handlers": ["stdout", "stderr", "file"]
     }
   },
+  "loggers": {
+    "uvicorn": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    },
+    "uvicorn.error": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    },
+    "uvicorn.access": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    }
+  },
   "root": {
     "level": "INFO",
     "handlers": ["queue"]

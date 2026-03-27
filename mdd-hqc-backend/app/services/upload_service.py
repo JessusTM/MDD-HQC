@@ -1,16 +1,18 @@
 import logging
 import shutil
 from pathlib import Path
-
 from fastapi import UploadFile
 
 logger = logging.getLogger(__name__)
 
 
 class UploadService:
-    BASE_DIR = Path("app/data")
+    """Stores uploaded XML models on disk so they can be processed later."""
+
+    BASE_DIR = Path("data")
 
     async def upload_file(self, uploaded_file: UploadFile) -> Path:
+        """Validates one uploaded XML file and writes it into the local data directory."""
         self.validate_extension(uploaded_file.filename)
         self.BASE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -22,7 +24,10 @@ class UploadService:
         return dest_path
 
     def validate_extension(self, uploaded_file):
+        """Rejects uploaded files whose extension is different from `.xml`."""
         extension = Path(uploaded_file).suffix.lower()
         if extension != ".xml":
-            logger.warning("Upload rejected: only .xml files allowed, got extension=%s", extension)
+            logger.warning(
+                "Upload rejected: only .xml files allowed, got extension=%s", extension
+            )
             raise ValueError("Solo se permiten archivos .xml")

@@ -6,7 +6,6 @@ import logging
 import logging.config
 import logging.handlers
 from pathlib import Path
-
 from app.core.config import config
 
 

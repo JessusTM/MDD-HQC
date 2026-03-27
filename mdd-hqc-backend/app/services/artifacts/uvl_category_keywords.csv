@@ -1,4 +1,15 @@
 category,keyword
+@Algorithm.Classical,classical
+@Algorithm.Classical,clasico
+@Algorithm.Classical,clásico
+@Algorithm.Classical,grafos
+@Algorithm.Classical,graph
+@Algorithm.Quantum,quantum
+@Algorithm.Quantum,cuantico
+@Algorithm.Quantum,cuántico
+@Algorithm.Quantum,annealing
+@Algorithm.Quantum,quantum annealing
+@Algorithm.Quantum,quantum_annealing
 @Algorithm,qaoa
 @Algorithm,vqe
 @Algorithm,qml
@@ -10,9 +21,6 @@ category,keyword
 @Algorithm,qft
 @Algorithm,qpe
 @Algorithm,hhl
-@Algorithm,annealing
-@Algorithm,quantum annealing
-@Algorithm,quantum_annealing
 @Algorithm,algoritmo
 @Algorithm,algorithm
 @Algorithm,heurístico
