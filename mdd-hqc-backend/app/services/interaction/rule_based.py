@@ -17,7 +17,7 @@ class RuleBasedInteractionEngine(InteractionEngine):
                 questions.append(
                     InteractionQuestion(
                         id="q_goal_missing",
-                        text="Se detectó un goal sin nombre, ¿cómo debería llamarse?",
+                        text="An unnamed goal was detected. What should it be called?",
                         scope="missing_information",
                     )
                 )
@@ -30,7 +30,7 @@ class RuleBasedInteractionEngine(InteractionEngine):
                         kind="add_or_group_child",
                         target={"parent": link.source},
                         data={"child": link.target},
-                        rationale="Se detectó un refinamiento en el CIM",
+                        rationale="A refinement was detected in the CIM",
                     )
                 )
         return InteractionReport(questions=questions, proposals=proposals)

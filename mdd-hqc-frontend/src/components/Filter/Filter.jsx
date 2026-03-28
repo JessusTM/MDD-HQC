@@ -1,5 +1,6 @@
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
+import { transformCimToPim } from "../../services/transformations"
 import { transformPimToPsm } from "../../services/transformations"
 
 export const Filter = ({
@@ -7,7 +8,6 @@ export const Filter = ({
   uvlContent,
   onTransformCimToPim,
   onTransformPimToPsm,
-  onOpenQuestionsModal,
 }) => {
   const [source, setSource] = useState("CIM")
   const [target, setTarget] = useState("PIM")
@@ -21,8 +21,9 @@ export const Filter = ({
     setLoading(true)
     try {
       if (source === "CIM" && target === "PIM") {
-        onOpenQuestionsModal?.();
-        return;
+        const response = await transformCimToPim(uploadedFilePath)
+        onTransformCimToPim?.(response)
+        return
       }
       
       if (source === "PIM" && target === "PSM") {

@@ -23,13 +23,13 @@ class LLMInteractionEngine(InteractionEngine):
                 questions.append(
                     InteractionQuestion(
                         id="q_algorithm",
-                        text="¿Qué tipo de algoritmo se utilizará?",
+                        text="What type of algorithm will be used?",
                         scope="missing_information",
                         options=[
                             "Greedy",
                             "Dynamic Programming",
                             "Quantum Search",
-                            "Otro",
+                            "Other",
                         ],
                     )
                 )
@@ -37,16 +37,16 @@ class LLMInteractionEngine(InteractionEngine):
                 questions.append(
                     InteractionQuestion(
                         id="q_programming",
-                        text="¿Qué framework/lenguaje se usará para programar?",
+                        text="Which framework/language will be used for development?",
                         scope="missing_information",
-                        options=["Python", "Rust", "Q#", "Otro"],
+                        options=["Python", "Rust", "Q#", "Other"],
                     )
                 )
             elif missing == "Integration_model":
                 questions.append(
                     InteractionQuestion(
                         id="q_integration",
-                        text="¿Qué modelo de integración se usará? (SOA, middleware, etc.)",
+                        text="Which integration model will be used? (SOA, middleware, etc.)",
                         scope="missing_information",
                         options=["Middleware/API", "Microservices", "Quantum-SOA"],
                     )
@@ -55,15 +55,15 @@ class LLMInteractionEngine(InteractionEngine):
                 questions.append(
                     InteractionQuestion(
                         id="q_hw",
-                        text="¿Qué restriccion HW es más relevante?",
+                        text="Which hardware constraint is the most relevant?",
                         scope="missing_information",
                         options=[
                             "Qubits",
                             "Shots",
                             "Circuit depth",
                             "Error rate",
-                            "Conectividad",
-                            "Otro",
+                            "Connectivity",
+                            "Other",
                         ],
                     )
                 )
@@ -71,7 +71,7 @@ class LLMInteractionEngine(InteractionEngine):
                 questions.append(
                     InteractionQuestion(
                         id="q_functionality",
-                        text="¿Qué funcionalidad principal debe cubrir el sistema?",
+                        text="What main functionality should the system cover?",
                         scope="missing_information",
                     )
                 )
