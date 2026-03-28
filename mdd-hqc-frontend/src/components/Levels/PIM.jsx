@@ -5,12 +5,12 @@ export const PIM = ({ uvlContent, metrics }) => {
 
   return (
     <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
-      <div className="p-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
-        <div className="flex items-center gap-4">
+      <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="p-2.5 bg-ctp-surface1 rounded-lg">
             <Layers className="w-8 h-8 text-ctp-mauve" />
           </div>
-          <div>
+          <div className="min-w-0 text-left">
             <h3 className="font-bold text-ctp-text text-2xl">PIM</h3>
             <p className="text-lg text-ctp-subtext0 font-semibold hidden xl:block">
               UVL (Universal Variability Language)
@@ -19,7 +19,7 @@ export const PIM = ({ uvlContent, metrics }) => {
         </div>
 
         {hasContent && (
-          <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm">
+          <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
             <CheckCircle className="w-4 h-4" /> Ready
           </span>
         )}
@@ -74,48 +74,14 @@ export const PIM = ({ uvlContent, metrics }) => {
                   </span>
                 </div>
 
-                {metrics.semantic_preservation && (
-                  <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0 font-semibold">Semantic Preservation:</span>
-                    <div className="mt-1 space-y-1 text-xs">
-                      <div className="text-ctp-text">
-                        Features with metadata:{" "}
-                        <span className="font-semibold">
-                          {metrics.semantic_preservation.features_with_metadata || 0}
-                        </span>{" "}
-                        ({metrics.semantic_preservation.metadata_percentage || 0}%)
-                      </div>
-
-                      <div className="text-ctp-text">
-                        Total metadata:{" "}
-                        <span className="font-semibold">
-                          {metrics.semantic_preservation.total_metadata || 0}
-                        </span>
-                      </div>
-
-                      <div className="text-ctp-text">
-                        Features with attributes:{" "}
-                        <span className="font-semibold">
-                          {metrics.semantic_preservation.features_with_attributes || 0}
-                        </span>{" "}
-                        ({metrics.semantic_preservation.attributes_percentage || 0}%)
-                      </div>
-
-                      <div className="text-ctp-text">
-                        Total attributes:{" "}
-                        <span className="font-semibold">
-                          {metrics.semantic_preservation.total_attributes || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ) : (
-            <span className="text-ctp-subtext0 text-xl font-semibold italic">
-               No metrics available
-            </span>
+            <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
+              <span className="text-ctp-subtext0 text-xl font-semibold italic">
+                No metrics available
+              </span>
+            </div>
           )}
         </div>
       </div>

@@ -43,25 +43,6 @@ class UvlMetricsService:
             if attributes_size > 0:
                 features_with_attributes += 1
 
-        metadata_percentage = 0.0
-        attributes_percentage = 0.0
-        if total_features > 0:
-            metadata_percentage = (
-                features_with_metadata / float(total_features)
-            ) * 100.0
-            attributes_percentage = (
-                features_with_attributes / float(total_features)
-            ) * 100.0
-
-        metrics["semantic_preservation"] = {
-            "features_with_metadata": features_with_metadata,
-            "total_metadata": total_metadata,
-            "metadata_percentage": round(metadata_percentage, 2),
-            "features_with_attributes": features_with_attributes,
-            "total_attributes": total_attributes,
-            "attributes_percentage": round(attributes_percentage, 2),
-        }
-
         if total_features > 0:
             metrics["density"] = {
                 "average_metadata_per_feature": total_metadata / float(total_features),

@@ -24,9 +24,6 @@ class UmlMetricsService:
         algorithm_classes = 0
         quantum_driver_classes = 0
         other_stereotyped_classes = 0
-        classes_with_notes = 0
-        total_notes = 0
-
         for uml_class in classes.values():
             attributes_size = len(uml_class.attributes)
             methods_size = len(uml_class.methods)
@@ -44,11 +41,6 @@ class UmlMetricsService:
             ):
                 other_stereotyped_classes += 1
 
-            notes_size = len(uml_class.notes)
-            total_notes += notes_size
-            if notes_size > 0:
-                classes_with_notes += 1
-
         metrics["attributes"] = total_attributes
         metrics["methods"] = total_methods
 
@@ -56,11 +48,6 @@ class UmlMetricsService:
             "algorithm_classes": algorithm_classes,
             "quantum_driver_classes": quantum_driver_classes,
             "other_stereotyped_classes": other_stereotyped_classes,
-        }
-
-        metrics["semantic_preservation"] = {
-            "classes_with_notes": classes_with_notes,
-            "total_notes": total_notes,
         }
 
         if total_classes > 0:

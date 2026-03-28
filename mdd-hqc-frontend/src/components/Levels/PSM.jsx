@@ -46,21 +46,21 @@ export const PSM = ({ pumlContent, metrics }) => {
   return (
     <>
       <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
-        <div className="p-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
-          <div className="flex items-center gap-4">
+        <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2.5 bg-ctp-surface1 rounded-lg">
               <Code className="w-8 h-8 text-ctp-teal" />
             </div>
-            <div>
+            <div className="min-w-0 text-left">
               <h3 className="font-bold text-ctp-text text-2xl">PSM</h3>
               <p className="text-lg text-ctp-subtext0 font-semibold hidden xl:block">
-                Quantum UML / PlantUML
+                UML with Quantum UML
               </p>
             </div>
           </div>
 
           {hasContent && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setIsFullscreen(true)}
                 className="px-3 py-1.5 bg-ctp-blue/20 hover:bg-ctp-blue/30 text-ctp-blue border border-ctp-blue/30 text-sm font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors"
@@ -128,31 +128,14 @@ export const PSM = ({ pumlContent, metrics }) => {
                       </div>
                     </>
                   )}
-                  {metrics.semantic_preservation && (
-                    <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                      <span className="text-ctp-subtext0 font-semibold">Semantic Preservation:</span>
-                      <div className="mt-1 space-y-1 text-xs">
-                        <div className="text-ctp-text">
-                          Classes with comments: <span className="font-semibold">{metrics.semantic_preservation.classes_with_comments || 0}</span>
-                        </div>
-                        <div className="text-ctp-text">
-                          Total comments: <span className="font-semibold">{metrics.semantic_preservation.total_comments || 0}</span>
-                        </div>
-                        <div className="text-ctp-text">
-                          Classes with tagged values: <span className="font-semibold">{metrics.semantic_preservation.classes_with_tagged_values || 0}</span>
-                        </div>
-                        <div className="text-ctp-text">
-                          Total tagged values: <span className="font-semibold">{metrics.semantic_preservation.total_tagged_values || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             ) : (
-              <span className="text-ctp-subtext0 text-xl font-semibold italic">
-                 No metrics available
-              </span>
+              <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
+                <span className="text-ctp-subtext0 text-xl font-semibold italic">
+                  No metrics available
+                </span>
+              </div>
             )}
           </div>
         </div>

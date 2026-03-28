@@ -1,13 +1,13 @@
 export const Header = () => {
   return (
-    <header className="bg-ctp-mantle border-b border-ctp-surface0 shrink-0 z-50 shadow-lg shadow-black/20 h-20 sticky top-0">
-      <div className="w-full max-w-[1920px] mx-auto px-6 h-full flex items-center justify-center relative pt-3 pb-2">
+    <header className="bg-ctp-mantle border-b border-ctp-surface0 shrink-0 z-50 shadow-lg shadow-black/20 h-24 sticky top-0">
+      <div className="w-full max-w-[1920px] mx-auto px-6 h-full flex items-center justify-center relative pt-3 pb-3">
         <div className="text-center mt-1">
           <h1 className="text-4xl font-bold text-ctp-text tracking-tight leading-tight">
             MDD-HQC
           </h1>
-          <p className="text-xl text-ctp-subtext0 font-semibold mt-1">
-            Agent-oriented prototype for hybrid systems
+          <p className="text-xl text-ctp-subtext0 font-semibold mt-1 mb-1">
+            A Goal-Oriented Model-Driven Solution for the Design of Hybrid Quantum-Classical Systems
           </p>
         </div>
 
