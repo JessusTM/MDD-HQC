@@ -7,28 +7,32 @@ from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+BASE_PATH = Path(__file__).resolve().parent
+CSV_PATH = BASE_PATH / "uvl_category_keywords.csv"
+FEATURE_MODEL_HQC = (
+    "@Algorithm.Classical",
+    "@Algorithm.Quantum",
+    "@Algorithm",
+    "@Programming",
+    "@Integration_model",
+    "@Quantum_HW_constraint",
+    "@Functionality",
+)
+
 
 class UvlService:
-    BASE_PATH = Path(__file__).resolve().parent
-    CSV_PATH = BASE_PATH / "uvl_category_keywords.csv"
-    CATEGORY_ORDER = [
-        "@Algorithm.Classical",
-        "@Algorithm.Quantum",
-        "@Algorithm",
-        "@Programming",
-        "@Integration_model",
-        "@Quantum_HW_constraint",
-        "@Functionality",
-    ]
-
     def __init__(self):
-        self.category_keywords: Dict[str, List[str]] = self.load_category_keywords()
+        """Initializes the service and loads the keyword catalog used for classification."""
+        self.category_keywords: Dict[str, List[str]] = self._load_category_keywords()
 
-    def load_category_keywords(self) -> Dict[str, List[str]]:
-        """Loads the keyword dictionary used to classify CIM labels into UVL branches."""
+    # ------------ CATEGORY KEYWORD LOADING ------------
+    # Helpers to load category keywords from the CSV file.
+
+    def _load_category_keywords(self) -> Dict[str, List[str]]:
+        """Loads the keyword catalog that maps CIM labels to UVL categories."""
         categories: Dict[str, List[str]] = {}
 
-        with self.CSV_PATH.open("r", encoding="utf-8") as f:
+        with CSV_PATH.open("r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 category = row["category"].strip()
@@ -38,13 +42,20 @@ class UvlService:
                 categories.setdefault(category, []).append(keyword)
         logger.debug(
             "Loaded UVL category keywords: path=%s, categories=%s",
-            self.CSV_PATH,
+            CSV_PATH,
             list(categories.keys()),
         )
         return categories
 
+    # ------------ TEXT NORMALIZATION ------------
+    # Helpers to normalize labels before matching and formatting.
+
     def _normalize_text(self, text: str) -> str:
-        """Normalizes labels so dictionary lookups ignore accents and punctuation noise."""
+        """
+        Normalizes a label so lookups ignore accents, symbols, and extra spaces.
+
+        NOTE: NFKD splits base characters from diacritics so accents can be removed safely.
+        """
         normalized = unicodedata.normalize("NFKD", text)
         ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
         cleaned = re.sub(r"[^A-Za-z0-9\s]", " ", ascii_text)
@@ -52,16 +63,36 @@ class UvlService:
         return cleaned.strip()
 
     def _split_words(self, label: str) -> List[str]:
+        """Splits a normalized label into words used by the naming formatters."""
         text = self._normalize_text(label)
         if not text:
             return []
         return text.split(" ")
 
+    # ------------ CATEGORY MATCHING ------------
+    # Helpers to find the best UVL category for a label.
+
+    def _find_matching_category(self, label: str) -> Optional[str]:
+        """Finds the first matching category for a label using the configured priority order."""
+        lower = self._normalize_text(label).lower()
+
+        for category in FEATURE_MODEL_HQC:
+            for word in self.category_keywords.get(category, []):
+                if word in lower:
+                    return category
+        return None
+
+    # ====== PUBLIC API ======
+
+    # ------------ NAME FORMATTING ------------
+    # Helpers to format source labels as UVL names.
+
     def format_feature_name(self, label: str) -> str:
-        """Formats one source label into the UVL feature naming convention."""
+        """Formats a source label into the PascalCase convention used for UVL features."""
         words = self._split_words(label)
         if not words:
             return ""
+
         result = words[0].capitalize()
         for word in words[1:]:
             if word:
@@ -69,7 +100,7 @@ class UvlService:
         return result
 
     def format_attribute_name(self, label: str) -> str:
-        """Formats one source label into the UVL attribute naming convention."""
+        """Formats a source label into the camelCase convention used for UVL attributes."""
         words = self._split_words(label)
         if not words:
             return ""
@@ -80,19 +111,12 @@ class UvlService:
                 result += word.capitalize()
         return result
 
-    def _resolve_category_match(self, label: str) -> Optional[str]:
-        """Finds the most specific category key that matches the normalized label."""
-        lower = self._normalize_text(label).lower()
-
-        for category in self.CATEGORY_ORDER:
-            for word in self.category_keywords.get(category, []):
-                if word in lower:
-                    return category
-        return None
+    # ------------ FEATURE CLASSIFICATION ------------
+    # Helpers to assign category and subcategory to a feature label.
 
     def assign_category(self, label: str) -> str:
-        """Returns the main UVL category for one label using the project dictionary."""
-        category = self._resolve_category_match(label)
+        """Returns the main UVL category that should contain the given source label."""
+        category = self._find_matching_category(label)
         if category is None:
             return "@Functionality"
 
@@ -101,29 +125,38 @@ class UvlService:
 
         return category
 
-    def assign_subgroup(self, label: str, category: str) -> Optional[str]:
-        """Returns the UVL subgroup when the selected category supports nested branches."""
+    def assign_subcategory(self, label: str, category: str) -> Optional[str]:
+        """Returns the nested algorithm subcategory when the selected category supports it."""
         if category != "@Algorithm":
             return None
 
-        resolved_category = self._resolve_category_match(label)
+        resolved_category = self._find_matching_category(label)
         if resolved_category is None:
             return None
 
-        subgroup_by_category = {
-            "@Algorithm.Classical": "Classical",
-            "@Algorithm.Quantum": "Quantum",
-        }
-        return subgroup_by_category.get(resolved_category)
+        if resolved_category == "@Algorithm.Classical":
+            return "Classical"
+        if resolved_category == "@Algorithm.Quantum":
+            return "Quantum"
+        return None
 
     def classify_feature(self, label: str) -> Tuple[str, Optional[str]]:
-        """Classifies one label into UVL category and optional subgroup in one step."""
+        """Classifies a label and returns its UVL category plus an optional subcategory."""
         category = self.assign_category(label)
-        subgroup = self.assign_subgroup(label, category)
-        return category, subgroup
+        subcategory = self.assign_subcategory(label, category)
+        return category, subcategory
+
+    # ------------ UVL PARSING ------------
+    # Helpers to build lightweight data structures from UVL text.
 
     def parse_uvl_to_dict(self, uvl_text: str) -> dict:
-        """Builds a lightweight interaction DTO from the current UVL text format."""
+        """Parses the current UVL text into the lightweight dictionary consumed by interactions.
+
+        This helper is used in the interaction flow when the backend needs a simple DTO-like
+        representation of the UVL content instead of the raw text. At this stage of the flow,
+        only the namespace and the top-level HQC feature groups are required, so the method
+        extracts those elements and returns empty placeholders for constraints and OR groups.
+        """
         namespace = "default"
         features = []
 
@@ -151,8 +184,11 @@ class UvlService:
             "or_groups": {},
         }
 
+    # ------------ FUNCTIONALITY EXTRACTION ------------
+    # Helpers to extract direct functionality names from the UVL model.
+
     def extract_functionality_names(self, uvl_text: str) -> List[str]:
-        """Extracts direct functionality feature names from the current UVL structure."""
+        """Extracts direct functionality feature names from the mandatory Functionality block."""
         lines = uvl_text.splitlines()
         names: List[str] = []
         in_functionality = False

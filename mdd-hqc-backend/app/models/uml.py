@@ -41,6 +41,7 @@ class UmlMethod(UmlBaseModel):
     notes: list[str] = Field(default_factory=list)
 
     def add_note(self, note: str):
+        """Appends a non-empty note to the method."""
         text = (note or "").strip()
         if text:
             self.notes.append(text)
@@ -56,12 +57,15 @@ class UmlClass(UmlBaseModel):
     notes: list[str] = Field(default_factory=list)
 
     def add_attribute(self, attr: UmlAttribute):
+        """Adds one attribute to the class member list."""
         self.attributes.append(attr)
 
     def add_method(self, method: UmlMethod):
+        """Adds one method to the class member list."""
         self.methods.append(method)
 
     def add_note(self, note: str):
+        """Appends a non-empty note to the class."""
         text = (note or "").strip()
         if text:
             self.notes.append(text)
@@ -93,6 +97,7 @@ class UmlModel(UmlBaseModel):
     notes: list[str] = Field(default_factory=list)
 
     def get_or_create_class(self, label: str) -> UmlClass:
+        """Returns an existing class by label or creates a new one when missing."""
         name = (label or "").strip()
         if not name:
             name = "Class"
@@ -106,23 +111,28 @@ class UmlModel(UmlBaseModel):
         return uml_class
 
     def get_class(self, label: str) -> Optional[UmlClass]:
+        """Returns the class matching the given label, if it exists."""
         name = (label or "").strip()
         if not name:
             return None
         return self.classes.get(name)
 
     def add_dependency(self, dep: UmlDependency) -> None:
+        """Adds one dependency to the diagram model."""
         self.dependencies.append(dep)
 
     def add_note(self, note: str) -> None:
+        """Appends a non-empty diagram-level note."""
         text = (note or "").strip()
         if text:
             self.notes.append(text)
 
     def get_classes(self) -> dict[str, UmlClass]:
+        """Returns the class index keyed by class name."""
         return self.classes
 
     def get_dependencies(self) -> list[UmlDependency]:
+        """Returns the list of registered class dependencies."""
         return self.dependencies
 
     def add_dependency_by_label(
@@ -133,6 +143,7 @@ class UmlModel(UmlBaseModel):
         label: Optional[str] = None,
         notes: Optional[list[str]] = None,
     ) -> UmlDependency:
+        """Creates a dependency from labels, ensuring both endpoint classes exist."""
         source = self.get_or_create_class(source_label)
         target = self.get_or_create_class(target_label)
 
@@ -153,6 +164,7 @@ class UmlModel(UmlBaseModel):
         attribute_type: str = "String",
         default: Optional[str] = None,
     ) -> UmlAttribute:
+        """Creates an attribute and attaches it to the target class."""
         uml_class = self.get_or_create_class(class_label)
         attribute = UmlAttribute(
             name=attribute_name, type=attribute_type, default=default
@@ -167,6 +179,7 @@ class UmlModel(UmlBaseModel):
         parameters: Optional[list[UmlMethodParameter]] = None,
         return_type: str = "void",
     ) -> UmlMethod:
+        """Creates a method and attaches it to the target class."""
         uml_class = self.get_or_create_class(class_name)
         method = UmlMethod(
             name=method_name,
@@ -181,6 +194,7 @@ class UmlModel(UmlBaseModel):
         class_name: str,
         method_name: str,
     ) -> Optional[UmlMethod]:
+        """Returns a method from the given class when both names can be resolved."""
         uml_class = self.get_class(class_name)
         if uml_class is None:
             return None

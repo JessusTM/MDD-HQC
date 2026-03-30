@@ -2,9 +2,7 @@
 
 import logging
 from typing import Dict, List, Optional
-
 from pydantic import BaseModel
-
 from app.models.istar import IstarModel
 from app.models.uvl import UVL
 from app.services.artifacts.uvl_service import UvlService
@@ -31,7 +29,6 @@ class CimToPim:
         self.elements_to_actors: Dict[str, str] = {}
         self.feature_locations: Dict[str, FeatureLocation] = {}
 
-    # ======= Private Helpers =======
     # ----- Feature Resolution and Creation -----
     # These helpers classify CIM labels, build UVL locations, and ensure features exist.
 
