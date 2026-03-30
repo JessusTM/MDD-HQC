@@ -53,7 +53,7 @@ export const PSM = ({ pumlContent, metrics }) => {
             </div>
             <div className="min-w-0 text-left">
               <h3 className="font-bold text-ctp-text text-2xl">PSM</h3>
-              <p className="text-lg text-ctp-subtext0 font-semibold hidden xl:block">
+              <p className="text-lg text-[#a0988c] font-semibold hidden xl:block">
                 UML with Quantum UML
               </p>
             </div>
@@ -87,7 +87,7 @@ export const PSM = ({ pumlContent, metrics }) => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
-              <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
+              <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
                 Waiting for UVL to UML transformation...
               </p>
             </div>
@@ -101,29 +101,29 @@ export const PSM = ({ pumlContent, metrics }) => {
                 <h4 className="text-ctp-text font-bold text-sm mb-3">PSM Metrics</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Total classes:</span>
+                    <span className="text-[#a0988c]">Total classes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_classes || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Dependencies:</span>
+                    <span className="text-[#a0988c]">Dependencies:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_dependencies || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Attributes:</span>
+                    <span className="text-[#a0988c]">Attributes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.attributes || 0}</span>
                   </div>
                   <div className="bg-ctp-surface0/50 p-2 rounded">
-                    <span className="text-ctp-subtext0">Methods:</span>
+                    <span className="text-[#a0988c]">Methods:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.methods || 0}</span>
                   </div>
                   {metrics.stereotypes && (
                     <>
                       <div className="bg-ctp-surface0/50 p-2 rounded">
-                        <span className="text-ctp-subtext0">Algorithm:</span>
+                        <span className="text-[#a0988c]">Algorithm:</span>
                         <span className="text-ctp-text font-semibold ml-2">{metrics.stereotypes.algorithm_classes || 0}</span>
                       </div>
                       <div className="bg-ctp-surface0/50 p-2 rounded">
-                        <span className="text-ctp-subtext0">QuantumDriver:</span>
+                        <span className="text-[#a0988c]">QuantumDriver:</span>
                         <span className="text-ctp-text font-semibold ml-2">{metrics.stereotypes.quantum_driver_classes || 0}</span>
                       </div>
                     </>
@@ -132,7 +132,7 @@ export const PSM = ({ pumlContent, metrics }) => {
               </div>
             ) : (
               <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
-                <span className="text-ctp-subtext0 text-xl font-semibold italic">
+                <span className="text-[#a0988c] text-xl font-semibold italic">
                   No metrics available
                 </span>
               </div>

@@ -49,8 +49,8 @@ export const Filter = ({
     <div className="w-full relative">
       <div className="bg-ctp-mantle border-2 border-ctp-surface1 shadow-xl rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-4">
 
-        <div className="flex items-center gap-6 flex-1">
-          <div className="flex items-center gap-3 text-ctp-overlay1 mr-4">
+          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-3 text-[#7F849C] mr-3">
             <Settings2 className="w-6 h-6" />
             <span className="text-lg font-semibold uppercase tracking-wider hidden md:inline">
               Transformation
@@ -58,12 +58,12 @@ export const Filter = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">From</span>
+            <span className="text-lg font-bold text-[#7F849C] uppercase tracking-wide">From</span>
             <div className="relative">
               <select
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-transparent text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#FAB387] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -72,15 +72,15 @@ export const Filter = ({
             </div>
           </div>
 
-          <ArrowRight className="text-ctp-surface2 w-6 h-6" />
+          <ArrowRight className="text-ctp-surface2 w-8 h-8" />
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">To</span>
+            <span className="text-lg font-bold text-[#7F849C] uppercase tracking-wide">To</span>
             <div className="relative">
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-transparent text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#FAB387] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -96,10 +96,10 @@ export const Filter = ({
             disabled={!canTransform || loading}
             onClick={handleTransform}
             className={`
-              flex items-center gap-3 px-8 py-3 rounded-lg font-bold text-ctp-base shadow-lg transition-all text-base tracking-wide
+              flex items-center gap-2.5 min-w-[138px] justify-center px-6 py-3 rounded-lg font-semibold border transition-all text-base
               ${!canTransform || loading
-                ? "bg-ctp-surface0 text-ctp-overlay0 cursor-not-allowed shadow-none border border-ctp-surface1"
-                : "bg-ctp-mauve hover:bg-ctp-pink active:bg-ctp-pink text-ctp-base"
+                ? "bg-ctp-surface0 text-[#a0988c] cursor-not-allowed border-[#FAB387]"
+                : "bg-ctp-surface0 text-[#a0988c] border-[#FAB387] hover:bg-ctp-surface1"
               }
             `}
           >
@@ -110,8 +110,8 @@ export const Filter = ({
               </>
             ) : (
               <>
-                <Play className="w-5 h-5 fill-current" />
-                Run
+                <Play className="w-4 h-4 fill-current opacity-80" />
+                Execute
               </>
             )}
           </button>

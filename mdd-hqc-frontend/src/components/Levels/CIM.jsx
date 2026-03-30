@@ -1,15 +1,16 @@
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
 import { uploadFile } from "../../services/file"
 import { getCimMetrics } from "../../services/metrics"
 
-export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
+export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample }) => {
   const [file, setFile] = useState(null)
   const [filePath, setFilePath] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
   const [infoMessage, setInfoMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef(null)
+  const processedExampleRequestRef = useRef(null)
 
   const reset = ({ clearError = true } = {}) => {
     setFile(null)
@@ -35,7 +36,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
     await processFile(selected)
   }
 
-  const processFile = async (fileToRead) => {
+  const processFile = useCallback(async (fileToRead) => {
     try {
       const uploadResponse = await uploadFile(fileToRead)
       const path = uploadResponse.path
@@ -54,7 +55,46 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [onFileUploaded, onMetricsLoaded])
+
+  useEffect(() => {
+    const loadExample = async () => {
+      if (!selectedExample?.url || !selectedExample?.requestId) return
+      if (processedExampleRequestRef.current === selectedExample.requestId) return
+
+      processedExampleRequestRef.current = selectedExample.requestId
+
+      try {
+        setFile(null)
+        setFilePath(null)
+        setErrorMessage("")
+        setInfoMessage(`Loading ${selectedExample.name}...`)
+        setLoading(true)
+
+        const response = await fetch(selectedExample.url)
+        if (!response.ok) {
+          throw new Error("Example file could not be loaded")
+        }
+
+        const blob = await response.blob()
+        const exampleFile = new File([blob], `${selectedExample.name}.xml`, {
+          type: "text/xml",
+        })
+
+        setFile(exampleFile)
+        await processFile(exampleFile)
+      } catch (error) {
+        console.error("Error loading example", error)
+        processedExampleRequestRef.current = null
+        setFile(null)
+        setErrorMessage("Error loading example")
+        setInfoMessage("")
+        setLoading(false)
+      }
+    }
+
+    loadExample()
+  }, [processFile, selectedExample])
 
   return (
     <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
@@ -65,7 +105,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
           </div>
           <div className="min-w-0 text-left">
             <h3 className="font-bold text-ctp-text text-2xl">CIM</h3>
-            <p className="text-lg text-ctp-subtext0 font-semibold hidden xl:block">
+            <p className="text-lg text-[#a0988c] font-semibold hidden xl:block">
               i* 2.0 (iStar)
             </p>
           </div>
@@ -80,7 +120,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
 
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
         <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
-          <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
+          <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
             Upload your i* 2.0 (XML) file here...
           </p>
 
@@ -103,7 +143,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
 
           <div className="mt-4 text-sm">
             {file && !errorMessage && !infoMessage && (
-              <span className="text-ctp-subtext0">{file.name}</span>
+              <span className="text-[#a0988c]">{file.name}</span>
             )}
 
             {infoMessage && (
@@ -120,7 +160,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
       <div className="shrink-0 bg-ctp-mantle border-t border-ctp-surface0/50 p-4">
         <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 text-ctp-subtext0">
+            <div className="flex items-center justify-center gap-2 text-[#a0988c]">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-sm font-semibold">Calculating metrics...</span>
             </div>
@@ -129,49 +169,49 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
               <h4 className="text-ctp-text font-bold text-sm mb-3">CIM Metrics</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Goals:</span>
+                  <span className="text-[#a0988c]">Goals:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.goals || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Tasks:</span>
+                  <span className="text-[#a0988c]">Tasks:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.tasks || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Softgoals:</span>
+                  <span className="text-[#a0988c]">Softgoals:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.softgoals || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Resources:</span>
+                  <span className="text-[#a0988c]">Resources:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.resources || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Actors:</span>
+                  <span className="text-[#a0988c]">Actors:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.actors || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Agents:</span>
+                  <span className="text-[#a0988c]">Agents:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.agents || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Roles:</span>
+                  <span className="text-[#a0988c]">Roles:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.roles || 0}</span>
                 </div>
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Dependencies:</span>
+                  <span className="text-[#a0988c]">Dependencies:</span>
                   <span className="text-ctp-text font-semibold ml-2">{metrics.social_dependencies || 0}</span>
                 </div>
                 {metrics.internal_links && (
                   <>
                     <div className="bg-ctp-surface0/50 p-2 rounded">
-                      <span className="text-ctp-subtext0">Needed-by:</span>
+                      <span className="text-[#a0988c]">Needed-by:</span>
                       <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.needed_by || 0}</span>
                     </div>
                     <div className="bg-ctp-surface0/50 p-2 rounded">
-                      <span className="text-ctp-subtext0">Qualification:</span>
+                      <span className="text-[#a0988c]">Qualification:</span>
                       <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.qualification_links || 0}</span>
                     </div>
                     <div className="bg-ctp-surface0/50 p-2 rounded">
-                      <span className="text-ctp-subtext0">Contributions:</span>
+                      <span className="text-[#a0988c]">Contributions:</span>
                       <span className="text-ctp-text font-semibold ml-2">{metrics.internal_links.contributions || 0}</span>
                     </div>
                   </>
@@ -179,18 +219,18 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
                 {metrics.refinements && (
                   <>
                     <div className="bg-ctp-surface0/50 p-2 rounded">
-                      <span className="text-ctp-subtext0">Refinements AND:</span>
+                      <span className="text-[#a0988c]">Refinements AND:</span>
                       <span className="text-ctp-text font-semibold ml-2">{metrics.refinements.and || 0}</span>
                     </div>
                     <div className="bg-ctp-surface0/50 p-2 rounded">
-                      <span className="text-ctp-subtext0">Refinements OR:</span>
+                      <span className="text-[#a0988c]">Refinements OR:</span>
                       <span className="text-ctp-text font-semibold ml-2">{metrics.refinements.or || 0}</span>
                     </div>
                   </>
                 )}
                 {metrics.total_nodes !== undefined && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0">Total nodes:</span>
+                    <span className="text-[#a0988c]">Total nodes:</span>
                     <span className="text-ctp-text font-semibold ml-2">{metrics.total_nodes}</span>
                   </div>
                 )}
@@ -198,7 +238,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics }) => {
             </div>
           ) : (
             <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
-              <span className="text-ctp-subtext0 text-xl font-semibold italic">
+              <span className="text-[#a0988c] text-xl font-semibold italic">
                 No metrics available
               </span>
             </div>

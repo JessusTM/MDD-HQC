@@ -12,7 +12,7 @@ export const PIM = ({ uvlContent, metrics }) => {
           </div>
           <div className="min-w-0 text-left">
             <h3 className="font-bold text-ctp-text text-2xl">PIM</h3>
-            <p className="text-lg text-ctp-subtext0 font-semibold hidden xl:block">
+            <p className="text-lg text-[#a0988c] font-semibold hidden xl:block">
               UVL (Universal Variability Language)
             </p>
           </div>
@@ -34,7 +34,7 @@ export const PIM = ({ uvlContent, metrics }) => {
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
-            <p className="text-ctp-subtext0 text-xl mb-6 text-center px-6 font-semibold">
+            <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
               Waiting for i* to UVL transformation...
             </p>
           </div>
@@ -48,7 +48,7 @@ export const PIM = ({ uvlContent, metrics }) => {
               <h4 className="text-ctp-text font-bold text-sm mb-3">PIM Metrics</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Total Features:</span>
+                  <span className="text-[#a0988c]">Total Features:</span>
                   <span className="text-ctp-text font-semibold ml-2">
                     {metrics.total_features || 0}
                   </span>
@@ -56,7 +56,7 @@ export const PIM = ({ uvlContent, metrics }) => {
 
                 {metrics.features_by_category && Object.keys(metrics.features_by_category).length > 0 && (
                   <div className="bg-ctp-surface0/50 p-2 rounded col-span-2">
-                    <span className="text-ctp-subtext0 font-semibold">By Category:</span>
+                    <span className="text-[#a0988c] font-semibold">By Category:</span>
                     <div className="mt-1 space-y-1">
                       {Object.entries(metrics.features_by_category).map(([cat, count]) => (
                         <div key={cat} className="text-ctp-text text-xs">
@@ -68,7 +68,7 @@ export const PIM = ({ uvlContent, metrics }) => {
                 )}
 
                 <div className="bg-ctp-surface0/50 p-2 rounded">
-                  <span className="text-ctp-subtext0">Constraints:</span>
+                  <span className="text-[#a0988c]">Constraints:</span>
                   <span className="text-ctp-text font-semibold ml-2">
                     {metrics.constraints || 0}
                   </span>
@@ -78,7 +78,7 @@ export const PIM = ({ uvlContent, metrics }) => {
             </div>
           ) : (
             <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
-              <span className="text-ctp-subtext0 text-xl font-semibold italic">
+              <span className="text-[#a0988c] text-xl font-semibold italic">
                 No metrics available
               </span>
             </div>
