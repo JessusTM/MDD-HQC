@@ -1,0 +1,79 @@
+features
+    Functionality
+        mandatory
+            # actor: ChileEsPres
+            RealizarEnvio
+            {
+                kind "goal"
+                rapidez "true"
+                usoOptimoDeRecurso "true"
+            }
+            ObtenerPlanDeRutaOptimo
+            {
+                kind "goal"
+            }
+            # actor: Sistema de Planificación de Rutas
+            GenerarPlanDeRuta
+            {
+                kind "task"
+            }
+                mandatory
+                    # actor: Sistema de Planificación de Rutas
+                    DemandaActual
+                    {
+                        kind "resource"
+                    }
+                    # actor: Sistema de Planificación de Rutas
+                    MapaNacional
+                    {
+                        kind "resource"
+                    }
+                    # actor: Sistema de Planificación de Rutas
+                    FlotaDeVehiculos
+                    {
+                        kind "resource"
+                    }
+                    # actor: Sistema de Planificación de Rutas
+                    DeterminarTipoDeComputoNecesario
+                    {
+                        kind "task"
+                    }
+                        or
+                            # actor: Sistema de Planificación de Rutas
+                            # contribution: hurt -> TiempoDeCalculo
+                            # contribution: break -> EscalabilidadAnteAltaDemanda
+                            # contribution: make -> CalidadPlanDeRuta
+                            # contribution: hurt -> UsoDeComputo
+                            EjecutarAlgoritmoDeGrafos
+                            {
+                                kind "task"
+                            }
+                                mandatory
+                                    # actor: Sistema de Planificación de Rutas
+                                    ComputadorClasico
+                                    {
+                                        kind "resource"
+                                    }
+                            # actor: Sistema de Planificación de Rutas
+                            SolicitarComputoCuantico
+                            {
+                                kind "task"
+                            }
+    Algorithm
+        Quantum
+            mandatory
+                # actor: Módulo Cuántico
+                EjecutarAlgoritmoQuantumAnnealing
+                {
+                    kind "task"
+                }
+                    mandatory
+                        # actor: Módulo Cuántico
+                        ComputadorCuantico
+                        {
+                            kind "resource"
+                        }
+
+constraints
+    RealizarEnvio => GenerarPlanDeRuta
+    SolicitarComputoCuantico => EjecutarAlgoritmoQuantumAnnealing
