@@ -8,6 +8,7 @@ export const Filter = ({
   uvlContent,
   onTransformCimToPim,
   onTransformPimToPsm,
+  onOpenQuestionsModal,
 }) => {
   const [source, setSource] = useState("CIM")
   const [target, setTarget] = useState("PIM")
@@ -21,8 +22,7 @@ export const Filter = ({
     setLoading(true)
     try {
       if (source === "CIM" && target === "PIM") {
-        const response = await transformCimToPim(uploadedFilePath)
-        onTransformCimToPim?.(response)
+        onOpenQuestionsModal?.();
         return
       }
       
