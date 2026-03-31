@@ -14,15 +14,15 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
     <>
       <div
         className={[
-          "fixed inset-0 z-40 bg-ctp-base/70 backdrop-blur-sm transition-opacity duration-300",
+          "fixed inset-0 z-[60] bg-ctp-base/70 backdrop-blur-sm transition-opacity duration-300",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         ].join(" ")}
         onClick={onClose}
       />
 
-      <aside
-        className={[
-          "fixed left-0 top-0 z-50 h-full w-full max-w-[420px] border-r border-ctp-surface1 bg-ctp-mantle shadow-2xl transition-transform duration-300",
+        <aside
+          className={[
+          "fixed left-0 top-0 z-[70] h-full w-full max-w-[420px] border-r border-ctp-surface1 bg-ctp-mantle shadow-2xl transition-transform duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
@@ -33,10 +33,7 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
                 <BookOpen className="h-6 w-6 text-ctp-mauve" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-ctp-text">CIM Examples</h2>
-                <p className="mt-1 text-sm font-medium text-[#a0988c]">
-                  Load a predefined i* 2.0 model into CIM.
-                </p>
+                <h2 className="text-2xl font-bold text-ctp-text">Examples</h2>
               </div>
             </div>
 
@@ -55,7 +52,7 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
               <div className="flex items-start gap-3">
                 <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-ctp-blue" />
                 <p className="text-sm leading-6 text-[#a0988c]">
-                  Select the ChileEsPres example to load it into the CIM card exactly like a local XML upload.
+                  Use these examples to quickly explore the transformation flow and test the system without uploading your own model.
                 </p>
               </div>
             </div>
@@ -69,7 +66,7 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
                 <div>
                   <div className="text-2xl font-bold text-ctp-text">ChileEsPres</div>
                   <p className="mt-3 text-base leading-7 text-[#a0988c]">
-                    Delivery-focused i* 2.0 example model ready to test the CIM upload and transformation flow.
+                    Enterprise route-planning scenario with a quantum annealing module designed to produce improved routing plans for deliveries.
                   </p>
                 </div>
                 <ChevronRight className="mt-1 h-6 w-6 shrink-0 text-[#a0988c] transition-transform group-hover:translate-x-1 group-hover:text-ctp-text" />

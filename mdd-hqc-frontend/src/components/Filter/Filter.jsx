@@ -99,7 +99,7 @@ export const Filter = ({
               flex items-center gap-2.5 min-w-[138px] justify-center px-6 py-3 rounded-lg font-semibold border transition-all text-base
               ${!canTransform || loading
                 ? "bg-ctp-surface0 text-[#a0988c] cursor-not-allowed border-[#FAB387]"
-                : "bg-ctp-surface0 text-[#a0988c] border-[#FAB387] hover:bg-ctp-surface1"
+                : "bg-ctp-mauve text-ctp-base border-ctp-mauve shadow-lg shadow-ctp-mauve/20 hover:bg-ctp-pink hover:border-ctp-pink active:scale-95"
               }
             `}
           >
