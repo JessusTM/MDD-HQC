@@ -1,6 +1,6 @@
 import { Layers, CheckCircle } from "lucide-react"
 
-export const PIM = ({ uvlContent, metrics }) => {
+export const PIM = ({ uvlContent, metrics, interactionStatus }) => {
   const hasContent = !!uvlContent
 
   return (
@@ -18,11 +18,15 @@ export const PIM = ({ uvlContent, metrics }) => {
           </div>
         </div>
 
-        {hasContent && (
+        {interactionStatus === "loading" ? (
+          <span className="px-3 py-1 bg-ctp-blue/20 text-ctp-blue border border-ctp-blue/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
+            Preparing
+          </span>
+        ) : hasContent ? (
           <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
             <CheckCircle className="w-4 h-4" /> Ready
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
