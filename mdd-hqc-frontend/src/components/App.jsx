@@ -12,6 +12,7 @@ import { transformCimToPim } from "../services/transformations"
 import { fetchQuestions } from "../services/questions"
 
 export const App = () => {
+  const [isAiEnabled, setIsAiEnabled] = useState(true)
   const [uploadedFilePath, setUploadedFilePath] = useState(null)
   const [cimMetrics, setCimMetrics] = useState(null)
   const [pimMetrics, setPimMetrics] = useState(null)
@@ -59,6 +60,30 @@ export const App = () => {
     setPsmMetrics(data.metrics?.psm || null)
   }, [cimMetrics, pimMetrics, uvlContent])
 
+  const handleClearPsm = useCallback(() => {
+    setPumlContent(null)
+    setPsmMetrics(null)
+  }, [])
+
+  const handleClearPim = useCallback(() => {
+    setUvlContent(null)
+    setPimMetrics(null)
+    setPumlContent(null)
+    setPsmMetrics(null)
+    resetInteractionState()
+  }, [resetInteractionState])
+
+  const handleClearCim = useCallback(() => {
+    setUploadedFilePath(null)
+    setSelectedExample(null)
+    setCimMetrics(null)
+    setUvlContent(null)
+    setPimMetrics(null)
+    setPumlContent(null)
+    setPsmMetrics(null)
+    resetInteractionState()
+  }, [resetInteractionState])
+
   const handleExampleSelected = useCallback((example) => {
     setSelectedExample({
       ...example,
@@ -73,8 +98,33 @@ export const App = () => {
     resetInteractionState()
   }, [resetInteractionState])
 
+  const handleToggleAi = useCallback(() => {
+    setIsAiEnabled((currentValue) => {
+      const nextValue = !currentValue
+
+      if (!nextValue) {
+        resetInteractionState()
+      }
+
+      return nextValue
+    })
+  }, [resetInteractionState])
+
+  const runCimToPimTransformation = useCallback(async () => {
+    if (!uploadedFilePath) return
+
+    const response = await transformCimToPim(uploadedFilePath)
+    handlePimTransformed(response)
+  }, [handlePimTransformed, uploadedFilePath])
+
   const openQuestionsModal = async () => {
     if (!uploadedFilePath) return
+
+    if (!isAiEnabled) {
+      resetInteractionState()
+      await runCimToPimTransformation()
+      return
+    }
 
     if (questionsStatus === "loading") {
       setIsQuestionsModalOpen(true)
@@ -111,8 +161,7 @@ export const App = () => {
 
   const handleContinueWithQuestions = async () => {
     setIsQuestionsModalOpen(false)
-    const response = await transformCimToPim(uploadedFilePath)
-    handlePimTransformed(response)
+    await runCimToPimTransformation()
   }
 
   const renderInteractionButton = ({ interactive = false }) => {
@@ -170,7 +219,11 @@ export const App = () => {
         onSelectExample={handleExampleSelected}
       />
 
-      <Header onOpenExamples={() => setIsExamplesOpen(true)} />
+      <Header
+        onOpenExamples={() => setIsExamplesOpen(true)}
+        isAiEnabled={isAiEnabled}
+        onToggleAi={handleToggleAi}
+      />
 
       <main className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto px-6 py-8">
         <div className="mb-8">
@@ -190,6 +243,7 @@ export const App = () => {
               onMetricsLoaded={handleCimMetricsLoaded}
               metrics={cimMetrics}
               selectedExample={selectedExample}
+              onClear={handleClearCim}
             />
           </div>
 
@@ -249,6 +303,7 @@ export const App = () => {
               uvlContent={uvlContent}
               metrics={pimMetrics}
               interactionStatus={questionsStatus}
+              onClear={handleClearPim}
             />
           </div>
 
@@ -260,6 +315,7 @@ export const App = () => {
             <PSM
               pumlContent={pumlContent}
               metrics={psmMetrics}
+              onClear={handleClearPsm}
             />
           </div>
         </div>

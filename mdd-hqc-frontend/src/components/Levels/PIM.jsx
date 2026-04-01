@@ -1,6 +1,6 @@
-import { Layers, CheckCircle } from "lucide-react"
+import { Layers, CheckCircle, Trash2 } from "lucide-react"
 
-export const PIM = ({ uvlContent, metrics, interactionStatus }) => {
+export const PIM = ({ uvlContent, metrics, interactionStatus, onClear }) => {
   const hasContent = !!uvlContent
 
   return (
@@ -23,9 +23,20 @@ export const PIM = ({ uvlContent, metrics, interactionStatus }) => {
             Preparing
           </span>
         ) : hasContent ? (
-          <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
-            <CheckCircle className="w-4 h-4" /> Ready
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="px-4 py-1.5 border text-base font-semibold rounded-full flex items-center gap-2 shadow-sm shrink-0 bg-[#a6e3a1]/20 border-[#a6e3a1]/30 text-[#a6e3a1]">
+              <CheckCircle className="h-4.5 w-4.5" /> Ready
+            </span>
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-lg border border-ctp-surface0 bg-ctp-crust p-2.5 text-ctp-overlay1 shadow-sm transition-all hover:border-ctp-red/30 hover:bg-ctp-red/20 hover:text-ctp-red"
+              title="Clear PIM and downstream results"
+              aria-label="Clear PIM and downstream results"
+            >
+              <Trash2 className="h-4.5 w-4.5" />
+            </button>
+          </div>
         ) : null}
       </div>
 

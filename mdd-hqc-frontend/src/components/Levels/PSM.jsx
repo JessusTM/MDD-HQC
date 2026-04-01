@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { Code, CheckCircle, Maximize2, X } from "lucide-react"
+import { Code, CheckCircle, Maximize2, Trash2, X } from "lucide-react"
 import { encode } from "plantuml-encoder"
 
-export const PSM = ({ pumlContent, metrics }) => {
+export const PSM = ({ pumlContent, metrics, onClear }) => {
   const hasContent = !!pumlContent
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -62,6 +62,7 @@ export const PSM = ({ pumlContent, metrics }) => {
           {hasContent && (
             <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={() => setIsFullscreen(true)}
                 className="px-3 py-1.5 bg-ctp-blue/20 hover:bg-ctp-blue/30 text-ctp-blue border border-ctp-blue/30 text-sm font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors"
                 title="View fullscreen"
@@ -69,9 +70,18 @@ export const PSM = ({ pumlContent, metrics }) => {
                 <Maximize2 className="w-4 h-4" />
                 Fullscreen
               </button>
-              <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm">
-                <CheckCircle className="w-4 h-4" /> Ready
+              <span className="px-4 py-1.5 border text-base font-semibold rounded-full flex items-center gap-2 shadow-sm bg-[#a6e3a1]/20 border-[#a6e3a1]/30 text-[#a6e3a1]">
+                <CheckCircle className="h-4.5 w-4.5" /> Ready
               </span>
+              <button
+                type="button"
+                onClick={onClear}
+                className="rounded-lg border border-ctp-surface0 bg-ctp-crust p-2.5 text-ctp-overlay1 shadow-sm transition-all hover:border-ctp-red/30 hover:bg-ctp-red/20 hover:text-ctp-red"
+                title="Clear PSM result"
+                aria-label="Clear PSM result"
+              >
+                <Trash2 className="h-4.5 w-4.5" />
+              </button>
             </div>
           )}
         </div>

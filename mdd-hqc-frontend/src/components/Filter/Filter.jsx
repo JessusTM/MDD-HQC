@@ -63,7 +63,7 @@ export const Filter = ({
               <select
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-[#FAB387] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#45475a] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:border-[#585b70] hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -80,7 +80,7 @@ export const Filter = ({
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-[#FAB387] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#45475a] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:border-[#585b70] hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -98,7 +98,7 @@ export const Filter = ({
             className={`
               flex items-center gap-2.5 min-w-[138px] justify-center px-6 py-3 rounded-lg font-semibold border transition-all text-base
               ${!canTransform || loading
-                ? "bg-ctp-surface0 text-[#a0988c] cursor-not-allowed border-[#FAB387]"
+                ? "bg-ctp-surface0 text-[#a0988c] cursor-not-allowed border-[#45475a]"
                 : "bg-ctp-mauve text-ctp-base border-ctp-mauve shadow-lg shadow-ctp-mauve/20 hover:bg-ctp-pink hover:border-ctp-pink active:scale-95"
               }
             `}

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
+import { Upload, FileText, CheckCircle, Loader2, Trash2 } from "lucide-react"
 import { uploadFile } from "../../services/file"
 import { getCimMetrics } from "../../services/metrics"
 
-export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample }) => {
+export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample, onClear }) => {
   const [file, setFile] = useState(null)
   const [filePath, setFilePath] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
@@ -96,8 +96,19 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample 
     loadExample()
   }, [processFile, selectedExample])
 
+  const handleClear = () => {
+    processedExampleRequestRef.current = null
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+    reset()
+    onClear?.()
+  }
+
+  const hasUploadedResult = file && !errorMessage && !loading && metrics
+
   return (
-    <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
+    <div className="group flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
       <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="p-2.5 bg-ctp-surface1 rounded-lg">
@@ -112,18 +123,25 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample 
         </div>
 
         {file && !errorMessage && (
-          <span className="px-3 py-1 bg-ctp-green/20 text-ctp-green border border-ctp-green/30 text-sm font-semibold rounded-full flex items-center gap-1.5 shadow-sm shrink-0">
-            <CheckCircle className="w-4 h-4" /> Ready
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="px-4 py-1.5 border text-base font-semibold rounded-full flex items-center gap-2 shadow-sm shrink-0 bg-[#a6e3a1]/20 border-[#a6e3a1]/30 text-[#a6e3a1]">
+              <CheckCircle className="h-4.5 w-4.5" /> Ready
+            </span>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="rounded-lg border border-ctp-surface0 bg-ctp-crust p-2.5 text-ctp-overlay1 shadow-sm transition-all hover:border-ctp-red/30 hover:bg-ctp-red/20 hover:text-ctp-red"
+              title="Clear CIM and downstream results"
+              aria-label="Clear CIM and downstream results"
+            >
+              <Trash2 className="h-4.5 w-4.5" />
+            </button>
+          </div>
         )}
       </div>
 
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
         <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
-          <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
-            Upload your i* 2.0 (XML) file here...
-          </p>
-
           <input
             type="file"
             ref={fileInputRef}
@@ -132,28 +150,51 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample 
             onChange={handleFile}
           />
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-3 px-6 py-3 bg-ctp-mauve hover:bg-ctp-pink text-ctp-base rounded-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-ctp-mauve/20 text-base"
-          >
-            <Upload className="w-5 h-5" />
-            Upload File
-          </button>
+          {hasUploadedResult ? (
+            <div className="flex flex-col items-center justify-center px-6 text-center">
+              <div className="mb-2 rounded-full bg-ctp-green/10 p-3 text-ctp-green">
+                <CheckCircle className="h-14 w-14" />
+              </div>
+              <h4 className="text-3xl font-bold uppercase tracking-[0.16em] text-ctp-green">
+                Archivo Subido
+              </h4>
+              <p className="mt-2 max-w-[240px] truncate text-center font-mono text-2xl text-ctp-text" title={file.name}>
+                {file.name}
+              </p>
+              <p className="mt-2 text-lg font-semibold text-ctp-green/90">
+                Metrics calculated
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
+                Upload your i* 2.0 (XML) file here...
+              </p>
 
-          <div className="mt-4 text-sm">
-            {file && !errorMessage && !infoMessage && (
-              <span className="text-[#a0988c]">{file.name}</span>
-            )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-3 px-6 py-3 bg-ctp-mauve hover:bg-ctp-pink text-ctp-base rounded-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-ctp-mauve/20 text-base"
+              >
+                <Upload className="w-5 h-5" />
+                Upload File
+              </button>
 
-            {infoMessage && (
-              <span className="text-ctp-green">{infoMessage}</span>
-            )}
+              <div className="mt-4 text-sm">
+                {file && !errorMessage && !infoMessage && (
+                  <span className="text-[#a0988c]">{file.name}</span>
+                )}
 
-            {errorMessage && (
-              <span className="text-ctp-red">{errorMessage}</span>
-            )}
-          </div>
+                {infoMessage && (
+                  <span className="text-ctp-green">{infoMessage}</span>
+                )}
+
+                {errorMessage && (
+                  <span className="text-ctp-red">{errorMessage}</span>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
