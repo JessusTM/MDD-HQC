@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import axios from "axios"
 import { Upload, FileText, CheckCircle, Loader2, Trash2 } from "lucide-react"
 import { uploadFile } from "../../services/file"
 import { getCimMetrics } from "../../services/metrics"
 
 export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample, onClear }) => {
+  const uploadAbortRef = useRef(null)
+  const metricsAbortRef = useRef(null)
+  const processRunIdRef = useRef(0)
   const [file, setFile] = useState(null)
   const [filePath, setFilePath] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
@@ -12,14 +16,27 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
   const fileInputRef = useRef(null)
   const processedExampleRequestRef = useRef(null)
 
-  const reset = ({ clearError = true } = {}) => {
+  const abortProcessing = useCallback(() => {
+    processRunIdRef.current += 1
+    uploadAbortRef.current?.abort()
+    uploadAbortRef.current = null
+    metricsAbortRef.current?.abort()
+    metricsAbortRef.current = null
+  }, [])
+
+  const reset = useCallback(({ clearError = true } = {}) => {
     setFile(null)
     setFilePath(null)
     if (clearError) setErrorMessage("")
     setInfoMessage("")
+    setLoading(false)
     onFileUploaded?.(null)
     onMetricsLoaded?.(null)
-  }
+  }, [onFileUploaded, onMetricsLoaded])
+
+  useEffect(() => () => {
+    abortProcessing()
+  }, [abortProcessing])
 
   const handleFile = async (event) => {
     const selected = event.target.files?.[0]
@@ -29,6 +46,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
       return
     }
 
+    abortProcessing()
     setFile(selected)
     setInfoMessage("Uploading file...")
     setErrorMessage("")
@@ -37,31 +55,63 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
   }
 
   const processFile = useCallback(async (fileToRead) => {
+    const runId = ++processRunIdRef.current
+    const uploadController = new AbortController()
+    let metricsController = null
+    uploadAbortRef.current = uploadController
+
     try {
-      const uploadResponse = await uploadFile(fileToRead)
+      const uploadResponse = await uploadFile(fileToRead, { signal: uploadController.signal })
+
+      if (uploadController.signal.aborted || runId !== processRunIdRef.current) {
+        return
+      }
+
       const path = uploadResponse.path
       setFilePath(path)
       setInfoMessage("File uploaded successfully")
       onFileUploaded?.(path)
       setInfoMessage("Calculating CIM metrics...")
-      const metricsResponse = await getCimMetrics(path)
+
+      metricsController = new AbortController()
+      metricsAbortRef.current = metricsController
+      const metricsResponse = await getCimMetrics(path, { signal: metricsController.signal })
+
+      if (metricsController.signal.aborted || runId !== processRunIdRef.current) {
+        return
+      }
+
       onMetricsLoaded?.(metricsResponse.metrics?.cim)
       setInfoMessage("Metrics calculated")
     } catch (error) {
+      if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
+        return
+      }
+
       console.error("Error processing file", error)
       setErrorMessage(error.response?.data?.detail || "Error processing file")
       setInfoMessage("")
       reset({ clearError: false })
     } finally {
-      setLoading(false)
+      if (uploadAbortRef.current === uploadController) {
+        uploadAbortRef.current = null
+      }
+      if (metricsAbortRef.current === metricsController) {
+        metricsAbortRef.current = null
+      }
+
+      if (runId === processRunIdRef.current) {
+        setLoading(false)
+      }
     }
-  }, [onFileUploaded, onMetricsLoaded])
+  }, [onFileUploaded, onMetricsLoaded, reset])
 
   useEffect(() => {
     const loadExample = async () => {
       if (!selectedExample?.url || !selectedExample?.requestId) return
       if (processedExampleRequestRef.current === selectedExample.requestId) return
 
+      abortProcessing()
       processedExampleRequestRef.current = selectedExample.requestId
 
       try {
@@ -84,6 +134,10 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
         setFile(exampleFile)
         await processFile(exampleFile)
       } catch (error) {
+        if (error.name === "AbortError") {
+          return
+        }
+
         console.error("Error loading example", error)
         processedExampleRequestRef.current = null
         setFile(null)
@@ -94,9 +148,10 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     }
 
     loadExample()
-  }, [processFile, selectedExample])
+  }, [abortProcessing, processFile, selectedExample])
 
   const handleClear = () => {
+    abortProcessing()
     processedExampleRequestRef.current = null
     if (fileInputRef.current) {
       fileInputRef.current.value = ""

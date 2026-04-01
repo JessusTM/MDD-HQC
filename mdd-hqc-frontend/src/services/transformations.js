@@ -9,16 +9,20 @@ export const transformationsApi = axios.create({
   },
 });
 
-export const transformCimToPim = async (path) => {
+export const transformCimToPim = async (path, options = {}) => {
   const response = await transformationsApi.post('/transformations/cim-to-pim', {
     path,
+  }, {
+    signal: options.signal,
   });
   return response.data;
 };
 
-export const transformPimToPsm = async (path) => {
+export const transformPimToPsm = async (path, options = {}) => {
   const response = await transformationsApi.post('/transformations/pim-to-psm', {
     path,
+  }, {
+    signal: options.signal,
   });
   return response.data;
 };

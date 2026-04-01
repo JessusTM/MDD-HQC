@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import axios from "axios"
 import { Loader2, TriangleAlert } from "lucide-react"
 import { CIM } from "./Levels/CIM"
 import { PIM } from "./Levels/PIM"
@@ -12,6 +13,9 @@ import { transformCimToPim } from "../services/transformations"
 import { fetchQuestions } from "../services/questions"
 
 export const App = () => {
+  const questionsAbortRef = useRef(null)
+  const transformAbortRef = useRef(null)
+  const interactionRunIdRef = useRef(0)
   const [isAiEnabled, setIsAiEnabled] = useState(true)
   const [uploadedFilePath, setUploadedFilePath] = useState(null)
   const [cimMetrics, setCimMetrics] = useState(null)
@@ -33,14 +37,36 @@ export const App = () => {
     setIsQuestionsModalOpen(false)
   }, [])
 
+  const abortInteractionRequests = useCallback(() => {
+    interactionRunIdRef.current += 1
+    questionsAbortRef.current?.abort()
+    questionsAbortRef.current = null
+    transformAbortRef.current?.abort()
+    transformAbortRef.current = null
+  }, [])
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      abortInteractionRequests()
+    }
+
+    window.addEventListener("pagehide", handlePageHide)
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide)
+      abortInteractionRequests()
+    }
+  }, [abortInteractionRequests])
+
   const handleFileUploaded = useCallback((path) => {
+    abortInteractionRequests()
     setUploadedFilePath(path)
     setUvlContent(null)
     setPumlContent(null)
     setPimMetrics(null)
     setPsmMetrics(null)
     resetInteractionState()
-  }, [resetInteractionState])
+  }, [abortInteractionRequests, resetInteractionState])
 
   const handleCimMetricsLoaded = useCallback((metrics) => {
     setCimMetrics(metrics)
@@ -66,14 +92,16 @@ export const App = () => {
   }, [])
 
   const handleClearPim = useCallback(() => {
+    abortInteractionRequests()
     setUvlContent(null)
     setPimMetrics(null)
     setPumlContent(null)
     setPsmMetrics(null)
     resetInteractionState()
-  }, [resetInteractionState])
+  }, [abortInteractionRequests, resetInteractionState])
 
   const handleClearCim = useCallback(() => {
+    abortInteractionRequests()
     setUploadedFilePath(null)
     setSelectedExample(null)
     setCimMetrics(null)
@@ -82,9 +110,10 @@ export const App = () => {
     setPumlContent(null)
     setPsmMetrics(null)
     resetInteractionState()
-  }, [resetInteractionState])
+  }, [abortInteractionRequests, resetInteractionState])
 
   const handleExampleSelected = useCallback((example) => {
+    abortInteractionRequests()
     setSelectedExample({
       ...example,
       requestId: `${example.id}-${Date.now()}`,
@@ -96,25 +125,42 @@ export const App = () => {
     setUvlContent(null)
     setPumlContent(null)
     resetInteractionState()
-  }, [resetInteractionState])
+  }, [abortInteractionRequests, resetInteractionState])
 
   const handleToggleAi = useCallback(() => {
     setIsAiEnabled((currentValue) => {
       const nextValue = !currentValue
 
       if (!nextValue) {
+        abortInteractionRequests()
         resetInteractionState()
       }
 
       return nextValue
     })
-  }, [resetInteractionState])
+  }, [abortInteractionRequests, resetInteractionState])
 
   const runCimToPimTransformation = useCallback(async () => {
     if (!uploadedFilePath) return
 
-    const response = await transformCimToPim(uploadedFilePath)
-    handlePimTransformed(response)
+    transformAbortRef.current?.abort()
+    const controller = new AbortController()
+    const runId = ++interactionRunIdRef.current
+    transformAbortRef.current = controller
+
+    try {
+      const response = await transformCimToPim(uploadedFilePath, { signal: controller.signal })
+
+      if (controller.signal.aborted || runId !== interactionRunIdRef.current) {
+        return
+      }
+
+      handlePimTransformed(response)
+    } finally {
+      if (transformAbortRef.current === controller) {
+        transformAbortRef.current = null
+      }
+    }
   }, [handlePimTransformed, uploadedFilePath])
 
   const openQuestionsModal = async () => {
@@ -140,18 +186,37 @@ export const App = () => {
     setQuestionsError("")
     setQuestionsStatus("loading")
     setIsQuestionsModalOpen(true)
+    let controller = null
 
     try {
-      const qs = await fetchQuestions(uploadedFilePath)
+      questionsAbortRef.current?.abort()
+      controller = new AbortController()
+      const runId = ++interactionRunIdRef.current
+      questionsAbortRef.current = controller
+
+      const qs = await fetchQuestions(uploadedFilePath, { signal: controller.signal })
+
+      if (controller.signal.aborted || runId !== interactionRunIdRef.current) {
+        return
+      }
+
       setQuestions(qs)
       setQuestionsStatus("ready")
       setIsQuestionsModalOpen(true)
     } catch (error) {
+      if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
+        return
+      }
+
       setQuestions([])
       setQuestionsError(error.response?.data?.detail || "Unable to load guided questions. Please try again.")
       setQuestionsStatus("error")
       setIsQuestionsModalOpen(true)
       console.error("Error fetching questions:", error)
+    } finally {
+      if (questionsAbortRef.current === controller) {
+        questionsAbortRef.current = null
+      }
     }
   }
 
@@ -161,7 +226,15 @@ export const App = () => {
 
   const handleContinueWithQuestions = async () => {
     setIsQuestionsModalOpen(false)
-    await runCimToPimTransformation()
+    try {
+      await runCimToPimTransformation()
+    } catch (error) {
+      if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
+        return
+      }
+
+      throw error
+    }
   }
 
   const renderInteractionButton = ({ interactive = false }) => {

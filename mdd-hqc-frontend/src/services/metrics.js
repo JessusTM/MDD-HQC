@@ -9,7 +9,9 @@ export const metricsApi = axios.create({
   },
 });
 
-export const getCimMetrics = async (path) => {
-  const response = await metricsApi.post('/metrics/cim', { path });
+export const getCimMetrics = async (path, options = {}) => {
+  const response = await metricsApi.post('/metrics/cim', { path }, {
+    signal: options.signal,
+  });
   return response.data;
 };
