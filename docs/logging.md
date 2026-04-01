@@ -334,9 +334,3 @@ The system is prepared to run a “queue + listener” model when a listener is 
 ### Minimal repository policy
 
 The `logs/` directory is runtime output and must not be versioned. It should stay out of Git (e.g., `.gitignore`) to avoid committing local log files.
-
-### See also
-
-For deeper detail on Python’s standard logging (`logging`)—including the mental model, `dictConfig`, handlers/formatters/filters, JSON Lines, and queue-based patterns—refer to:
-
-* [Python Logging Guide](./notes/python_logging_guide.md)
