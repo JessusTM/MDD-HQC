@@ -1,3 +1,5 @@
+"""Rule-based interaction engine used when no LLM provider is selected."""
+
 from app.models.llm_contract import (
     InteractionInput,
     InteractionReport,
@@ -8,7 +10,18 @@ from app.services.interaction.interaction_engine import InteractionEngine
 
 
 class RuleBasedInteractionEngine(InteractionEngine):
+    """Produces clarification questions and proposals from simple deterministic rules.
+
+    This engine provides a fallback interaction strategy for the backend when the flow
+    should not depend on an external LLM provider.
+    """
+
     def run(self, payload: InteractionInput) -> InteractionReport:
+        """Runs the rule-based interaction pass over the provided payload.
+
+        This method inspects the current CIM evidence and returns the questions or
+        proposals that can be inferred through fixed backend rules.
+        """
         questions = []
         proposals = []
 

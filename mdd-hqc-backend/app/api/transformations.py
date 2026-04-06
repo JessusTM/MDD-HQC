@@ -1,3 +1,5 @@
+"""Transformation endpoints that expose the CIM-to-PIM and PIM-to-PSM flows."""
+
 import logging
 from pathlib import Path
 
@@ -24,6 +26,11 @@ router = APIRouter(prefix="/transformations", tags=["transformations"])
 
 @router.post("/cim-to-pim")
 async def transform_cim_pim(request: PathRequest):
+    """Runs the CIM-to-PIM flow and returns the generated UVL artifact plus metrics.
+
+    This endpoint parses the source XML, applies the CIM-to-PIM rules, and exposes the
+    resulting UVL model together with the relevant CIM and PIM summaries.
+    """
     logger.info("CIM-to-PIM transformation requested: input_path=%s", request.path)
     try:
         xml_service = XmlService(request.path)
@@ -71,6 +78,11 @@ async def transform_cim_pim(request: PathRequest):
 
 @router.post("/pim-to-psm")
 async def transform_pim_psm(request: PathRequest):
+    """Runs the full PIM-to-PSM flow and returns the UVL and PlantUML artifacts.
+
+    This endpoint executes both transformation stages so the caller receives the
+    generated UVL, the final UML artifact, and the metrics of each stage.
+    """
     logger.info("PIM-to-PSM transformation requested: input_path=%s", request.path)
     try:
         xml_service = XmlService(request.path)

@@ -11,7 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class FeatureLocation(BaseModel):
-    """Stores the UVL location created for one i* element."""
+    """Stores the UVL location created for one i* element.
+
+    This helper model keeps the generated feature name and placement data together so
+    later rules can keep extending the same UVL element consistently.
+    """
 
     name: str
     category: str
@@ -19,21 +23,36 @@ class FeatureLocation(BaseModel):
 
 
 class CimToPim:
-    """Applies the CIM->PIM rules from i* into the HQC UVL model."""
+    """Applies the CIM->PIM rules from i* into the HQC UVL model.
+
+    This transformer reads the parsed i* structures and progressively builds the UVL
+    model required by the next stages of the backend pipeline.
+    """
 
     def __init__(self, xml_service: IstarModel, uvl_service: UvlService, uvl: UVL):
-        """Initializes the transformer with the parsed i* model and UVL services."""
+        """Initializes the transformer with the parsed i* model and UVL services.
+
+        These dependencies provide the source diagram data, the naming helpers, and the
+        target UVL model that each transformation rule will update.
+        """
         self.xml_service = xml_service
         self.uvl_service = uvl_service
         self.uvl = uvl
         self.elements_to_actors: Dict[str, str] = {}
         self.feature_locations: Dict[str, FeatureLocation] = {}
 
-    # ----- Feature Resolution and Creation -----
-    # These helpers classify CIM labels, build UVL locations, and ensure features exist.
+    # ====== Private Helpers ======
+    # Internal methods below prepare UVL locations and link mappings before rules run.
+
+    # ------------ Feature Resolution and Creation ------------
+    # Methods below classify CIM elements, build UVL locations, and ensure features exist.
 
     def _build_actor_comments(self, element_id: str) -> List[str]:
-        """Builds the actor comments added to UVL features by R1 traceability."""
+        """Builds the actor comments added by R1 traceability handling.
+
+        This helper prepares the metadata that later rules attach to UVL features when
+        the source i* element already has an owning actor.
+        """
         actor_label = self.elements_to_actors.get(element_id)
         if not actor_label:
             return []
@@ -42,7 +61,11 @@ class CimToPim:
     def _get_existing_feature_location(
         self, element_id: str
     ) -> Optional[FeatureLocation]:
-        """Obtains a UVL location only if it was already created by an earlier rule."""
+        """Returns the UVL location already created for one i* element.
+
+        This helper lets later rules reuse earlier placements instead of rebuilding the
+        same feature location more than once.
+        """
         return self.feature_locations.get(element_id)
 
     def _get_or_create_feature_location(
@@ -53,7 +76,11 @@ class CimToPim:
         category: Optional[str] = None,
         subgroup: Optional[str] = None,
     ) -> Optional[FeatureLocation]:
-        """Obtains the UVL location for an element or creates it when the current rule must materialize it."""
+        """Returns or creates the UVL location needed for the current rule.
+
+        This helper materializes features only when required so several rules can share
+        one consistent UVL location for the same source i* element.
+        """
         existing_location = self._get_existing_feature_location(element_id)
         if existing_location is not None:
             return existing_location
@@ -86,7 +113,11 @@ class CimToPim:
         resource_id: str,
         task_location: FeatureLocation,
     ) -> Optional[FeatureLocation]:
-        """Obtains or creates the UVL subfeature that a task needs before adding it to its group."""
+        """Returns or creates the resource subfeature attached to one task.
+
+        This helper supports R4 and R6.1 by ensuring the task branch has the resource
+        feature needed before the hierarchy link is recorded.
+        """
         resource_label = self.xml_service.get_label_by_id(resource_id)
         if not resource_label:
             return None
@@ -99,15 +130,19 @@ class CimToPim:
             subgroup=task_location.subgroup,
         )
 
-    # ----- Attribute and Hierarchy Mapping -----
-    # These helpers map quality, resources, and refinements into UVL attributes and groups.
+    # ------------ Attribute and Hierarchy Mapping ------------
+    # Methods below map quality, resources, and refinements into UVL attributes and groups.
 
     def _add_quality_attribute_to_feature(
         self,
         quality_id: str,
         target_location: FeatureLocation,
     ) -> None:
-        """Adds the quality attribute required by R3 and by qualification-link handling in R6.2."""
+        """Adds the quality attribute required by R3 and R6.2.
+
+        This helper turns one quality element into feature data so the UVL model keeps
+        the non-structural properties derived from the source i* diagram.
+        """
         quality_label = self.xml_service.get_label_by_id(quality_id)
         if not quality_label:
             return
@@ -129,7 +164,11 @@ class CimToPim:
         child_location: FeatureLocation,
         relation: str,
     ) -> None:
-        """Attaches child features for R4 and for refinement handling in R6.1/R6.4."""
+        """Attaches child features for R4 and refinement handling in R6.1 and R6.4.
+
+        This helper centralizes the hierarchy update so all rules add children to the
+        UVL model using the same mandatory-or-group behavior.
+        """
         if parent_location.name == child_location.name:
             return
 
@@ -140,11 +179,15 @@ class CimToPim:
         if relation == "or":
             self.uvl.add_or_child(parent_location.name, child_location.name)
 
-    # ----- Link and Dependency Resolution -----
-    # These helpers translate i* links into UVL constraints, comments, and feature groups.
+    # ------------ Link and Dependency Resolution ------------
+    # Methods below translate i* links into UVL constraints, comments, and feature groups.
 
     def _get_social_dependency_pairs(self) -> List[Dict[str, str]]:
-        """Resolves the depender/dependee pairs consumed by R5 social dependency constraints."""
+        """Resolves the depender-dependee pairs consumed by R4.
+
+        This helper extracts the valid feature pairs that later become UVL requires
+        constraints derived from social dependencies in the i* model.
+        """
         pairs: List[Dict[str, str]] = []
         resources = self.xml_service.get_intentional_element_by_type("resource")
         outgoing_by_resource: Dict[str, List[str]] = {}
@@ -180,7 +223,11 @@ class CimToPim:
         return pairs
 
     def _get_link_endpoints(self, link: dict) -> Optional[tuple[str, str]]:
-        """Returns valid source and target ids for a link, or None when the link is incomplete."""
+        """Returns valid source and target ids for one link when both exist.
+
+        This helper keeps the rule methods simpler by centralizing the check for links
+        that do not contain the minimum endpoint data.
+        """
         source_id = link.get("source")
         target_id = link.get("target")
         if not source_id or not target_id:
@@ -188,7 +235,11 @@ class CimToPim:
         return source_id, target_id
 
     def _add_needed_by_links(self) -> None:
-        """Applies R4 and R6.1 by turning needed-by links into mandatory task resources."""
+        """Applies R4 and R6.1 by turning needed-by links into mandatory resources.
+
+        This helper updates the UVL hierarchy so task-resource relations from the i*
+        model appear as mandatory child features in the generated PIM.
+        """
         resources = self.xml_service.get_intentional_element_by_type("resource")
         tasks = self.xml_service.get_intentional_element_by_type("task")
 
@@ -232,7 +283,11 @@ class CimToPim:
             )
 
     def _add_contribution_comments(self) -> None:
-        """Applies R6.3 by copying contribution links into UVL comments as-is."""
+        """Applies R6.3 by copying contribution links into UVL comments.
+
+        This helper preserves contribution semantics as feature metadata so later stages
+        can still inspect the contribution intent after the transformation.
+        """
         for link in self.xml_service.get_internal_links().values():
             if link.get("type") != "contribution":
                 continue
@@ -262,7 +317,11 @@ class CimToPim:
             )
 
     def _add_refinement_groups(self) -> None:
-        """Applies R6.4 by translating refinements into mandatory or or-groups."""
+        """Applies R6.4 by translating refinements into mandatory or `or` groups.
+
+        This helper maps refinement relations into UVL hierarchy groups so the generated
+        PIM preserves structural decomposition choices from the source model.
+        """
         for refinement in self.xml_service.get_refinements().values():
             endpoints = self._get_link_endpoints(refinement)
             if endpoints is None:
@@ -293,11 +352,18 @@ class CimToPim:
                 relation="or",
             )
 
-    # ======= Public Rules =======
-    # Public entry points that apply the explicit CIM->PIM transformation rules.
+    # ====== Public API ======
+    # Methods below expose the explicit CIM-to-PIM rules used by the transformation flow.
+
+    # ------------ Transformation Rules ------------
+    # Methods below apply the ordered rules that build the UVL model from the i* input.
 
     def apply_r1(self) -> None:
-        """Loads actor ownership so later rules can add traceability comments."""
+        """Applies rule R1 by loading actor ownership for later traceability comments.
+
+        This rule prepares the actor mappings that subsequent steps use when creating
+        UVL metadata from the source i* elements.
+        """
         self.elements_to_actors = self.xml_service.get_element_to_actor_mapping()
         logger.debug(
             "CIM-to-PIM R1 applied: element-to-actor mappings=%s",
@@ -305,7 +371,11 @@ class CimToPim:
         )
 
     def apply_r2(self) -> None:
-        """Transforms goals and tasks into UVL features using dictionary-based classification."""
+        """Applies rule R2 to convert goals and tasks into UVL features.
+
+        This rule creates the base feature set that the remaining CIM-to-PIM rules will
+        later enrich with constraints, hierarchy, and metadata.
+        """
         for goal in self.xml_service.get_intentional_element_by_type("goal").values():
             goal_id = goal.get("id")
             goal_label = goal.get("label")
@@ -323,7 +393,11 @@ class CimToPim:
         logger.debug("CIM-to-PIM R2 applied: goals and tasks converted to features")
 
     def apply_r3(self) -> None:
-        """Transforms qualification links into quality attributes after all target features exist."""
+        """Applies rule R3 to convert qualification links into feature attributes.
+
+        This rule enriches the UVL model with quality information once the target
+        features already exist in the generated feature set.
+        """
         qualities = self.xml_service.get_intentional_element_by_type("quality")
         if not qualities:
             qualities = self.xml_service.get_intentional_element_by_type("softgoal")
@@ -361,7 +435,11 @@ class CimToPim:
         )
 
     def apply_r4(self) -> None:
-        """Transforms social dependencies into UVL requires constraints."""
+        """Applies rule R4 to convert social dependencies into UVL requires constraints.
+
+        This rule records cross-feature dependencies in the UVL model after the related
+        source and target feature locations have already been resolved.
+        """
         for pair in self._get_social_dependency_pairs():
             source_location = self._get_existing_feature_location(pair["source_id"])
             target_location = self._get_existing_feature_location(pair["target_id"])
@@ -375,7 +453,11 @@ class CimToPim:
         )
 
     def apply_r5(self) -> None:
-        """Applies internal-link and refinement rules over the feature set created before."""
+        """Applies rule R5 over the feature set created by the earlier rules.
+
+        This rule completes the UVL model by adding needed-by relations, contribution
+        comments, and refinement groups derived from internal i* links.
+        """
         self._add_needed_by_links()
         self._add_contribution_comments()
         self._add_refinement_groups()

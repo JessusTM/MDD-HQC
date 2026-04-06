@@ -1,3 +1,5 @@
+"""Services that parse draw.io iStar XML files into in-memory model indexes."""
+
 import logging
 import xml.etree.ElementTree as ET
 
@@ -7,18 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 class XmlService(IstarModel):
-    """
-    XmlService parses a draw.io XML export of an iStar 2.0 model and builds in-memory indexes.
+    """Parses a draw.io iStar XML export and fills the in-memory iStar indexes.
 
-    Indexes built:
-    - _intentional_elements : iStar intentional elements grouped by type, then by id.
-    - _social_dependencies  : social dependency edges (mxCell edges with source/target), keyed by id.
-    - _internal_links       : internal links (needed-by, qualification-link, contribution), keyed by id.
-    - _refinements          : refinement edges (type='refinement'), keyed by id.
-    - _element_to_actor     : mapping {element_id: actor_label} for ownership resolution.
+    This service extends the base iStar model with the loading logic required to turn
+    the XML artifact into the indexed structures used by metrics and transformations.
     """
 
     def __init__(self, file_path: str):
+        """Initializes the parser and builds the iStar indexes from one XML file.
+
+        This method is used at the start of CIM-related flows so the rest of the backend
+        can work with the parsed iStar model instead of raw XML.
+        """
         super().__init__()
         self.file_path = file_path
 
@@ -33,10 +35,16 @@ class XmlService(IstarModel):
             len(self._refinements),
         )
 
-    # ============ ROOT / RAW EXTRACTION ============
+    # ====== Private Helpers ======
+    # Internal methods below parse the XML file and populate the inherited iStar indexes.
+
+    # ------------ Root and Raw Extraction ------------
+    # Methods below read the XML document and extract the raw diagram elements to index.
     def _get_root(self):
-        """
-        Parse the XML file located at self.file_path and return its root element.
+        """Parses the XML file located at `self.file_path` and returns its root element.
+
+        This helper starts the loading process by giving the rest of the parser access to
+        the root tree structure of the source draw.io file.
         """
         try:
             tree = ET.parse(self.file_path)
@@ -56,12 +64,10 @@ class XmlService(IstarModel):
             raise
 
     def _get_raw_diagram_elements(self, root):
-        """
-        Extract indexable diagram elements from draw.io XML.
+        """Extracts the raw diagram elements that can later be indexed.
 
-        We merge <object> attributes (semantic: type/label/value/id)
-        with its inner <mxCell> attributes (graph: edge/source/target/parent),
-        because downstream indexers require both views at once.
+        This helper merges semantic object data with graph-level mxCell data so the
+        downstream indexers can classify each element with full context.
         """
         objects = root.findall("./diagram/mxGraphModel/root/object")
         raw_elements = []
@@ -81,13 +87,13 @@ class XmlService(IstarModel):
 
         return raw_elements
 
-    # ============ VALIDATIONS ============
+    # ------------ Validations ------------
+    # Methods below validate whether raw XML nodes match the supported iStar link types.
     def _verify_social_dependency(self, tag: str, attrib: dict) -> bool:
-        """
-        Return True if the given node represents a social dependency link.
+        """Returns `True` when the given node represents a social dependency link.
 
-        In the draw.io export used by this prototype, social dependencies are
-        stored as edges with `type="dependency-link"` and both endpoints.
+        This helper keeps the link checks centralized before the parser stores a raw edge
+        as a social dependency in the in-memory model.
         """
         is_mxcell = tag == "mxCell"
         is_edge = attrib.get("edge") == "1"
@@ -102,11 +108,13 @@ class XmlService(IstarModel):
             and link_type == "dependency-link"
         )
 
-    # ============ INDEXERS (SELF-VALIDATING) ============
+    # ------------ Index Builders ------------
+    # Methods below classify raw XML nodes and store them in the inherited iStar indexes.
     def _index_intentional_element(self, tag, attrib):
-        """
-        Index an iStar intentional element (goals, tasks, softgoals, resources, actors, etc.).
-        Metadata nodes are excluded. mxCell nodes are only included if they encode a social dependency.
+        """Indexes one iStar intentional element when the raw node is valid.
+
+        This helper populates the main intentional-element index so later backend steps
+        can query goals, tasks, resources, and related nodes by type and id.
         """
         excluded_tags = {"Array", "root", "mxPoint", "mxGeometry"}
 
@@ -134,8 +142,10 @@ class XmlService(IstarModel):
         }
 
     def _index_social_dependency(self, tag, attrib):
-        """
-        Index a social dependency edge (dependency-link) by its id.
+        """Indexes one social dependency edge by its id.
+
+        This helper stores the dependency links that metrics and transformations later
+        inspect when deriving cross-element relations from the iStar model.
         """
         id = attrib.get("id")
         source = attrib.get("source")
@@ -155,11 +165,10 @@ class XmlService(IstarModel):
         }
 
     def _index_internal_link(self, tag, attrib):
-        """
-        Index internal links among intentional elements:
-        - needed-by
-        - qualification-link
-        - contribution
+        """Indexes one supported internal link between intentional elements.
+
+        This helper stores needed-by, qualification, and contribution links so later
+        backend steps can process those semantics without re-reading the XML.
         """
         internal_link_types = {"needed-by", "qualification-link", "contribution"}
 
@@ -188,8 +197,10 @@ class XmlService(IstarModel):
         }
 
     def _index_refinement(self, tag, attrib):
-        """
-        Index refinement edges (type='refinement') by their id.
+        """Indexes one refinement edge by its id.
+
+        This helper stores decomposition relations so transformations can later rebuild
+        the refinement structure of the source iStar model.
         """
         id = attrib.get("id")
         source = attrib.get("source")
@@ -214,15 +225,13 @@ class XmlService(IstarModel):
             "value": value,
         }
 
-    # ============ ACTOR OWNERSHIP (ORCHESTRATOR + HELPERS) ============
+    # ------------ Actor Ownership Resolution ------------
+    # Methods below derive which actor owns each relevant iStar element.
     def _index_element_to_actor(self, root) -> dict:
-        """
-        Build a mapping {element_id: actor_label} using the already-parsed XML root.
+        """Builds the mapping `{element_id: actor_label}` from the parsed XML root.
 
-        Steps:
-        1) Read all <object> nodes and collect quick indexes: type, label, and mxCell parent.
-        2) Resolve which actor owns each boundary through `owns` links.
-        3) For each target element (goal/task/resource), walk its parent chain until an owned boundary is found.
+        This helper derives ownership information so later transformations can attach
+        actor traceability metadata to the generated UVL model.
         """
         objects = root.findall("./diagram/mxGraphModel/root/object")
         if not objects:
@@ -255,13 +264,10 @@ class XmlService(IstarModel):
     def _collect_object_indexes(
         self, objects, parent_by_id, type_by_id, label_by_id, actor_by_boundary
     ) -> None:
-        """
-        Fill lookup dicts keyed by object id:
+        """Fills the lookup dictionaries needed for actor-ownership resolution.
 
-        - type_by_id[id]  : element kind (goal, task, agent, ...)
-        - label_by_id[id] : raw label (later formatted when needed)
-        - parent_by_id[id]: mxCell parent id (used to walk "who contains who")
-        - actor_by_boundary[boundary_id]: actor label owning the boundary
+        This helper prepares the indexes that let the ownership step walk boundaries and
+        resolve which actor controls each relevant element.
         """
         owns_links = []
 
@@ -310,13 +316,10 @@ class XmlService(IstarModel):
         actor_by_boundary,
         element_to_actor,
     ) -> None:
-        """
-        Populate element_to_actor in-place.
+        """Populates `element_to_actor` in place for goals, tasks, and resources.
 
-        For each goal/task/resource:
-        - Start from its parent
-        - Move up parent -> parent -> parent
-        - Stop when an owned boundary is reached, and assign that actor label as the owner
+        This helper walks the containment chain until it reaches an owned boundary so the
+        parser can preserve actor ownership in the in-memory model.
         """
         for object in objects:
             id = object.attrib.get("id")
@@ -334,10 +337,13 @@ class XmlService(IstarModel):
                     break
                 current_parent = parent_by_id.get(current_parent)
 
-    # ============ INDEX BUILD ============
+    # ------------ Index Build ------------
+    # Methods below orchestrate the full XML-to-index parsing process.
     def _build_indexes(self):
-        """
-        Build all in-memory indexes from the XML file.
+        """Builds all in-memory indexes from the XML file.
+
+        This helper is the main internal parsing step that fills every inherited iStar
+        index before public consumers start querying the model.
         """
         root = self._get_root()
         raw_elements = self._get_raw_diagram_elements(root)

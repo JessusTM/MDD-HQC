@@ -1,3 +1,5 @@
+"""LM Studio client used to infer missing HQC evidence from iStar elements."""
+
 import requests
 from typing import Dict, List
 
@@ -11,16 +13,29 @@ LMSTUDIO_MODEL = "Meta-Llama-3-8B-Instruct"
 
 
 class LMStudioClient(LLMInterface):
+    """Calls LM Studio to analyze iStar elements for the interaction workflow.
+
+    This client adapts the backend interaction contract to the LM Studio completion API
+    so missing HQC blocks can be inferred from the source CIM labels.
+    """
+
     def __init__(
         self, model_name=LMSTUDIO_MODEL, temperature: float = 0.0, max_tokens: int = 512
     ):
+        """Initializes the LM Studio client with the configured generation settings.
+
+        These settings control how the backend queries LM Studio during one interaction
+        analysis pass.
+        """
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
 
     def analyze_istar_elements(self, elements: List[CimNode]) -> Dict:
-        """
-        Recibe elementos iStar (type + text) y devuelve señales HQC_SPL.
+        """Analyzes the provided iStar elements and returns the HQC evidence signals.
+
+        This method is used by the interaction engine when LM Studio is the selected
+        provider for detecting missing HQC blocks.
         """
 
         prompt = self._build_prompt(elements)
@@ -45,6 +60,11 @@ class LMStudioClient(LLMInterface):
         return self._safe_parse_json(raw)
 
     def _build_prompt(self, elements: List[CimNode]) -> str:
+        """Builds the prompt sent to LM Studio for one interaction request.
+
+        This helper prepares the textual context that tells the model how to classify the
+        current iStar evidence into HQC categories.
+        """
         text_elements = "\n".join(
             [f"{element.type}: {element.label_raw}" for element in elements]
         )
@@ -57,6 +77,11 @@ class LMStudioClient(LLMInterface):
         )
 
     def _safe_parse_json(self, raw: str) -> Dict:
+        """Extracts the expected JSON object from the LM Studio raw response.
+
+        This helper keeps the interaction flow resilient when the provider returns extra
+        text around the JSON payload expected by the backend.
+        """
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
             return {}

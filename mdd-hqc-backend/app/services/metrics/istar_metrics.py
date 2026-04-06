@@ -1,3 +1,5 @@
+"""Services that compute structural metrics from parsed iStar models."""
+
 import logging
 from typing import Any, Dict
 from app.models.istar import IstarModel
@@ -6,10 +8,26 @@ logger = logging.getLogger(__name__)
 
 
 class IstarMetricsService:
+    """Calculates aggregate metrics from the parsed iStar model.
+
+    This service is used by CIM endpoints to summarize node and link counts before or
+    after other backend steps consume the same parsed model.
+    """
+
     def __init__(self, xml_service: IstarModel):
+        """Initializes the metrics service with one parsed iStar model.
+
+        This keeps the metrics calculation tied to the same in-memory data already built
+        by the XML parsing flow.
+        """
         self.xml_service = xml_service
 
     def calculate(self) -> Dict[str, Any]:
+        """Calculates the main structural metrics of the current iStar model.
+
+        This method summarizes node types, link types, and overall totals so the CIM API
+        can return a compact overview of the parsed source model.
+        """
         metrics: Dict[str, Any] = {}
 
         goals = self.xml_service.get_intentional_element_by_type("goal")

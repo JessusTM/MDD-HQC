@@ -1,3 +1,5 @@
+"""Base contracts for LLM clients used by the interaction layer."""
+
 from abc import ABC, abstractmethod
 from typing import Dict, List
 
@@ -5,21 +7,17 @@ from app.models.llm_contract import CimNode
 
 
 class LLMInterface(ABC):
+    """Defines the contract implemented by LLM clients used in interactions.
+
+    This abstraction lets the interaction engine call different providers through the
+    same analysis method.
+    """
+
     @abstractmethod
     def analyze_istar_elements(self, elements: List[CimNode]) -> Dict:
-        """
-        Analiza elementos iStar y devuelve señales de evidencia para HQC_SPL.
+        """Analyzes iStar elements and returns the HQC evidence signals.
 
-        Entrada:
-            elements: Lista de nodos CIM con `type` y `label_raw`.
-        Salida:
-            {
-                "Functionality": bool,
-                "Algorithm": bool,
-                "Programming": bool,
-                "Integration_model": bool,
-                "Quantum_HW_constraint": bool,
-                "missing": ["Lista de bloques faltantes"]
-            }
+        This method is called by the LLM interaction engine when it needs a provider to
+        infer which HQC blocks are still missing from the current input.
         """
         pass

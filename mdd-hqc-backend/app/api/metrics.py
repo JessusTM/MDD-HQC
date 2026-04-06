@@ -1,3 +1,5 @@
+"""Metrics endpoints that expose aggregate information about parsed CIM models."""
+
 import logging
 from typing import Annotated
 
@@ -13,12 +15,22 @@ router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 
 def get_xml_service(request: PathRequest) -> IstarModel:
+    """Builds the parsed iStar model required by the metrics dependency chain.
+
+    This dependency loads the XML artifact once so the metrics endpoint can reuse the
+    same parsed model during request handling.
+    """
     return XmlService(request.path)
 
 
 def get_istar_metrics_service(
     xml_service: Annotated[IstarModel, Depends(get_xml_service)],
 ) -> IstarMetricsService:
+    """Builds the CIM metrics service for the current parsed iStar model.
+
+    This dependency keeps the endpoint wiring small by creating the metrics service only
+    after the XML model has already been parsed.
+    """
     return IstarMetricsService(xml_service)
 
 
@@ -27,6 +39,11 @@ async def get_cim_metrics(
     request: PathRequest,
     metrics_service: Annotated[IstarMetricsService, Depends(get_istar_metrics_service)],
 ):
+    """Calculates and returns the CIM metrics for the XML file in the request.
+
+    This endpoint is used when the caller needs a structural summary of the parsed iStar
+    model without running the full transformation pipeline.
+    """
     logger.info("CIM metrics requested: input_path=%s", request.path)
     try:
         istar_metrics = metrics_service.calculate()

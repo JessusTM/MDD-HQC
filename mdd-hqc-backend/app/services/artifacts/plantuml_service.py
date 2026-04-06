@@ -1,3 +1,5 @@
+"""Services that render UML models into PlantUML text artifacts."""
+
 import logging
 from pathlib import Path
 from app.models.uml import UmlClass, UmlDependency, UmlModel
@@ -5,9 +7,18 @@ from app.models.uml import UmlClass, UmlDependency, UmlModel
 logger = logging.getLogger(__name__)
 
 
+# ====== Private Helpers ======
+# Internal methods below render individual UML fragments before the full artifact is written.
+
+
 # ------------ Class Rendering ------------
+# Methods below render UML classes, their members, and their attached notes.
 def _render_class(uml_class: UmlClass, alias: str) -> list[str]:
-    """Renders one UML class block and its visible notes."""
+    """Renders one UML class block and its visible notes.
+
+    This helper assembles the class header, members, and class notes before the final
+    PlantUML document is joined into one artifact.
+    """
     lines: list[str] = []
 
     header = _render_class_header(uml_class, alias)
@@ -22,14 +33,22 @@ def _render_class(uml_class: UmlClass, alias: str) -> list[str]:
 
 
 def _render_class_header(uml_class: UmlClass, alias: str) -> str:
-    """Builds the PlantUML header line for one class."""
+    """Builds the PlantUML header line for one class.
+
+    This helper keeps the class declaration formatting consistent before attributes and
+    methods are rendered under the same block.
+    """
     name = _escape_quoted(uml_class.name)
     stereotypes = _format_stereotypes(uml_class.stereotypes)
     return f'class "{name}" as {alias}{stereotypes} {{'
 
 
 def _render_class_notes(uml_class: UmlClass, alias: str) -> list[str]:
-    """Renders the UML notes attached to one class."""
+    """Renders the UML notes attached to one class.
+
+    This helper collects the visible class annotations so the generated PlantUML output
+    preserves notes added during the transformation stage.
+    """
     lines: list[str] = []
     note_lines = _get_class_note_lines(uml_class)
     if not note_lines:
@@ -43,7 +62,11 @@ def _render_class_notes(uml_class: UmlClass, alias: str) -> list[str]:
 
 
 def _get_class_note_lines(uml_class: UmlClass) -> list[str]:
-    """Returns the note lines that must be attached to one class."""
+    """Returns the note lines that must be attached to one class.
+
+    This helper consolidates class notes and visible method notes before they are drawn
+    as one PlantUML note block.
+    """
     lines: list[str] = []
 
     lines.extend(_get_note_lines(uml_class.notes))
@@ -64,7 +87,11 @@ def _get_class_note_lines(uml_class: UmlClass) -> list[str]:
 
 
 def _render_class_attributes(uml_class: UmlClass) -> list[str]:
-    """Renders the attributes declared in one UML class."""
+    """Renders the attributes declared in one UML class.
+
+    This helper turns the stored attribute models into PlantUML member lines for the
+    class block currently being generated.
+    """
     lines: list[str] = []
 
     for attr in uml_class.attributes:
@@ -88,7 +115,11 @@ def _render_class_attributes(uml_class: UmlClass) -> list[str]:
 
 
 def _render_class_methods(uml_class: UmlClass) -> list[str]:
-    """Renders the methods declared in one UML class."""
+    """Renders the methods declared in one UML class.
+
+    This helper converts stored UML methods into PlantUML operation lines so the class
+    behavior appears in the generated artifact.
+    """
     lines: list[str] = []
 
     for method in uml_class.methods:
@@ -109,7 +140,11 @@ def _render_class_methods(uml_class: UmlClass) -> list[str]:
 
 
 def _get_note_lines(notes) -> list[str]:
-    """Returns the visible note lines stored in one notes collection."""
+    """Returns the visible note lines stored in one notes collection.
+
+    This helper filters and normalizes note text before it is emitted in the PlantUML
+    output.
+    """
     lines: list[str] = []
 
     for note in notes:
@@ -121,7 +156,11 @@ def _get_note_lines(notes) -> list[str]:
 
 
 def _get_method_contribution_lines(uml_class: UmlClass) -> list[str]:
-    """Returns contribution notes declared by the methods of one class."""
+    """Returns contribution notes declared by the methods of one class.
+
+    This helper keeps contribution annotations visible at class-note level when the UML
+    methods carry those notes internally.
+    """
     lines: list[str] = []
 
     for method in uml_class.methods:
@@ -137,7 +176,11 @@ def _get_method_contribution_lines(uml_class: UmlClass) -> list[str]:
 
 
 def _get_method_group_lines(uml_class: UmlClass) -> list[str]:
-    """Returns group notes for methods so they can be shown in the class note."""
+    """Returns group notes for methods so they can be shown in the class note.
+
+    This helper preserves method-level mandatory and `or` information in a form that can
+    still be displayed in the rendered PlantUML note block.
+    """
     lines: list[str] = []
 
     for method in uml_class.methods:
@@ -153,7 +196,11 @@ def _get_method_group_lines(uml_class: UmlClass) -> list[str]:
 
 
 def _get_group_note_lines(notes) -> list[str]:
-    """Returns only the mandatory/or notes that should stay visible in UML notes."""
+    """Returns only the mandatory or `or` notes that should stay visible.
+
+    This helper filters the notes collection so the renderer keeps only the group-related
+    annotations that matter in the final UML view.
+    """
     lines: list[str] = []
 
     for note in notes:
@@ -167,8 +214,13 @@ def _get_group_note_lines(notes) -> list[str]:
 
 
 # ------------ Parameters and Stereotypes ------------
+# Methods below render reusable textual fragments for methods and stereotypes.
 def _render_parameters(parameters) -> str:
-    """Renders the textual parameter list of one UML method."""
+    """Renders the textual parameter list of one UML method.
+
+    This helper formats method parameters once so every rendered operation follows the
+    same PlantUML signature style.
+    """
     parts: list[str] = []
 
     for p in parameters:
@@ -186,7 +238,11 @@ def _render_parameters(parameters) -> str:
 
 
 def _format_stereotypes(stereotypes) -> str:
-    """Formats a stereotype list using PlantUML class/method syntax."""
+    """Formats a stereotype list using PlantUML class or method syntax.
+
+    This helper centralizes stereotype formatting so classes and methods render those
+    markers consistently in the final artifact.
+    """
     cleaned: list[str] = []
 
     if stereotypes is None:
@@ -205,8 +261,13 @@ def _format_stereotypes(stereotypes) -> str:
 
 
 # ------------ Dependency Rendering ------------
+# Methods below render the links between UML classes once aliases are known.
 def _render_dependency(dep: UmlDependency, alias_by_name: dict[str, str]) -> str:
-    """Renders one UML dependency between two previously rendered classes."""
+    """Renders one UML dependency between two previously rendered classes.
+
+    This helper turns stored class relationships into PlantUML dependency lines after
+    the class aliases have already been assigned.
+    """
     source = _clean_line(dep.source)
     target = _clean_line(dep.target)
     if not source or not target:
@@ -233,8 +294,13 @@ def _render_dependency(dep: UmlDependency, alias_by_name: dict[str, str]) -> str
 
 
 # ------------ Text Helpers ------------
+# Methods below normalize raw text before it is written into PlantUML output.
 def _escape_quoted(text) -> str:
-    """Escapes text that will be written inside double quotes in PlantUML."""
+    """Escapes text that will be written inside double quotes in PlantUML.
+
+    This helper prevents the generated artifact from breaking when class names contain
+    special characters or line breaks.
+    """
     if text is None:
         return ""
     s = str(text)
@@ -246,7 +312,11 @@ def _escape_quoted(text) -> str:
 
 
 def _clean_line(text) -> str:
-    """Normalizes one text fragment into a single safe PlantUML line."""
+    """Normalizes one text fragment into a single safe PlantUML line.
+
+    This helper keeps emitted lines compact and valid before the final document is
+    assembled.
+    """
     if text is None:
         return ""
     s = str(text)
@@ -255,8 +325,16 @@ def _clean_line(text) -> str:
     return s.strip()
 
 
+# ====== Public API ======
+# Methods below expose the PlantUML rendering operations used by the backend.
+
+
 def render(model: UmlModel) -> str:
-    """Renders the complete UML model as PlantUML text."""
+    """Renders the complete UML model as PlantUML text.
+
+    This function is the main rendering entry point used when the backend needs the UML
+    model as a textual artifact.
+    """
     lines: list[str] = []
     lines.append("@startuml")
 
@@ -293,12 +371,26 @@ def render(model: UmlModel) -> str:
 
 
 class PlantumlService:
+    """Wraps the PlantUML rendering helpers behind a small service interface.
+
+    This service is used by transformation endpoints when they need to render or persist
+    the generated UML model as a `.puml` artifact.
+    """
+
     def render(self, uml_model: UmlModel) -> str:
-        """Returns the PlantUML text generated from one UML model."""
+        """Returns the PlantUML text generated from one UML model.
+
+        This method exposes the textual rendering step so callers can inspect the UML
+        output before deciding whether to persist it.
+        """
         return render(uml_model)
 
     def write(self, uml_model: UmlModel, output_path: Path) -> Path:
-        """Writes the rendered PlantUML artifact to disk and returns its path."""
+        """Writes the rendered PlantUML artifact to disk and returns its path.
+
+        This method is used by transformation endpoints when they need a persistent UML
+        artifact that can be returned or inspected outside the process memory.
+        """
         output_path.parent.mkdir(parents=True, exist_ok=True)
         content = self.render(uml_model)
         output_path.write_text(content, encoding="utf-8")

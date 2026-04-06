@@ -1,3 +1,5 @@
+"""Ollama client used to infer missing HQC evidence from iStar elements."""
+
 import os
 import requests
 from typing import Dict, List
@@ -33,6 +35,11 @@ SYSTEM_INSTRUCTIONS = (
 
 
 def build_prompt(elements: List[CimNode]) -> str:
+    """Builds the prompt sent to Ollama for one interaction request.
+
+    This helper prepares the textual context that tells the model how to classify the
+    current iStar evidence into HQC categories.
+    """
     lines = [f"- {element.type}: {element.label_raw}" for element in elements]
     return (
         f"{SYSTEM_INSTRUCTIONS}\n\n"
@@ -70,11 +77,27 @@ def build_prompt(elements: List[CimNode]) -> str:
 
 
 class OllamaClient(LLMInterface):
+    """Calls Ollama to analyze iStar elements for the interaction workflow.
+
+    This client adapts the backend interaction contract to the Ollama generation API so
+    missing HQC blocks can be inferred from the current CIM evidence.
+    """
+
     def __init__(self, model_name=OLLAMA_MODEL, temperature: float = 0.0):
+        """Initializes the Ollama client with the configured generation settings.
+
+        These settings control how the backend queries Ollama during one interaction
+        analysis pass.
+        """
         self.model_name = model_name
         self.temperature = temperature
 
     def analyze_istar_elements(self, elements: List[CimNode]) -> Dict:
+        """Analyzes the provided iStar elements and returns the HQC evidence signals.
+
+        This method is used by the interaction engine when Ollama is the selected
+        provider for detecting missing HQC blocks.
+        """
         prompt = build_prompt(elements)
         logger.debug("Prompt enviado a Ollama:\n%s", prompt)
         resp = requests.post(
@@ -97,6 +120,11 @@ class OllamaClient(LLMInterface):
         return parsed
 
     def _safe_parse_json(self, raw: str) -> Dict:
+        """Extracts the expected JSON object from the Ollama raw response.
+
+        This helper keeps the interaction flow resilient when the provider returns extra
+        text around the JSON payload expected by the backend.
+        """
         logger.debug("Respuesta cruda recibida:\n%s", raw)
         parsed = None
         try:

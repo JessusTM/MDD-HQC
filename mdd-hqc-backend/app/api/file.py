@@ -1,3 +1,5 @@
+"""File endpoints used to upload XML artifacts into the backend workspace."""
+
 import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -12,6 +14,11 @@ async def upload_file(
     file: UploadFile = File(...),
     upload_service: UploadService = Depends(UploadService),
 ):
+    """Uploads one XML file and stores it in the backend data directory.
+
+    This endpoint is used at the start of the pipeline when a source XML model must be
+    persisted before parsing or transformation begins.
+    """
     logger.info("File upload requested: filename=%s", file.filename)
     try:
         saved_path = await upload_service.upload_file(file)

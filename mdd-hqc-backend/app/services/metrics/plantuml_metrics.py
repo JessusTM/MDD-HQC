@@ -1,3 +1,5 @@
+"""Services that compute metrics from UML models prepared for PlantUML output."""
+
 import logging
 from typing import Any, Dict
 from app.models.uml import UmlModel, UmlClass, UmlDependency
@@ -6,10 +8,26 @@ logger = logging.getLogger(__name__)
 
 
 class UmlMetricsService:
+    """Calculates aggregate metrics from one UML model used for PlantUML output.
+
+    This service mirrors the UML metrics view used when the backend needs summary data
+    alongside the generated PlantUML artifact.
+    """
+
     def __init__(self, uml_model: UmlModel):
+        """Initializes the metrics service with one in-memory UML model.
+
+        This keeps the metric calculations aligned with the same model that will be
+        rendered as PlantUML text.
+        """
         self.uml_model = uml_model
 
     def calculate(self) -> Dict[str, Any]:
+        """Calculates the main structural metrics of the current UML model.
+
+        This method summarizes classes, members, stereotypes, and dependencies so the
+        PlantUML flow can expose a compact structural overview.
+        """
         metrics: Dict[str, Any] = {}
 
         classes: Dict[str, UmlClass] = self.uml_model.classes

@@ -1,3 +1,5 @@
+"""FastAPI application entry point for the MDD-HQC backend."""
+
 import logging
 
 from fastapi import FastAPI

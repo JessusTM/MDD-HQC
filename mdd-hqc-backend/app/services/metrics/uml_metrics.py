@@ -1,3 +1,5 @@
+"""Services that compute structural metrics from generated UML models."""
+
 import logging
 from typing import Any, Dict
 from app.models.uml import UmlModel, UmlClass, UmlDependency
@@ -6,10 +8,26 @@ logger = logging.getLogger(__name__)
 
 
 class UmlMetricsService:
+    """Calculates aggregate metrics from one generated UML model.
+
+    This service is used by transformation flows to summarize the size and structure of
+    the UML output before it is returned or rendered as PlantUML.
+    """
+
     def __init__(self, uml_model: UmlModel):
+        """Initializes the metrics service with one in-memory UML model.
+
+        This keeps the metric calculations aligned with the exact UML model produced by
+        the transformation pipeline.
+        """
         self.uml_model = uml_model
 
     def calculate(self) -> Dict[str, Any]:
+        """Calculates the main structural metrics of the current UML model.
+
+        This method summarizes classes, members, stereotypes, and dependencies so the
+        PSM flow can report a compact overview of the generated diagram.
+        """
         metrics: Dict[str, Any] = {}
 
         classes: Dict[str, UmlClass] = self.uml_model.classes
