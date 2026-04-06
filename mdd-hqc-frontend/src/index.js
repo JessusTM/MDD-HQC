@@ -1,3 +1,7 @@
+/**
+ * Frontend entry point that mounts the main React application.
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './components/App';

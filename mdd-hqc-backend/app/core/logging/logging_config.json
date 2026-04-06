@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "filters": {
+    "below_warning": {
+      "()": "app.core.logging.json_formatter.BelowWarningFilter"
+    },
+    "warning_and_above": {
+      "()": "app.core.logging.json_formatter.WarningAndAboveFilter"
+    }
+  },
+  "formatters": {
+    "console": {
+      "format": "%(asctime)s [%(levelname)s] %(name)s (%(module)s:%(lineno)d) - %(message)s",
+      "datefmt": "%Y-%m-%dT%H:%M:%S%z"
+    },
+    "json": {
+      "()": "app.core.logging.json_formatter.JSONFormatter",
+      "fmt_keys": {
+        "timestamp": "timestamp",
+        "level": "levelname",
+        "logger": "name",
+        "module": "module",
+        "function": "funcName",
+        "line": "lineno",
+        "thread": "threadName",
+        "message": "message"
+      }
+    }
+  },
+  "handlers": {
+    "stdout": {
+      "class": "logging.StreamHandler",
+      "formatter": "console",
+      "filters": ["below_warning"],
+      "stream": "ext://sys.stdout"
+    },
+    "stderr": {
+      "class": "logging.StreamHandler",
+      "formatter": "console",
+      "filters": ["warning_and_above"]
+    },
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "formatter": "json",
+      "filename": "logs/mdd_hqc.jsonl",
+      "maxBytes": 10485760,
+      "backupCount": 5,
+      "encoding": "utf-8"
+    },
+    "queue": {
+      "class": "logging.handlers.QueueHandler",
+      "handlers": ["stdout", "stderr", "file"]
+    }
+  },
+  "loggers": {
+    "uvicorn": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    },
+    "uvicorn.error": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    },
+    "uvicorn.access": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": true
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": ["queue"]
+  }
+}

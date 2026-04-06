@@ -1,0 +1,39 @@
+@startuml
+title MDD-HQC
+class "EjecutarAlgoritmoQuantumAnnealing" as C1 <<Quantum>> {
+  ComputadorCuantico : String
+}
+note right of C1
+  mandatory: ComputadorCuantico
+  actor: Módulo Cuántico
+end note
+class "GenerarPlanDeRuta" as C2 <<Quantum>> {
+  DemandaActual : String
+  MapaNacional : String
+  FlotaDeVehiculos : String
+  EjecutarAlgoritmoDeGrafos() : void
+  DeterminarTipoDeComputoNecesario() : void
+  SolicitarComputoCuantico() : void
+}
+note right of C2
+  mandatory: DemandaActual, MapaNacional, FlotaDeVehiculos, DeterminarTipoDeComputoNecesario
+  actor: Sistema de Planificación de Rutas
+  contribution: hurt -> TiempoDeCalculo
+  contribution: break -> EscalabilidadAnteAltaDemanda
+  contribution: make -> CalidadPlanDeRuta
+  contribution: hurt -> UsoDeComputo
+  EjecutarAlgoritmoDeGrafos(): mandatory: ComputadorClasico
+  DeterminarTipoDeComputoNecesario(): or: EjecutarAlgoritmoDeGrafos, SolicitarComputoCuantico
+end note
+class "ObtenerPlanDeRutaOptimo" as C3 {
+}
+class "RealizarEnvio" as C4 {
+  rapidez : String = true
+  usoOptimoDeRecurso : String = true
+}
+note right of C4
+  actor: ChileEsPres
+end note
+C4 ..> C2 : requires
+C2 ..> C1 : requires
+@enduml

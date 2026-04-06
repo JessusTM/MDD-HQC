@@ -1,12 +1,24 @@
+/**
+ * Transformation controls used to choose the source and target levels.
+ */
+
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
-import { transformCimToPim, transformPimToPsm } from "../../services/api"
+import { transformCimToPim } from "../../services/transformations"
+import { transformPimToPsm } from "../../services/transformations"
 
+/**
+ * Displays the transformation selector and triggers the next valid backend step.
+ *
+ * This component is used by the main application layout to keep level selection and
+ * transformation execution separate from the result panels.
+ */
 export const Filter = ({
   uploadedFilePath,
   uvlContent,
   onTransformCimToPim,
   onTransformPimToPsm,
+  onOpenQuestionsModal,
 }) => {
   const [source, setSource] = useState("CIM")
   const [target, setTarget] = useState("PIM")
@@ -14,52 +26,62 @@ export const Filter = ({
 
   const sameLevel = source === target
 
+  /**
+   * Runs the transformation selected in the source-target control pair.
+   *
+   * This handler is used by the filter execute button because this component owns the
+   * selected levels and decides which transformation action should run next.
+   */
   const handleTransform = async () => {
     if (sameLevel || !uploadedFilePath) return
 
     setLoading(true)
     try {
       if (source === "CIM" && target === "PIM") {
-        const response = await transformCimToPim(uploadedFilePath)
-        onTransformCimToPim?.(response)
-      } else if (source === "PIM" && target === "PSM") {
+        onOpenQuestionsModal?.();
+        return
+      }
+      
+      if (source === "PIM" && target === "PSM") {
         if (!uvlContent) {
-          alert("Primero debes completar la transformación CIM → PIM")
+          alert("You must complete the CIM -> PIM transformation first")
           return
         }
         const response = await transformPimToPsm(uploadedFilePath)
         onTransformPimToPsm?.(response)
       }
     } catch (error) {
-      console.error("Error en transformación:", error)
-      alert(error.response?.data?.detail || "Error al realizar la transformación")
+      console.error("Transformation error:", error)
+      alert(error.response?.data?.detail || "Error running the transformation")
     } finally {
       setLoading(false)
     }
   }
 
-  const canTransform = !sameLevel && uploadedFilePath && 
+  const canTransform = !sameLevel && uploadedFilePath &&
     !(source === "PIM" && target === "PSM" && !uvlContent)
 
   return (
     <div className="w-full relative">
+      {/* Transformation bar */}
       <div className="bg-ctp-mantle border-2 border-ctp-surface1 shadow-xl rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-4">
 
-        <div className="flex items-center gap-6 flex-1">
-          <div className="flex items-center gap-3 text-ctp-overlay1 mr-4">
+          {/* Source and target selectors */}
+          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-3 text-[#7F849C] mr-3">
             <Settings2 className="w-6 h-6" />
             <span className="text-lg font-semibold uppercase tracking-wider hidden md:inline">
-              Transformación
+              Transformation
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">De</span>
+            <span className="text-lg font-bold text-[#7F849C] uppercase tracking-wide">From</span>
             <div className="relative">
               <select
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-transparent text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#45475a] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:border-[#585b70] hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -68,15 +90,15 @@ export const Filter = ({
             </div>
           </div>
 
-          <ArrowRight className="text-ctp-surface2 w-6 h-6" />
+          <ArrowRight className="text-ctp-surface2 w-8 h-8" />
 
           <div className="flex items-center gap-3">
-            <span className="text-base font-bold text-ctp-overlay0 uppercase">A</span>
+            <span className="text-lg font-bold text-[#7F849C] uppercase tracking-wide">To</span>
             <div className="relative">
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="appearance-none bg-ctp-surface0 border border-transparent text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
+                className="appearance-none bg-ctp-surface0 border border-[#45475a] text-ctp-text text-lg rounded-lg focus:ring-2 focus:ring-ctp-mauve focus:border-ctp-mauve block w-36 md:w-48 p-3 font-semibold cursor-pointer hover:border-[#585b70] hover:bg-ctp-surface1 transition-colors shadow-sm outline-none"
               >
                 <option value="CIM">CIM</option>
                 <option value="PIM">PIM</option>
@@ -86,42 +108,44 @@ export const Filter = ({
           </div>
         </div>
 
+        {/* Execute action */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             disabled={!canTransform || loading}
             onClick={handleTransform}
             className={`
-              flex items-center gap-3 px-8 py-3 rounded-lg font-bold text-ctp-base shadow-lg transition-all text-base tracking-wide
+              flex items-center gap-2.5 min-w-[138px] justify-center px-6 py-3 rounded-lg font-semibold border transition-all text-base
               ${!canTransform || loading
-                ? "bg-ctp-surface0 text-ctp-overlay0 cursor-not-allowed shadow-none border border-ctp-surface1"
-                : "bg-ctp-mauve hover:bg-ctp-pink active:bg-ctp-pink text-ctp-base"
+                ? "bg-ctp-surface0 text-[#a0988c] cursor-not-allowed border-[#45475a]"
+                : "bg-ctp-mauve text-ctp-base border-ctp-mauve shadow-lg shadow-ctp-mauve/20 hover:bg-ctp-pink hover:border-ctp-pink active:scale-95"
               }
             `}
           >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-ctp-base border-t-transparent rounded-full animate-spin" />
-                Transformando...
+                Transforming...
               </>
             ) : (
               <>
-                <Play className="w-5 h-5 fill-current" />
-                Ejecutar
+                <Play className="w-4 h-4 fill-current opacity-80" />
+                Execute
               </>
             )}
           </button>
         </div>
       </div>
 
+      {/* Validation messages */}
       {sameLevel && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
-          Origen y Destino no pueden ser iguales.
+          Source and target cannot be the same.
         </div>
       )}
       {source === "PIM" && target === "PSM" && !uvlContent && uploadedFilePath && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
-          Primero completa la transformación CIM → PIM.
+          Complete the CIM -> PIM transformation first.
         </div>
       )}
     </div>
