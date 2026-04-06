@@ -1,8 +1,18 @@
+/**
+ * Transformation controls used to choose the source and target levels.
+ */
+
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
 import { transformCimToPim } from "../../services/transformations"
 import { transformPimToPsm } from "../../services/transformations"
 
+/**
+ * Displays the transformation selector and triggers the next valid backend step.
+ *
+ * This component is used by the main application layout to keep level selection and
+ * transformation execution separate from the result panels.
+ */
 export const Filter = ({
   uploadedFilePath,
   uvlContent,
@@ -16,6 +26,12 @@ export const Filter = ({
 
   const sameLevel = source === target
 
+  /**
+   * Runs the transformation selected in the source-target control pair.
+   *
+   * This handler is used by the filter execute button because this component owns the
+   * selected levels and decides which transformation action should run next.
+   */
   const handleTransform = async () => {
     if (sameLevel || !uploadedFilePath) return
 
@@ -47,8 +63,10 @@ export const Filter = ({
 
   return (
     <div className="w-full relative">
+      {/* Transformation bar */}
       <div className="bg-ctp-mantle border-2 border-ctp-surface1 shadow-xl rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-4">
 
+          {/* Source and target selectors */}
           <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-3 text-[#7F849C] mr-3">
             <Settings2 className="w-6 h-6" />
@@ -90,6 +108,7 @@ export const Filter = ({
           </div>
         </div>
 
+        {/* Execute action */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -118,6 +137,7 @@ export const Filter = ({
         </div>
       </div>
 
+      {/* Validation messages */}
       {sameLevel && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 text-center text-sm text-ctp-red font-semibold bg-ctp-base p-2 rounded-md border border-ctp-red/50 px-6 shadow-sm backdrop-blur-sm pointer-events-none">
           Source and target cannot be the same.

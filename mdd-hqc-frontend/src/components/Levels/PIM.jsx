@@ -1,10 +1,21 @@
+/**
+ * PIM panel that displays the generated UVL artifact and its metrics.
+ */
+
 import { Layers, CheckCircle, Trash2 } from "lucide-react"
 
+/**
+ * Displays the PIM stage after the CIM-to-PIM transformation finishes.
+ *
+ * This component renders the generated UVL text, the interaction status, and the PIM
+ * metrics that help the user inspect the intermediate transformation result.
+ */
 export const PIM = ({ uvlContent, metrics, interactionStatus, onClear }) => {
   const hasContent = !!uvlContent
 
   return (
     <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
+      {/* Panel header */}
       <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="p-2.5 bg-ctp-surface1 rounded-lg">
@@ -40,6 +51,7 @@ export const PIM = ({ uvlContent, metrics, interactionStatus, onClear }) => {
         ) : null}
       </div>
 
+      {/* UVL content */}
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
         {hasContent ? (
           <textarea
@@ -56,6 +68,7 @@ export const PIM = ({ uvlContent, metrics, interactionStatus, onClear }) => {
         )}
       </div>
 
+      {/* Metrics area */}
       <div className="shrink-0 bg-ctp-mantle border-t border-ctp-surface0/50 p-4">
         <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
           {metrics ? (

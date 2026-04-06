@@ -1,3 +1,7 @@
+/**
+ * Main application container that coordinates the CIM, PIM, and PSM frontend flow.
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { Loader2, TriangleAlert } from "lucide-react"
@@ -12,6 +16,12 @@ import GuidedQuestionsModal from "./Questions/GuidedQuestionsModal"
 import { transformCimToPim } from "../services/transformations"
 import { fetchQuestions } from "../services/questions"
 
+/**
+ * Orchestrates uploads, guided interaction, and transformation results across the app.
+ *
+ * This component owns the shared state used by the level panels, the filter controls,
+ * and the interaction modals so the full frontend flow stays synchronized.
+ */
 export const App = () => {
   const questionsAbortRef = useRef(null)
   const transformAbortRef = useRef(null)
@@ -30,6 +40,12 @@ export const App = () => {
   const [questionsStatus, setQuestionsStatus] = useState("idle")
   const [questionsError, setQuestionsError] = useState("")
 
+  /**
+   * Resets the guided-interaction state used by the application and modal flow.
+   *
+   * This helper is used by the main app whenever a new upload, example selection, or
+   * mode change should discard stale questions, errors, and modal visibility.
+   */
   const resetInteractionState = useCallback(() => {
     setQuestions([])
     setQuestionsStatus("idle")
@@ -37,6 +53,12 @@ export const App = () => {
     setIsQuestionsModalOpen(false)
   }, [])
 
+  /**
+   * Cancels the active interaction-related requests tracked by the application.
+   *
+   * This helper is used by the main app before starting a new interaction or
+   * transformation run so older responses cannot overwrite the latest shared state.
+   */
   const abortInteractionRequests = useCallback(() => {
     interactionRunIdRef.current += 1
     questionsAbortRef.current?.abort()
@@ -58,6 +80,12 @@ export const App = () => {
     }
   }, [abortInteractionRequests])
 
+  /**
+   * Stores the uploaded file path and clears downstream results tied to the previous run.
+   *
+   * This handler is used by the CIM panel after a successful upload so the rest of the
+   * application can start a fresh transformation flow from the new source file.
+   */
   const handleFileUploaded = useCallback((path) => {
     abortInteractionRequests()
     setUploadedFilePath(path)
@@ -68,16 +96,34 @@ export const App = () => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Stores the CIM metrics returned by the upload-processing flow.
+   *
+   * This handler is used by the CIM panel so the application can expose the loaded CIM
+   * summary to the rest of the transformation flow.
+   */
   const handleCimMetricsLoaded = useCallback((metrics) => {
     setCimMetrics(metrics)
   }, [])
 
+  /**
+   * Stores the PIM result produced by the CIM-to-PIM transformation.
+   *
+   * This handler is used by the app after the first transformation step so the PIM panel
+   * and downstream actions can reuse the generated UVL content and metrics.
+   */
   const handlePimTransformed = useCallback((data) => {
     setUvlContent(data.uvl_content)
     setCimMetrics(data.metrics?.cim || cimMetrics)
     setPimMetrics(data.metrics?.pim || null)
   }, [cimMetrics])
 
+  /**
+   * Stores the PSM result produced by the PIM-to-PSM transformation.
+   *
+   * This handler is used by the app after the second transformation step so the PSM
+   * panel can display the generated diagram and the latest metrics snapshot.
+   */
   const handlePsmTransformed = useCallback((data) => {
     setPumlContent(data.puml_content)
     setUvlContent(data.uvl_content || uvlContent)
@@ -86,11 +132,23 @@ export const App = () => {
     setPsmMetrics(data.metrics?.psm || null)
   }, [cimMetrics, pimMetrics, uvlContent])
 
+  /**
+   * Clears only the PSM output while keeping the earlier CIM and PIM state available.
+   *
+   * This handler is used by the PSM panel when the user wants to discard the final UML
+   * result without restarting the whole frontend flow.
+   */
   const handleClearPsm = useCallback(() => {
     setPumlContent(null)
     setPsmMetrics(null)
   }, [])
 
+  /**
+   * Clears the current PIM result and every state that depends on it.
+   *
+   * This handler is used by the PIM panel so the application can remove the generated UVL,
+   * reset guided interaction, and also discard the downstream PSM output.
+   */
   const handleClearPim = useCallback(() => {
     abortInteractionRequests()
     setUvlContent(null)
@@ -100,6 +158,12 @@ export const App = () => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Clears the source CIM state and all downstream transformation results.
+   *
+   * This handler is used by the CIM panel when the user wants to restart the complete
+   * frontend flow from a clean state.
+   */
   const handleClearCim = useCallback(() => {
     abortInteractionRequests()
     setUploadedFilePath(null)
@@ -112,6 +176,12 @@ export const App = () => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Loads one predefined example into the application as the current CIM source.
+   *
+   * This handler is used by the examples sidebar so the app can switch to a sample model
+   * while clearing every result derived from a previous upload or example.
+   */
   const handleExampleSelected = useCallback((example) => {
     abortInteractionRequests()
     setSelectedExample({
@@ -127,6 +197,12 @@ export const App = () => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Toggles AI-assisted interaction mode and resets stale interaction state when disabled.
+   *
+   * This handler is used by the header toggle because guided questions only make sense
+   * while the application is operating in the AI-assisted interaction mode.
+   */
   const handleToggleAi = useCallback(() => {
     setIsAiEnabled((currentValue) => {
       const nextValue = !currentValue
@@ -140,6 +216,12 @@ export const App = () => {
     })
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Runs the CIM-to-PIM transformation for the current uploaded source file.
+   *
+   * This helper is used by the main application after guided interaction or direct
+   * execution so the PIM result is always produced from the latest active file path.
+   */
   const runCimToPimTransformation = useCallback(async () => {
     if (!uploadedFilePath) return
 
@@ -163,6 +245,12 @@ export const App = () => {
     }
   }, [handlePimTransformed, uploadedFilePath])
 
+  /**
+   * Opens the guided-question flow or falls back to direct transformation when AI is off.
+   *
+   * This helper is used by the central interaction button because that action decides
+   * whether the app should fetch questions first or run the CIM-to-PIM step immediately.
+   */
   const openQuestionsModal = async () => {
     if (!uploadedFilePath) return
 
@@ -220,10 +308,22 @@ export const App = () => {
     }
   }
 
+  /**
+   * Closes the questions modal without mutating the stored question state.
+   *
+   * This handler is used by both modal variants so the shared modal visibility stays
+   * controlled from the main application state.
+   */
   const handleQuestionsModalClose = () => {
     setIsQuestionsModalOpen(false)
   }
 
+  /**
+   * Continues from the guided-question step into the CIM-to-PIM transformation.
+   *
+   * This handler is used by the guided questions modal so the app can resume the main
+   * transformation flow after the user is done reviewing the prepared questions.
+   */
   const handleContinueWithQuestions = async () => {
     setIsQuestionsModalOpen(false)
     try {
@@ -237,6 +337,12 @@ export const App = () => {
     }
   }
 
+  /**
+   * Renders one interaction button variant for the center action columns.
+   *
+   * This helper is used twice by the main layout so both action columns share the same
+   * button structure while keeping the interactive and disabled behaviors consistent.
+   */
   const renderInteractionButton = ({ interactive = false }) => {
     const isLoadingQuestions = interactive && questionsStatus === "loading"
     const isDisabled = interactive ? !uploadedFilePath || isLoadingQuestions : true
@@ -286,19 +392,23 @@ export const App = () => {
 
   return (
     <div className="min-h-screen w-full bg-ctp-base text-[#a0988c] font-sans selection:bg-ctp-mauve selection:text-ctp-base flex flex-col">
+      {/* Examples sidebar */}
       <ExamplesSidebar
         isOpen={isExamplesOpen}
         onClose={() => setIsExamplesOpen(false)}
         onSelectExample={handleExampleSelected}
       />
 
+      {/* Top navigation */}
       <Header
         onOpenExamples={() => setIsExamplesOpen(true)}
         isAiEnabled={isAiEnabled}
         onToggleAi={handleToggleAi}
       />
 
+      {/* Main workspace */}
       <main className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto px-6 py-8">
+        {/* Transformation controls */}
         <div className="mb-8">
           <Filter
             uploadedFilePath={uploadedFilePath}
@@ -309,7 +419,9 @@ export const App = () => {
           />
         </div>
 
+        {/* Three-level transformation layout */}
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)_88px_minmax(0,1fr)] gap-4 items-stretch min-h-[780px]">
+          {/* CIM panel */}
           <div className="h-full">
             <CIM
               onFileUploaded={handleFileUploaded}
@@ -320,10 +432,12 @@ export const App = () => {
             />
           </div>
 
+          {/* CIM to PIM action */}
           <div className="flex flex-col items-center justify-center">
             {renderInteractionButton({ interactive: true })}
           </div>
 
+          {/* Interaction modals */}
           {questionsStatus === "ready" ? (
             <GuidedQuestionsModal
               isOpen={isQuestionsModalOpen}
@@ -334,7 +448,9 @@ export const App = () => {
           ) : (
             <QuestionsModal isOpen={isQuestionsModalOpen} onClose={handleQuestionsModalClose}>
               {questionsStatus === "loading" ? (
-              <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+                <>
+                  {/* Loading state */}
+                  <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
                 <div className="mb-5 rounded-full border border-ctp-blue/30 bg-ctp-blue/10 p-4 text-ctp-blue">
                   <Loader2 className="h-10 w-10 animate-spin" />
                 </div>
@@ -342,9 +458,12 @@ export const App = () => {
                 <p className="mt-3 max-w-md text-base text-[#a0988c]">
                   You can close this window while we prepare them. It will reopen automatically when the questions are ready.
                 </p>
-              </div>
+                  </div>
+                </>
               ) : questionsStatus === "error" ? (
-              <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+                <>
+                  {/* Error state */}
+                  <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
                 <div className="mb-5 rounded-full border border-ctp-red/30 bg-ctp-red/10 p-4 text-ctp-red">
                   <TriangleAlert className="h-10 w-10" />
                 </div>
@@ -366,11 +485,13 @@ export const App = () => {
                     Try again
                   </button>
                 </div>
-              </div>
+                  </div>
+                </>
               ) : null}
             </QuestionsModal>
           )}
 
+          {/* PIM panel */}
           <div className="h-full">
             <PIM
               uvlContent={uvlContent}
@@ -380,10 +501,12 @@ export const App = () => {
             />
           </div>
 
+          {/* PIM to PSM action */}
           <div className="flex flex-col items-center justify-center">
             {renderInteractionButton({ interactive: false })}
           </div>
 
+          {/* PSM panel */}
           <div className="h-full">
             <PSM
               pumlContent={pumlContent}

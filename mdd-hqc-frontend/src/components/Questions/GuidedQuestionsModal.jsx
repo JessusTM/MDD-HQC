@@ -1,9 +1,20 @@
+/**
+ * Guided questions modal used by the AI-assisted CIM-to-PIM interaction flow.
+ */
+
+/**
+ * Displays the prepared questions that guide the user before the CIM-to-PIM step.
+ *
+ * This component is used by the main application when guided interaction is available so
+ * the user can review the generated questions in a dedicated modal view.
+ */
 const GuidedQuestionsModal = ({ isOpen, onClose, questions, onContinue }) => {
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-xl relative">
+        {/* Close action */}
         <button
           type="button"
           onClick={onClose}
@@ -12,6 +23,7 @@ const GuidedQuestionsModal = ({ isOpen, onClose, questions, onContinue }) => {
           X
         </button>
 
+        {/* Modal header */}
         <div className="flex items-center mb-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -25,6 +37,7 @@ const GuidedQuestionsModal = ({ isOpen, onClose, questions, onContinue }) => {
           <h2 className="text-xl font-bold text-white">Guided Interaction: CIM to PIM</h2>
         </div>
 
+        {/* Question list */}
         <div className="bg-gray-900 p-4 mb-4 -mx-6 max-h-[420px] overflow-y-auto">
           <p className="text-gray-300">
             Answer the following questions to refine the semi-automatic transformation from <span className="font-bold text-blue-200">CIM to PIM</span>
@@ -48,6 +61,7 @@ const GuidedQuestionsModal = ({ isOpen, onClose, questions, onContinue }) => {
           ))}
         </div>
 
+        {/* Footer action */}
         <div className="flex justify-end">
           <button
             type="button"

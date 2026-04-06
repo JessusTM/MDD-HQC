@@ -1,6 +1,22 @@
+/**
+ * Sidebar components that expose predefined XML examples for the frontend flow.
+ */
+
 import { BookOpen, ChevronRight, Lightbulb, X } from "lucide-react"
 
+/**
+ * Displays the example catalog used to start the flow from a predefined CIM model.
+ *
+ * This component is used by the main application so users can test the transformation
+ * pipeline quickly without preparing their own upload first.
+ */
 export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
+  /**
+   * Selects the built-in example and closes the sidebar afterwards.
+   *
+   * This handler is used by the example card because the sidebar is responsible for
+   * packaging the predefined example metadata before the app consumes it.
+   */
   const handleSelect = () => {
     onSelectExample?.({
       id: "chileespres",
@@ -12,6 +28,7 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
 
   return (
     <>
+      {/* Backdrop */}
       <div
         className={[
           "fixed inset-0 z-[60] bg-ctp-base/70 backdrop-blur-sm transition-opacity duration-300",
@@ -20,14 +37,17 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
         onClick={onClose}
       />
 
+      {/* Sidebar panel */}
         <aside
           className={[
           "fixed left-0 top-0 z-[70] h-full w-full max-w-[540px] border-r border-ctp-surface1 bg-ctp-mantle shadow-2xl transition-transform duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
+          {/* Sidebar content */}
           <div className="flex h-full flex-col">
-           <div className="flex items-center justify-between border-b border-ctp-surface1 px-6 py-6">
+            {/* Sidebar header */}
+            <div className="flex items-center justify-between border-b border-ctp-surface1 px-6 py-6">
              <div className="flex items-center gap-4">
                <div className="rounded-xl bg-ctp-surface0 p-3">
                  <BookOpen className="h-6 w-6 text-ctp-mauve" />
@@ -47,6 +67,7 @@ export const ExamplesSidebar = ({ isOpen, onClose, onSelectExample }) => {
              </button>
           </div>
 
+          {/* Example list */}
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <div className="mb-6 rounded-2xl border border-ctp-blue/20 bg-ctp-blue/10 p-4">
               <div className="flex items-start gap-3">

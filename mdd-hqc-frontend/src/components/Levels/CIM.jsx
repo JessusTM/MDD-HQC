@@ -1,9 +1,19 @@
+/**
+ * CIM panel that handles XML upload, example loading, and CIM metric display.
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { Upload, FileText, CheckCircle, Loader2, Trash2 } from "lucide-react"
 import { uploadFile } from "../../services/file"
 import { getCimMetrics } from "../../services/metrics"
 
+/**
+ * Displays the CIM stage and manages the source file-processing workflow.
+ *
+ * This component is responsible for uploading or loading the XML source model and for
+ * exposing the resulting CIM metrics to the rest of the application.
+ */
 export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample, onClear }) => {
   const uploadAbortRef = useRef(null)
   const metricsAbortRef = useRef(null)
@@ -16,6 +26,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
   const fileInputRef = useRef(null)
   const processedExampleRequestRef = useRef(null)
 
+  /**
+   * Cancels the active upload and metric requests used by the CIM processing flow.
+   *
+   * This helper is used by the CIM component before a new upload, example load, or clear
+   * action so stale responses do not overwrite the latest panel state.
+   */
   const abortProcessing = useCallback(() => {
     processRunIdRef.current += 1
     uploadAbortRef.current?.abort()
@@ -24,6 +40,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     metricsAbortRef.current = null
   }, [])
 
+  /**
+   * Resets the local CIM panel state and clears the parent callbacks when needed.
+   *
+   * This helper is used by the CIM component after failures, clears, or empty file input
+   * events so the panel returns to a stable baseline state.
+   */
   const reset = useCallback(({ clearError = true } = {}) => {
     setFile(null)
     setFilePath(null)
@@ -38,6 +60,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     abortProcessing()
   }, [abortProcessing])
 
+  /**
+   * Starts processing when the user selects a file from the upload input.
+   *
+   * This handler is used by the hidden file input because that control is the entry point
+   * for the manual XML upload flow managed by this component.
+   */
   const handleFile = async (event) => {
     const selected = event.target.files?.[0]
 
@@ -54,6 +82,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     await processFile(selected)
   }
 
+  /**
+   * Uploads the selected file and then requests the CIM metrics for the saved path.
+   *
+   * This helper is used by both manual uploads and example loading so the CIM component
+   * can reuse one processing pipeline for any source file that enters the panel.
+   */
   const processFile = useCallback(async (fileToRead) => {
     const runId = ++processRunIdRef.current
     const uploadController = new AbortController()
@@ -106,6 +140,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     }
   }, [onFileUploaded, onMetricsLoaded, reset])
 
+  /**
+   * Loads the selected example file and reuses the normal CIM processing flow for it.
+   *
+   * This helper is used by the CIM component when the examples sidebar picks a sample,
+   * so example loading behaves like a regular upload from the panel perspective.
+   */
   useEffect(() => {
     const loadExample = async () => {
       if (!selectedExample?.url || !selectedExample?.requestId) return
@@ -150,6 +190,12 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
     loadExample()
   }, [abortProcessing, processFile, selectedExample])
 
+  /**
+   * Clears the current CIM source, local UI state, and downstream application results.
+   *
+   * This handler is used by the panel clear button because resetting the source CIM must
+   * also invalidate every later transformation stage.
+   */
   const handleClear = () => {
     abortProcessing()
     processedExampleRequestRef.current = null
@@ -164,6 +210,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
 
   return (
     <div className="group flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
+      {/* Panel header */}
       <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="p-2.5 bg-ctp-surface1 rounded-lg">
@@ -195,6 +242,7 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
         )}
       </div>
 
+      {/* Upload state */}
       <div className="flex-1 p-0 overflow-hidden flex flex-col relative bg-ctp-crust">
         <div className="flex-1 flex flex-col items-center justify-center m-6 py-10 rounded-lg bg-ctp-mantle/50">
           <input
@@ -206,7 +254,9 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
           />
 
           {hasUploadedResult ? (
-            <div className="flex flex-col items-center justify-center px-6 text-center">
+            <>
+              {/* Success state */}
+              <div className="flex flex-col items-center justify-center px-6 text-center">
               <div className="mb-2 rounded-full bg-ctp-green/10 p-3 text-ctp-green">
                 <CheckCircle className="h-14 w-14" />
               </div>
@@ -219,9 +269,11 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
               <p className="mt-2 text-lg font-semibold text-ctp-green/90">
                 Metrics calculated
               </p>
-            </div>
+              </div>
+            </>
           ) : (
             <>
+              {/* Upload prompt */}
               <p className="text-[#a0988c] text-xl mb-6 text-center px-6 font-semibold">
                 Upload your i* 2.0 (XML) file here...
               </p>
@@ -253,15 +305,21 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
         </div>
       </div>
 
+      {/* Metrics area */}
       <div className="shrink-0 bg-ctp-mantle border-t border-ctp-surface0/50 p-4">
         <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 text-[#a0988c]">
+            <>
+              {/* Loading metrics */}
+              <div className="flex items-center justify-center gap-2 text-[#a0988c]">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-sm font-semibold">Calculating metrics...</span>
-            </div>
+              </div>
+            </>
           ) : metrics ? (
-            <div className="space-y-2">
+            <>
+              {/* Metrics content */}
+              <div className="space-y-2">
               <h4 className="text-ctp-text font-bold text-sm mb-3">CIM Metrics</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-ctp-surface0/50 p-2 rounded">
@@ -331,7 +389,8 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
                   </div>
                 )}
               </div>
-            </div>
+              </div>
+            </>
           ) : (
             <div className="min-h-[72px] border border-dashed border-ctp-overlay0/30 rounded-lg flex items-center justify-center px-4 bg-ctp-mantle/10">
               <span className="text-[#a0988c] text-xl font-semibold italic">

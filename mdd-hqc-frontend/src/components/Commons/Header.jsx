@@ -1,5 +1,15 @@
+/**
+ * Top-level header components used by the main application shell.
+ */
+
 import { Menu } from "lucide-react"
 
+/**
+ * Renders the decorative AI toggle icon used by the application header.
+ *
+ * This helper exists so the header can reuse the custom sparkles icon without mixing
+ * the SVG markup directly into the main header structure.
+ */
 const SparklesIcon = ({ className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -19,10 +29,17 @@ const SparklesIcon = ({ className = "" }) => (
   </svg>
 )
 
+/**
+ * Displays the sticky application header with examples, AI mode, and repository access.
+ *
+ * This component is used by the main app shell to keep navigation and global controls
+ * visible while the user moves through the transformation workspace.
+ */
 export const Header = ({ onOpenExamples, isAiEnabled, onToggleAi }) => {
   return (
     <header className="bg-ctp-mantle border-b border-ctp-surface0 shrink-0 z-50 shadow-lg shadow-black/20 h-24 sticky top-0">
       <div className="w-full max-w-[1920px] mx-auto px-6 h-full flex items-center justify-center relative pt-3 pb-3">
+        {/* Examples entry point */}
         <button
           type="button"
           onClick={onOpenExamples}
@@ -32,6 +49,7 @@ export const Header = ({ onOpenExamples, isAiEnabled, onToggleAi }) => {
           Examples
         </button>
 
+        {/* Project identity */}
         <div className="text-center mt-1">
           <h1 className="text-4xl font-bold text-ctp-text tracking-tight leading-tight">
             MDD-HQC
@@ -41,6 +59,7 @@ export const Header = ({ onOpenExamples, isAiEnabled, onToggleAi }) => {
           </p>
         </div>
 
+        {/* Global actions */}
         <div className="absolute right-3 sm:right-6 flex items-center gap-3">
           <button
             type="button"

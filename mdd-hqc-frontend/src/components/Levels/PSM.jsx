@@ -1,11 +1,27 @@
+/**
+ * PSM panel that displays the generated UML diagram and its metrics.
+ */
+
 import { useState } from "react"
 import { Code, CheckCircle, Maximize2, Trash2, X } from "lucide-react"
 import { encode } from "plantuml-encoder"
 
+/**
+ * Displays the PSM stage after the backend generates the PlantUML artifact.
+ *
+ * This component renders the UML preview, the fullscreen viewer, and the PSM metrics
+ * used to inspect the final transformation result.
+ */
 export const PSM = ({ pumlContent, metrics, onClear }) => {
   const hasContent = !!pumlContent
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  /**
+   * Builds the PlantUML server URL for the generated diagram content.
+   *
+   * This helper is used by the PSM component and its fullscreen modal because both views
+   * need the same encoded diagram URL derived from the current PlantUML text.
+   */
   const getPlantUmlUrl = (content) => {
     if (!content) return null
     const encoded = encode(content)
@@ -14,6 +30,12 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
 
   const plantUmlUrl = hasContent ? getPlantUmlUrl(pumlContent) : null
 
+  /**
+   * Renders the fullscreen viewer used to inspect the generated UML diagram in detail.
+   *
+   * This helper exists inside the PSM component because only this panel owns the modal
+   * state and the PlantUML URL required by the fullscreen preview.
+   */
   const FullscreenModal = () => {
     if (!isFullscreen) return null
 
@@ -45,7 +67,9 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
 
   return (
     <>
+      {/* PSM panel */}
       <div className="flex flex-col h-full bg-ctp-surface0 rounded-xl shadow-xl border-2 border-ctp-surface2 transition-all duration-300 hover:border-ctp-surface1">
+        {/* Panel header */}
         <div className="px-4 py-5 border-b border-ctp-surface1 bg-ctp-surface0/20 rounded-t-xl flex items-center justify-between shrink-0 h-20">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2.5 bg-ctp-surface1 rounded-lg">
@@ -86,6 +110,7 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
           )}
         </div>
 
+        {/* Diagram preview */}
         <div className="flex-1 p-0 overflow-auto flex flex-col relative bg-ctp-crust">
           {hasContent && plantUmlUrl ? (
             <div className="w-full h-full p-6 flex items-center justify-center">
@@ -104,6 +129,7 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
           )}
         </div>
 
+        {/* Metrics area */}
         <div className="shrink-0 bg-ctp-mantle border-t border-ctp-surface0/50 p-4">
           <div className="min-h-[104px] rounded-lg bg-ctp-mantle/40 p-4 overflow-y-auto max-h-[300px]">
             {metrics ? (
@@ -150,6 +176,7 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
           </div>
         </div>
       </div>
+      {/* Fullscreen preview */}
       <FullscreenModal />
     </>
   )
