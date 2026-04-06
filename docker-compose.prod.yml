@@ -1,0 +1,45 @@
+services:
+  backend:
+    image: ghcr.io/jessustm/mdd-hqc-backend:latest
+    container_name: mdd-hqc-backend
+    ports:
+      - "8000:8000"
+    environment:
+      BACKEND_CORS_ORIGINS: "http://localhost:3000,http://200.13.5.22:3000"
+      OLLAMA_URL: "http://ollama:11434/api/generate"
+    depends_on:
+      - ollama
+    networks:
+      - appnet
+
+  frontend:
+    image: ghcr.io/jessustm/mdd-hqc-frontend:latest
+    container_name: mdd-hqc-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      REACT_APP_API_URL: "http://200.13.5.22:8000"
+    depends_on:
+      - backend
+    networks:
+      - appnet
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - appnet
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull mistral && tail -f /dev/null"]
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  ollama_data:
