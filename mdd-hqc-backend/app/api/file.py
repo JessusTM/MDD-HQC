@@ -1,6 +1,7 @@
 """File endpoints used to upload XML artifacts into the backend workspace."""
 
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.services.upload_service import UploadService
@@ -11,8 +12,8 @@ router = APIRouter(prefix="/files", tags=["files"])
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
-    upload_service: UploadService = Depends(UploadService),
+    file: Annotated[UploadFile, File(...)],
+    upload_service: Annotated[UploadService, Depends(UploadService)],
 ):
     """Uploads one XML file and stores it in the backend data directory.
 

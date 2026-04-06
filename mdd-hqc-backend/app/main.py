@@ -9,6 +9,7 @@ from app.api.file import router as file_router
 from app.api.interactions import router as interactions_router
 from app.api.metrics import router as metrics_router
 from app.api.transformations import router as transformations_router
+from app.core.config import config
 from app.core.logging.logging import setup_logging
 
 setup_logging()
@@ -18,7 +19,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=config.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
