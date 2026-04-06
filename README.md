@@ -19,7 +19,8 @@
 </div>
 
 > **Version:** v1.2.0  
-> **Status:** Functional Prototype
+> **Status:** Functional Prototype  
+> **Live Demo:** http://200.13.5.22:3000/
 
 **MDD-HQC** is a model-driven platform for designing hybrid quantum-classical systems. It transforms **iStar 2.0** models into traceable **UVL** and **UML** artifacts enriched with **QuantumUML** stereotypes, with advisory **LLM support**.
 
@@ -88,19 +89,32 @@ The following must be installed before starting:
    cd MDD-HQC
    ```
 
-2. **Build and start the services:**
+2. **Create the backend environment file at the repository root:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Create the frontend environment file:**
+   ```bash
+   cp mdd-hqc-frontend/.env.example mdd-hqc-frontend/.env
+   ```
+
+   > [!NOTE]
+   > The backend reads variables from the root `.env`, while the React frontend reads `REACT_APP_*` variables from `mdd-hqc-frontend/.env`.
+
+4. **Build and start the services:**
    ```bash
    docker compose up --build
    ```
 
    This command builds the backend and frontend images and starts both services.
 
-3. **Access the application:**
+5. **Access the application:**
    * **Frontend:** [http://localhost:3000](http://localhost:3000)
    * **Backend API:** [http://localhost:8000](http://localhost:8000)
    * **API Documentation (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
 
-4. **Stop the services:**
+6. **Stop the services:**
    ```bash
    docker compose down
    ```

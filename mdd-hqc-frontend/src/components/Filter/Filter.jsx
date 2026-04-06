@@ -4,7 +4,6 @@
 
 import { Settings2, ArrowRight, Play } from "lucide-react"
 import { useState } from "react"
-import { transformCimToPim } from "../../services/transformations"
 import { transformPimToPsm } from "../../services/transformations"
 
 /**

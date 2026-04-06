@@ -19,7 +19,6 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
   const metricsAbortRef = useRef(null)
   const processRunIdRef = useRef(0)
   const [file, setFile] = useState(null)
-  const [filePath, setFilePath] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
   const [infoMessage, setInfoMessage] = useState("")
   const [loading, setLoading] = useState(false)
@@ -48,7 +47,6 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
    */
   const reset = useCallback(({ clearError = true } = {}) => {
     setFile(null)
-    setFilePath(null)
     if (clearError) setErrorMessage("")
     setInfoMessage("")
     setLoading(false)
@@ -102,7 +100,6 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
       }
 
       const path = uploadResponse.path
-      setFilePath(path)
       setInfoMessage("File uploaded successfully")
       onFileUploaded?.(path)
       setInfoMessage("Calculating CIM metrics...")
@@ -156,7 +153,6 @@ export const CIM = ({ onFileUploaded, onMetricsLoaded, metrics, selectedExample,
 
       try {
         setFile(null)
-        setFilePath(null)
         setErrorMessage("")
         setInfoMessage(`Loading ${selectedExample.name}...`)
         setLoading(true)
