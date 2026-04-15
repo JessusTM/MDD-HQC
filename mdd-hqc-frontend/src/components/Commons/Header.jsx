@@ -64,17 +64,36 @@ export const Header = ({ onOpenExamples, isAiEnabled, onToggleAi }) => {
           <button
             type="button"
             onClick={onToggleAi}
-            aria-pressed={isAiEnabled}
-            className={`group inline-flex h-12 items-center gap-2 rounded-full border px-3 text-sm font-bold uppercase tracking-[0.14em] transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 sm:px-6 ${
+            role="switch"
+            aria-checked={isAiEnabled}
+            className={`group inline-flex h-12 items-center gap-3 rounded-full border px-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.99] sm:px-4 ${
               isAiEnabled
-                ? "border-[#cba6f7] bg-[#1e1e2e] text-[#cba6f7]"
-                : "border-[#7f849c] bg-[#313244] text-[#7f849c]"
+                ? "border-[#cba6f7] bg-[#1e1e2e]"
+                : "border-[#7f849c] bg-[#313244]"
             }`}
           >
-            <span className="transition-transform duration-200 group-hover:rotate-12">
+            <span className={`transition-transform duration-200 group-hover:rotate-12 ${
+              isAiEnabled ? "text-[#cba6f7]" : "text-[#7f849c]"
+            }`}>
               <SparklesIcon className="h-4 w-4 sm:h-5 sm:w-5" />
             </span>
-            <span>{isAiEnabled ? "AI Active" : "AI Off"}</span>
+            <span className={`text-left text-xs font-bold uppercase tracking-[0.14em] sm:text-sm ${
+              isAiEnabled ? "text-[#f5e0dc]" : "text-[#bac2de]"
+            }`}>
+              AI Assist
+            </span>
+            <span
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                isAiEnabled ? "bg-ctp-mauve" : "bg-ctp-surface1"
+              }`}
+              aria-hidden="true"
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  isAiEnabled ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </span>
           </button>
 
           <a

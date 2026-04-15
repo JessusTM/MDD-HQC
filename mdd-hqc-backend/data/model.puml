@@ -1,39 +1,38 @@
 @startuml
 title MDD-HQC
-class "EjecutarAlgoritmoQuantumAnnealing" as C1 <<Quantum>> {
-  ComputadorCuantico : String
+class "ExecuteQuantumAnnealingAlgorithm" as C1 <<Quantum>> {
+  QuantumComputer : String
+  QuantumComputingInstance : String
 }
 note right of C1
-  mandatory: ComputadorCuantico
-  actor: Módulo Cuántico
+  mandatory: QuantumComputer, QuantumComputingInstance
+  actor: Quantum Module
 end note
-class "GenerarPlanDeRuta" as C2 <<Quantum>> {
-  DemandaActual : String
-  MapaNacional : String
-  FlotaDeVehiculos : String
-  EjecutarAlgoritmoDeGrafos() : void
-  DeterminarTipoDeComputoNecesario() : void
-  SolicitarComputoCuantico() : void
+class "GenerateRoutePlan" as C2 <<Quantum>> {
+  NationalMap : String
+  VehicleFleet : String
+  CurrentDemand : String
+  ExecuteGraphAlgorithm() : void
+  DetermineRequiredComputingType() : void
+  PrepareAndRequestQuantumComputation() : void
 }
 note right of C2
-  mandatory: DemandaActual, MapaNacional, FlotaDeVehiculos, DeterminarTipoDeComputoNecesario
-  actor: Sistema de Planificación de Rutas
-  contribution: hurt -> TiempoDeCalculo
-  contribution: break -> EscalabilidadAnteAltaDemanda
-  contribution: make -> CalidadPlanDeRuta
-  contribution: hurt -> UsoDeComputo
-  EjecutarAlgoritmoDeGrafos(): mandatory: ComputadorClasico
-  DeterminarTipoDeComputoNecesario(): or: EjecutarAlgoritmoDeGrafos, SolicitarComputoCuantico
+  mandatory: NationalMap, VehicleFleet, CurrentDemand, DetermineRequiredComputingType
+  actor: Route Planning System
+  contribution: hurt -> EfficientResourceUsage
+  contribution: hurt -> ComputationTime
+  contribution: break -> ScalabilityUnderHighDemand
+  contribution: make -> RoutePlanQuality
+  ExecuteGraphAlgorithm(): mandatory: ClassicalComputer
+  DetermineRequiredComputingType(): or: ExecuteGraphAlgorithm, PrepareAndRequestQuantumComputation
 end note
-class "ObtenerPlanDeRutaOptimo" as C3 {
+class "PerformDelivery" as C3 {
+  fastDelivery : String = true
+  optimalResourceUsage : String = true
 }
-class "RealizarEnvio" as C4 {
-  rapidez : String = true
-  usoOptimoDeRecurso : String = true
-}
-note right of C4
+note right of C3
   actor: ChileEsPres
 end note
-C4 ..> C2 : requires
 C2 ..> C1 : requires
+C3 ..> C2 : requires
 @enduml

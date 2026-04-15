@@ -19,9 +19,12 @@
   </p>
 </div>
 
+<p align="center">
+  <a href="http://200.13.5.22:3000/"><strong><font size="6">Try the Application</font></strong></a>
+</p>
+
 > **Version:** v1.2.0  
 > **Status:** Functional Prototype  
-> **Live Demo:** http://200.13.5.22:3000/
 
 **MDD-HQC** is a model-driven platform for designing hybrid quantum-classical systems. It transforms **iStar 2.0** models into traceable **UVL** and **UML** artifacts enriched with **QuantumUML** stereotypes, with advisory **LLM support**.
 
