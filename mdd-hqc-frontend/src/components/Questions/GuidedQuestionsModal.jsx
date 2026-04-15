@@ -3,7 +3,7 @@
  */
 
 /**
- * Displays the prepared questions that guide the user before the CIM-to-PIM step.
+ * Displays the prepared questions generated after the CIM-to-PIM step.
  *
  * This component is used by the main application when guided interaction is available so
  * the user can review the generated questions in a dedicated modal view.
@@ -40,7 +40,7 @@ const GuidedQuestionsModal = ({ isOpen, onClose, questions, onContinue }) => {
         {/* Question list */}
         <div className="bg-gray-900 p-4 mb-4 -mx-6 max-h-[420px] overflow-y-auto">
           <p className="text-gray-300">
-            Answer the following questions to refine the semi-automatic transformation from <span className="font-bold text-blue-200">CIM to PIM</span>
+            Review the questions generated to inspect the semi-automatic transformation from <span className="font-bold text-blue-200">CIM to PIM</span>
           </p>
 
           {questions.map((q, index) => (

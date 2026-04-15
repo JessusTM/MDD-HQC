@@ -1,6 +1,7 @@
 <div align="center">
-  <h1><em>MDD-HQC</em></h1>
+  <img src="docs/images/logo.png" alt="MDD-HQC logo" width="420" style="margin: 20px 0 20px;" />
   <p>
+    <hr>
     <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"></a>
     <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"></a>
@@ -18,9 +19,12 @@
   </p>
 </div>
 
+<p align="center">
+  <a href="http://200.13.5.22:3000/"><strong><font size="6">Try the Application</font></strong></a>
+</p>
+
 > **Version:** v1.2.0  
 > **Status:** Functional Prototype  
-> **Live Demo:** http://200.13.5.22:3000/
 
 **MDD-HQC** is a model-driven platform for designing hybrid quantum-classical systems. It transforms **iStar 2.0** models into traceable **UVL** and **UML** artifacts enriched with **QuantumUML** stereotypes, with advisory **LLM support**.
 

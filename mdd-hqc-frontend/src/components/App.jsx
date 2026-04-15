@@ -28,6 +28,7 @@ export const App = () => {
   const interactionRunIdRef = useRef(0)
   const [isAiEnabled, setIsAiEnabled] = useState(true)
   const [uploadedFilePath, setUploadedFilePath] = useState(null)
+  const [generatedUvlPath, setGeneratedUvlPath] = useState(null)
   const [cimMetrics, setCimMetrics] = useState(null)
   const [pimMetrics, setPimMetrics] = useState(null)
   const [psmMetrics, setPsmMetrics] = useState(null)
@@ -89,6 +90,7 @@ export const App = () => {
   const handleFileUploaded = useCallback((path) => {
     abortInteractionRequests()
     setUploadedFilePath(path)
+    setGeneratedUvlPath(null)
     setUvlContent(null)
     setPumlContent(null)
     setPimMetrics(null)
@@ -113,6 +115,7 @@ export const App = () => {
    * and downstream actions can reuse the generated UVL content and metrics.
    */
   const handlePimTransformed = useCallback((data) => {
+    setGeneratedUvlPath(data.output_uvl || null)
     setUvlContent(data.uvl_content)
     setCimMetrics(data.metrics?.cim || cimMetrics)
     setPimMetrics(data.metrics?.pim || null)
@@ -151,6 +154,7 @@ export const App = () => {
    */
   const handleClearPim = useCallback(() => {
     abortInteractionRequests()
+    setGeneratedUvlPath(null)
     setUvlContent(null)
     setPimMetrics(null)
     setPumlContent(null)
@@ -167,6 +171,7 @@ export const App = () => {
   const handleClearCim = useCallback(() => {
     abortInteractionRequests()
     setUploadedFilePath(null)
+    setGeneratedUvlPath(null)
     setSelectedExample(null)
     setCimMetrics(null)
     setUvlContent(null)
@@ -189,6 +194,7 @@ export const App = () => {
       requestId: `${example.id}-${Date.now()}`,
     })
     setUploadedFilePath(null)
+    setGeneratedUvlPath(null)
     setCimMetrics(null)
     setPimMetrics(null)
     setPsmMetrics(null)
@@ -197,83 +203,20 @@ export const App = () => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
-  /**
-   * Toggles AI-assisted interaction mode and resets stale interaction state when disabled.
-   *
-   * This handler is used by the header toggle because guided questions only make sense
-   * while the application is operating in the AI-assisted interaction mode.
-   */
-  const handleToggleAi = useCallback(() => {
-    setIsAiEnabled((currentValue) => {
-      const nextValue = !currentValue
-
-      if (!nextValue) {
-        abortInteractionRequests()
-        resetInteractionState()
-      }
-
-      return nextValue
-    })
-  }, [abortInteractionRequests, resetInteractionState])
-
-  /**
-   * Runs the CIM-to-PIM transformation for the current uploaded source file.
-   *
-   * This helper is used by the main application after guided interaction or direct
-   * execution so the PIM result is always produced from the latest active file path.
-   */
-  const runCimToPimTransformation = useCallback(async () => {
-    if (!uploadedFilePath) return
-
-    transformAbortRef.current?.abort()
-    const controller = new AbortController()
-    const runId = ++interactionRunIdRef.current
-    transformAbortRef.current = controller
-
-    try {
-      const response = await transformCimToPim(uploadedFilePath, { signal: controller.signal })
-
-      if (controller.signal.aborted || runId !== interactionRunIdRef.current) {
-        return
-      }
-
-      handlePimTransformed(response)
-    } finally {
-      if (transformAbortRef.current === controller) {
-        transformAbortRef.current = null
-      }
-    }
-  }, [handlePimTransformed, uploadedFilePath])
-
-  /**
-   * Opens the guided-question flow or falls back to direct transformation when AI is off.
-   *
-   * This helper is used by the central interaction button because that action decides
-   * whether the app should fetch questions first or run the CIM-to-PIM step immediately.
-   */
-  const openQuestionsModal = async () => {
-    if (!uploadedFilePath) return
-
-    if (!isAiEnabled) {
-      resetInteractionState()
-      await runCimToPimTransformation()
-      return
-    }
+  const loadQuestionsForUvl = useCallback(async (uvlPath, { openModal = false } = {}) => {
+    if (!uvlPath || !isAiEnabled) return
 
     if (questionsStatus === "loading") {
-      setIsQuestionsModalOpen(true)
-      return
-    }
-
-    if (questionsStatus === "ready" && questions.length > 0) {
-      setIsQuestionsModalOpen(true)
+      if (openModal) {
+        setIsQuestionsModalOpen(true)
+      }
       return
     }
 
     setQuestions([])
     setQuestionsError("")
     setQuestionsStatus("loading")
-    setIsQuestionsModalOpen(true)
+    setIsQuestionsModalOpen(openModal)
     let controller = null
 
     try {
@@ -282,7 +225,7 @@ export const App = () => {
       const runId = ++interactionRunIdRef.current
       questionsAbortRef.current = controller
 
-      const qs = await fetchQuestions(uploadedFilePath, { signal: controller.signal })
+      const qs = await fetchQuestions(uvlPath, { signal: controller.signal })
 
       if (controller.signal.aborted || runId !== interactionRunIdRef.current) {
         return
@@ -306,6 +249,80 @@ export const App = () => {
         questionsAbortRef.current = null
       }
     }
+  }, [isAiEnabled, questionsStatus])
+
+  /**
+   * Toggles AI-assisted interaction mode and resets stale interaction state when disabled.
+   *
+   * This handler is used by the header toggle because guided questions only make sense
+   * while the application is operating in the AI-assisted interaction mode.
+   */
+  const handleToggleAi = useCallback(() => {
+    setIsAiEnabled((currentValue) => {
+      const nextValue = !currentValue
+
+      if (!nextValue) {
+        abortInteractionRequests()
+        resetInteractionState()
+      }
+
+      return nextValue
+    })
+  }, [abortInteractionRequests, resetInteractionState])
+
+  /**
+   * Runs the CIM-to-PIM transformation for the current uploaded source file.
+   *
+   * This helper is used by the main application when the Execute action triggers the
+   * first transformation step and the guided questions must be refreshed afterward.
+   */
+  const runCimToPimTransformation = useCallback(async () => {
+    if (!uploadedFilePath) return
+
+    transformAbortRef.current?.abort()
+    const controller = new AbortController()
+    const runId = ++interactionRunIdRef.current
+    transformAbortRef.current = controller
+
+    try {
+      const response = await transformCimToPim(uploadedFilePath, { signal: controller.signal })
+
+      if (controller.signal.aborted || runId !== interactionRunIdRef.current) {
+        return
+      }
+
+      handlePimTransformed(response)
+
+      if (isAiEnabled && response.output_uvl) {
+        void loadQuestionsForUvl(response.output_uvl, { openModal: true })
+      }
+    } finally {
+      if (transformAbortRef.current === controller) {
+        transformAbortRef.current = null
+      }
+    }
+  }, [handlePimTransformed, isAiEnabled, loadQuestionsForUvl, uploadedFilePath])
+
+  /**
+   * Opens the guided-question modal after the CIM-to-PIM transformation has completed.
+   *
+   * This helper is used by the central interaction button because that action only
+   * exposes the generated questions tied to the latest UVL artifact.
+   */
+  const openQuestionsModal = async () => {
+    if (!generatedUvlPath || !isAiEnabled) return
+
+    if (questionsStatus === "loading" || questionsStatus === "error") {
+      setIsQuestionsModalOpen(true)
+      return
+    }
+
+    if (questionsStatus === "ready" && questions.length > 0) {
+      setIsQuestionsModalOpen(true)
+      return
+    }
+
+    await loadQuestionsForUvl(generatedUvlPath, { openModal: true })
   }
 
   /**
@@ -319,22 +336,13 @@ export const App = () => {
   }
 
   /**
-   * Continues from the guided-question step into the CIM-to-PIM transformation.
+   * Closes the guided-question modal after the generated questions are reviewed.
    *
-   * This handler is used by the guided questions modal so the app can resume the main
-   * transformation flow after the user is done reviewing the prepared questions.
+   * This handler is used by the guided questions modal because the transformation has
+   * already completed before the interaction step becomes available.
    */
-  const handleContinueWithQuestions = async () => {
+  const handleContinueWithQuestions = () => {
     setIsQuestionsModalOpen(false)
-    try {
-      await runCimToPimTransformation()
-    } catch (error) {
-      if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
-        return
-      }
-
-      throw error
-    }
   }
 
   /**
@@ -345,7 +353,7 @@ export const App = () => {
    */
   const renderInteractionButton = ({ interactive = false }) => {
     const isLoadingQuestions = interactive && questionsStatus === "loading"
-    const isDisabled = interactive ? !uploadedFilePath || isLoadingQuestions : true
+    const isDisabled = interactive ? !generatedUvlPath || !isAiEnabled : true
     const handleClick = interactive ? openQuestionsModal : undefined
 
     return (
@@ -356,7 +364,7 @@ export const App = () => {
         className={`min-w-[76px] rounded-lg border px-3 py-2 transition-all ${
           !interactive
             ? "cursor-not-allowed border-ctp-surface1 bg-ctp-surface0 text-[#a0988c] opacity-60"
-            : !uploadedFilePath
+            : !generatedUvlPath || !isAiEnabled
             ? "cursor-not-allowed border-ctp-surface1 bg-ctp-surface0 text-[#a0988c]"
             : isLoadingQuestions
               ? "border-ctp-blue/40 bg-ctp-blue/20 text-ctp-blue shadow-lg shadow-ctp-blue/10"
@@ -410,13 +418,12 @@ export const App = () => {
       <main className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto px-6 py-8">
         {/* Transformation controls */}
         <div className="mb-8">
-          <Filter
-            uploadedFilePath={uploadedFilePath}
-            uvlContent={uvlContent}
-            onTransformCimToPim={handlePimTransformed}
-            onTransformPimToPsm={handlePsmTransformed}
-            onOpenQuestionsModal={openQuestionsModal}
-          />
+            <Filter
+              uploadedFilePath={uploadedFilePath}
+              uvlContent={uvlContent}
+              onTransformCimToPim={runCimToPimTransformation}
+              onTransformPimToPsm={handlePsmTransformed}
+            />
         </div>
 
         {/* Three-level transformation layout */}
