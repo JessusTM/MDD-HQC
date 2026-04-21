@@ -46,6 +46,10 @@ MDD-HQC supports HQC design through a **model-driven flow** from **CIM** to **PI
 
 Starting from **iStar 2.0** goal models, the platform derives traceable **UVL** and **UML** artifacts enriched with **QuantumUML** stereotypes. Each level constrains the next one, narrowing the space of possible solutions and strengthening **vertical traceability**.
 
+<p align="center">
+  <img src="docs/images/layers.png" alt="MDD-HQC conceptual layers from CIM to PIM to preliminary HQC architecture" width="820">
+</p>
+
 **LLM support** helps identify **information gaps**, **ambiguities**, or **misplaced elements** during model refinement. It is **strictly advisory** and never makes decisions on behalf of the user.
 
 ---
