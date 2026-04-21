@@ -25,7 +25,7 @@ export const PSM = ({ pumlContent, metrics, onClear }) => {
   const getPlantUmlUrl = (content) => {
     if (!content) return null
     const encoded = encode(content)
-    return `http://www.plantuml.com/plantuml/svg/${encoded}`
+    return `http://www.plantuml.com/plantuml/png/${encoded}`
   }
 
   const plantUmlUrl = hasContent ? getPlantUmlUrl(pumlContent) : null

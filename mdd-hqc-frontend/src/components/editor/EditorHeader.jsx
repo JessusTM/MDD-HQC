@@ -35,7 +35,7 @@ const SparklesIcon = ({ className = "" }) => (
  * This component is used by the main app shell to keep navigation and global controls
  * visible while the user moves through the transformation workspace.
  */
-export const Header = ({ onOpenExamples, onGoHome, isAiEnabled, onToggleAi }) => {
+export const EditorHeader = ({ onOpenExamples, onGoHome, isAiEnabled, onToggleAi }) => {
   return (
     <header className="bg-ctp-mantle border-b border-ctp-surface0 shrink-0 z-50 shadow-lg shadow-black/20 h-24 sticky top-0">
       <div className="w-full max-w-[1920px] mx-auto px-6 h-full flex items-center justify-center relative pt-3 pb-3">

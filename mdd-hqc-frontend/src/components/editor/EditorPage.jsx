@@ -5,14 +5,14 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { Loader2, TriangleAlert } from "lucide-react"
-import { CIM } from "../Levels/CIM"
-import { PIM } from "../Levels/PIM"
-import { PSM } from "../Levels/PSM"
-import { Filter } from "../Filter/Filter"
-import { Header } from "../Commons/Header"
-import { ExamplesSidebar } from "../Examples/ExamplesSidebar"
-import QuestionsModal from "../Questions/Questions_modal"
-import GuidedQuestionsModal from "../Questions/GuidedQuestionsModal"
+import { EditorHeader } from "./EditorHeader"
+import { ExamplesSidebar } from "./ExamplesSidebar"
+import { Filter } from "./Filter"
+import { CIM } from "./levels/CIM"
+import { PIM } from "./levels/PIM"
+import { PSM } from "./levels/PSM"
+import GuidedQuestionsModal from "./questions/GuidedQuestionsModal"
+import QuestionsModal from "./questions/QuestionsModal"
 import { transformCimToPim } from "../../services/transformations"
 import { fetchQuestions } from "../../services/questions"
 
@@ -307,7 +307,7 @@ export const EditorPage = ({ onGoHome }) => {
         onSelectExample={handleExampleSelected}
       />
 
-      <Header
+      <EditorHeader
         onOpenExamples={() => setIsExamplesOpen(true)}
         onGoHome={onGoHome}
         isAiEnabled={isAiEnabled}

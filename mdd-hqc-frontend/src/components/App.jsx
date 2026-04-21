@@ -3,8 +3,8 @@
  */
 
 import { useState } from "react"
-import { EditorPage } from "./pages/EditorPage"
-import { HomePage } from "./pages/HomePage"
+import { EditorPage } from "./editor/EditorPage"
+import { HomePage } from "./home/HomePage"
 
 /**
  * Renders the top-level application view and keeps navigation intentionally simple.
