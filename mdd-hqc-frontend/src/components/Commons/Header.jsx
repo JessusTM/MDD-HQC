@@ -2,7 +2,7 @@
  * Top-level header components used by the main application shell.
  */
 
-import { Menu } from "lucide-react"
+import { Home, Menu } from "lucide-react"
 
 /**
  * Renders the decorative AI toggle icon used by the application header.
@@ -35,19 +35,29 @@ const SparklesIcon = ({ className = "" }) => (
  * This component is used by the main app shell to keep navigation and global controls
  * visible while the user moves through the transformation workspace.
  */
-export const Header = ({ onOpenExamples, isAiEnabled, onToggleAi }) => {
+export const Header = ({ onOpenExamples, onGoHome, isAiEnabled, onToggleAi }) => {
   return (
     <header className="bg-ctp-mantle border-b border-ctp-surface0 shrink-0 z-50 shadow-lg shadow-black/20 h-24 sticky top-0">
       <div className="w-full max-w-[1920px] mx-auto px-6 h-full flex items-center justify-center relative pt-3 pb-3">
-        {/* Examples entry point */}
-        <button
-          type="button"
-          onClick={onOpenExamples}
-          className="absolute left-6 flex items-center gap-3 rounded-2xl border border-[#45475a] bg-ctp-surface0 px-3.5 py-3 text-sm font-bold uppercase tracking-[0.2em] leading-none text-ctp-mauve transition-all hover:border-[#585b70] hover:bg-ctp-surface1"
-        >
-          <Menu className="h-6 w-6" />
-          Examples
-        </button>
+        <div className="absolute left-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpenExamples}
+            className="flex items-center gap-3 rounded-2xl border border-[#45475a] bg-ctp-surface0 px-3.5 py-3 text-sm font-bold uppercase tracking-[0.2em] leading-none text-ctp-mauve transition-all hover:border-[#585b70] hover:bg-ctp-surface1"
+          >
+            <Menu className="h-6 w-6" />
+            Examples
+          </button>
+
+          <button
+            type="button"
+            onClick={onGoHome}
+            className="flex items-center gap-3 rounded-2xl border border-[#45475a] bg-ctp-surface0 px-3.5 py-3 text-sm font-bold uppercase tracking-[0.2em] leading-none text-ctp-blue transition-all hover:border-[#585b70] hover:bg-ctp-surface1"
+          >
+            <Home className="h-6 w-6" />
+            Home
+          </button>
+        </div>
 
         {/* Project identity */}
         <div className="text-center mt-1">
