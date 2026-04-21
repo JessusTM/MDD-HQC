@@ -19,7 +19,7 @@ import { fetchQuestions } from "../../services/questions"
 /**
  * Keeps the full editor workflow synchronized across uploads, transformations, and modals.
  */
-export const EditorPage = ({ onGoHome }) => {
+export const EditorPage = () => {
   const questionsAbortRef = useRef(null)
   const transformAbortRef = useRef(null)
   const interactionRunIdRef = useRef(0)
@@ -360,7 +360,6 @@ export const EditorPage = ({ onGoHome }) => {
 
       <EditorHeader
         onOpenExamples={() => setIsExamplesOpen(true)}
-        onGoHome={onGoHome}
         isAiEnabled={isAiEnabled}
         onToggleAi={handleToggleAi}
       />
