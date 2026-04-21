@@ -160,7 +160,7 @@ export const HomePage = () => {
             <a href="#overview" className="transition-colors hover:text-ctp-text">Overview</a>
             <a href="#workflow" className="transition-colors hover:text-ctp-text">Workflow</a>
             <a href="#languages" className="transition-colors hover:text-ctp-text">Languages</a>
-            <a href="#operates" className="transition-colors hover:text-ctp-text">Operates</a>
+            <a href="#operates" className="transition-colors hover:text-ctp-text">Characteristics</a>
           </nav>
 
           <Link
@@ -192,7 +192,7 @@ export const HomePage = () => {
                 to="/editor"
                 className="flex items-center justify-center gap-3 rounded-2xl bg-ctp-mauve px-8 py-4 text-lg font-black text-ctp-base shadow-xl shadow-ctp-mauve/20 transition-all hover:scale-[1.02] hover:bg-ctp-pink active:scale-[0.99]"
               >
-                Open Editor <ArrowRight className="h-5 w-5" />
+                Get Started <ArrowRight className="h-5 w-5" />
               </Link>
               <a
                 href="https://github.com/JessusTM/MDD-HQC"
@@ -209,21 +209,41 @@ export const HomePage = () => {
 
         <section id="overview" className="bg-ctp-mantle px-6 py-24">
           <div className="mx-auto max-w-7xl">
-            <SectionHeading
-              title="What is MDD-HQC?"
-              description="MDD-HQC is a design support application that helps users model requirements, guide transformations, and structure hybrid quantum-classical system solutions across multiple abstraction levels."
-            />
-            <div className="mt-8 h-2 w-16 rounded-full bg-ctp-mauve" />
-            <div className="mt-14 grid gap-6 md:grid-cols-3">
-              {featureCards.map(({ icon: Icon, title, description }) => (
-                <article key={title} className="rounded-3xl border border-ctp-surface0 bg-ctp-base p-8 shadow-xl shadow-black/10">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-ctp-mauve/20 bg-ctp-mauve/10 text-ctp-mauve">
-                    <Icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="mt-6 text-2xl font-bold text-ctp-text">{title}</h3>
-                  <p className="mt-4 text-base leading-7 text-ctp-subtext0">{description}</p>
-                </article>
-              ))}
+            <div className="grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
+              <div>
+                <SectionHeading
+                  title="What is MDD-HQC?"
+                  description="MDD-HQC is a design support application that helps users model requirements, guide transformations, and structure hybrid quantum-classical system solutions across multiple abstraction levels."
+                />
+                <div className="mt-8 h-2 w-20 rounded-full bg-ctp-mauve" />
+                <div className="mt-12 space-y-6">
+                  {featureCards.map(({ icon: Icon, title, description }) => (
+                    <article
+                      key={title}
+                      className="group flex gap-5 rounded-[1.75rem] border border-ctp-surface0 bg-ctp-base p-6 shadow-xl shadow-black/10 transition-colors hover:border-ctp-mauve/30"
+                    >
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-ctp-mauve/20 bg-ctp-mauve/10 text-ctp-mauve transition-transform group-hover:scale-105">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-ctp-text transition-colors group-hover:text-ctp-mauve">{title}</h3>
+                        <p className="mt-3 text-base leading-7 text-ctp-subtext0">{description}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative lg:mt-10">
+                <div className="absolute -inset-6 rounded-full bg-ctp-mauve/10 blur-[90px]" />
+                <div className="relative overflow-hidden rounded-[2.5rem] border border-ctp-surface0 bg-ctp-base p-4 shadow-2xl shadow-black/20">
+                  <img
+                    src="/images/layers.png"
+                    alt="MDD-HQC conceptual layers diagram"
+                    className="h-auto w-full rounded-[2rem]"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -267,7 +287,7 @@ export const HomePage = () => {
               </article>
             </div>
             <div className="mt-10 text-center text-sm font-bold uppercase tracking-[0.35em] text-ctp-overlay1">
-              Goals -> Design Decisions -> Preliminary Architecture
+              <span className="text-ctp-blue">Goals</span> -&gt; <span className="text-ctp-pink">Design Decisions</span> -&gt; <span className="text-ctp-teal">Preliminary Architecture</span>
             </div>
           </div>
         </section>
