@@ -96,14 +96,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Ensure deployment directory exists
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: mkdir -p /home/jesus/MDD-HQC
-
       - name: Copy production Docker Compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -111,8 +103,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: docker-compose.prod.yml
-          target: /home/jesus/MDD-HQC
-          overwrite: true
+          target: ~/MDD-HQC
 
       - name: Connect to server and deploy latest containers
         uses: appleboy/ssh-action@v1.2.0
@@ -122,7 +113,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GHCR_USERNAME,GHCR_TOKEN
           script: |
-            cd /home/jesus/MDD-HQC
+            mkdir -p ~/MDD-HQC
+            cd ~/MDD-HQC
             docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
