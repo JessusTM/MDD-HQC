@@ -13,6 +13,7 @@ import {
   Target,
   Workflow,
 } from "lucide-react"
+import { Link } from "react-router-dom"
 
 const featureCards = [
   {
@@ -57,7 +58,7 @@ const languageCards = [
   {
     icon: Target,
     eyebrow: "Intentions",
-    eyebrowColor: "text-ctp-blue/50",
+    eyebrowColor: "text-ctp-blue/75",
     title: "iStar 2.0",
     description: "Models stakeholder goals, actors, dependencies, and system intentions.",
     note: "Captures the problem space before design decisions.",
@@ -67,7 +68,7 @@ const languageCards = [
   {
     icon: Layout,
     eyebrow: "Decisions",
-    eyebrowColor: "text-ctp-mauve/50",
+    eyebrowColor: "text-ctp-mauve/75",
     title: "Extended FM / UVL",
     description: "Models design variability, alternatives, and key HQC decision points.",
     note: "Makes the transition from requirements to design choices explicit.",
@@ -77,7 +78,7 @@ const languageCards = [
   {
     icon: Code,
     eyebrow: "Structure",
-    eyebrowColor: "text-ctp-teal/50",
+    eyebrowColor: "text-ctp-teal/75",
     title: "QuantumUML",
     description: "Models the preliminary architecture of the hybrid system.",
     note: "Translates design decisions into a structural view.",
@@ -90,7 +91,7 @@ const operationsCards = [
   {
     icon: GitBranch,
     eyebrow: "Traceability",
-    eyebrowColor: "text-ctp-blue/50",
+    eyebrowColor: "text-ctp-blue/75",
     title: "Transformation rules",
     description: "Map elements across levels and keep vertical traceability between models.",
     accent: "text-ctp-blue bg-ctp-blue/10 border-ctp-blue/20",
@@ -98,7 +99,7 @@ const operationsCards = [
   {
     icon: Layout,
     eyebrow: "Variability",
-    eyebrowColor: "text-ctp-mauve/50",
+    eyebrowColor: "text-ctp-mauve/75",
     title: "Explicit variability",
     description: "Represent decisions, alternatives, and key design points in a dedicated artifact.",
     accent: "text-ctp-mauve bg-ctp-mauve/10 border-ctp-mauve/20",
@@ -106,7 +107,7 @@ const operationsCards = [
   {
     icon: ShieldCheck,
     eyebrow: "Semantics",
-    eyebrowColor: "text-ctp-teal/50",
+    eyebrowColor: "text-ctp-teal/75",
     title: "Semantic support",
     description: "Use AI-assisted review when rule-based mappings are not enough.",
     accent: "text-ctp-teal bg-ctp-teal/10 border-ctp-teal/20",
@@ -129,11 +130,11 @@ const SectionHeading = ({ title, description, centered = false }) => (
 const WorkflowArrow = () => (
   <div className="hidden items-center justify-center lg:flex">
     <div className="flex flex-col items-center gap-3 text-center text-ctp-overlay1">
-      <svg width="86" height="42" viewBox="0 0 86 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
-        <path d="M6 23C24 8 47 8 74 23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <path d="M68 17L75 23L69 29" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <svg width="94" height="46" viewBox="0 0 94 46" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
+        <path d="M7 25C26 9 51 9 81 25" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
+        <path d="M74 18L82 25L75 32" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <span className="text-[9px] font-bold uppercase tracking-[0.22em]">Transformation Rules</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.22em]">Transformation Rules</span>
     </div>
   </div>
 )
@@ -141,7 +142,7 @@ const WorkflowArrow = () => (
 /**
  * Renders the public-facing landing page while keeping the editor one click away.
  */
-export const HomePage = ({ onOpenEditor }) => {
+export const HomePage = () => {
   return (
     <div className="min-h-screen bg-ctp-base text-ctp-text selection:bg-ctp-mauve selection:text-ctp-base">
       <header className="sticky top-0 z-40 border-b border-ctp-surface0 bg-ctp-base/85 backdrop-blur">
@@ -162,13 +163,12 @@ export const HomePage = ({ onOpenEditor }) => {
             <a href="#operates" className="transition-colors hover:text-ctp-text">Operates</a>
           </nav>
 
-          <button
-            type="button"
-            onClick={onOpenEditor}
+          <Link
+            to="/editor"
             className="rounded-2xl bg-ctp-mauve px-5 py-3 text-sm font-bold text-ctp-base shadow-lg shadow-ctp-mauve/20 transition-all hover:scale-[1.02] hover:bg-ctp-pink active:scale-[0.99]"
           >
             Open Editor
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -181,20 +181,19 @@ export const HomePage = ({ onOpenEditor }) => {
               alt="MDD-HQC"
               className="mb-10 h-auto w-full max-w-[40rem] drop-shadow-2xl"
             />
-            <h1 className="mt-2 max-w-6xl text-4xl font-black tracking-tight text-ctp-mauve md:text-6xl md:leading-[1.1]">
+            <h1 className="mt-2 max-w-6xl text-3xl font-black tracking-tight text-ctp-mauve md:text-5xl md:leading-[1.1]">
               MDD-HQC: A goal-oriented, model-driven approach to designing hybrid quantum-classical systems.
             </h1>
             <p className="mt-8 max-w-3xl text-lg leading-8 text-ctp-subtext0 md:text-xl">
               Understand requirements, structure design decisions, and move from goals to architectural models through a guided workflow.
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <button
-                type="button"
-                onClick={onOpenEditor}
+              <Link
+                to="/editor"
                 className="flex items-center justify-center gap-3 rounded-2xl bg-ctp-mauve px-8 py-4 text-lg font-black text-ctp-base shadow-xl shadow-ctp-mauve/20 transition-all hover:scale-[1.02] hover:bg-ctp-pink active:scale-[0.99]"
               >
                 Open Editor <ArrowRight className="h-5 w-5" />
-              </button>
+              </Link>
               <a
                 href="https://github.com/JessusTM/MDD-HQC"
                 target="_blank"
@@ -240,28 +239,28 @@ export const HomePage = ({ onOpenEditor }) => {
               Instead of jumping directly into implementation, the workflow starts from problem understanding and progressively refines the solution into connected design artifacts.
             </p>
             <div className="mt-16 grid gap-6 lg:grid-cols-[minmax(0,1fr)_110px_minmax(0,1fr)_110px_minmax(0,1fr)] lg:items-center">
-              <article className={`rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[0].accent}`}>
+              <article className={`self-stretch rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[0].accent}`}>
                 <div className="text-3xl font-black">{workflowStages[0].label}</div>
                 <div className="mt-3 text-xs font-bold uppercase tracking-[0.25em] opacity-80">{workflowStages[0].subtitle}</div>
-                <div className="mx-auto mt-8 h-px w-16 bg-current opacity-30" />
+                <div className="mx-auto mt-8 h-0.5 w-16 bg-current opacity-30" />
                 <div className="mt-8 text-sm font-semibold text-ctp-subtext0">
                   Notation: <span className="text-ctp-text">{workflowStages[0].notation}</span>
                 </div>
               </article>
               <WorkflowArrow />
-              <article className={`rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[1].accent}`}>
+              <article className={`self-stretch rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[1].accent}`}>
                 <div className="text-3xl font-black">{workflowStages[1].label}</div>
                 <div className="mt-3 text-xs font-bold uppercase tracking-[0.25em] opacity-80">{workflowStages[1].subtitle}</div>
-                <div className="mx-auto mt-8 h-px w-16 bg-current opacity-30" />
+                <div className="mx-auto mt-8 h-0.5 w-16 bg-current opacity-30" />
                 <div className="mt-8 text-sm font-semibold text-ctp-subtext0">
                   Notation: <span className="text-ctp-text">{workflowStages[1].notation}</span>
                 </div>
               </article>
               <WorkflowArrow />
-              <article className={`rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[2].accent}`}>
+              <article className={`self-stretch rounded-[2rem] border p-8 text-center shadow-xl shadow-black/10 ${workflowStages[2].accent}`}>
                 <div className="text-3xl font-black">{workflowStages[2].label}</div>
                 <div className="mt-3 text-xs font-bold uppercase tracking-[0.25em] opacity-80">{workflowStages[2].subtitle}</div>
-                <div className="mx-auto mt-8 h-px w-16 bg-current opacity-30" />
+                <div className="mx-auto mt-8 h-0.5 w-16 bg-current opacity-30" />
                 <div className="mt-8 text-sm font-semibold text-ctp-subtext0">
                   Notation: <span className="text-ctp-text">{workflowStages[2].notation}</span>
                 </div>
@@ -286,10 +285,10 @@ export const HomePage = ({ onOpenEditor }) => {
                   <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border ${accent}`}>
                     <Icon className="h-8 w-8" />
                   </div>
-                  <div className={`mt-8 text-xs font-black uppercase tracking-[0.35em] ${eyebrowColor}`}>{eyebrow}</div>
+                  <div className={`mt-6 text-sm font-black uppercase tracking-[0.35em] ${eyebrowColor}`}>{eyebrow}</div>
                   <h3 className="mt-4 text-3xl font-black text-ctp-text">{title}</h3>
-                  <p className="mt-5 min-h-[96px] text-lg leading-8 text-ctp-subtext0">{description}</p>
-                  <div className={`mt-8 border-t border-ctp-surface0 pt-6 text-sm font-bold ${noteColor}`}>Why: {note}</div>
+                  <p className="mt-4 min-h-[72px] text-lg leading-8 text-ctp-subtext0">{description}</p>
+                  <div className={`mt-4 border-t-2 border-ctp-surface0 pt-3 text-sm font-bold ${noteColor}`}>Why: {note}</div>
                 </article>
               ))}
             </div>
@@ -309,9 +308,9 @@ export const HomePage = ({ onOpenEditor }) => {
                   <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border ${accent}`}>
                     <Icon className="h-8 w-8" />
                   </div>
-                  <div className={`mt-8 text-xs font-black uppercase tracking-[0.35em] ${eyebrowColor}`}>{eyebrow}</div>
+                  <div className={`mt-6 text-sm font-black uppercase tracking-[0.35em] ${eyebrowColor}`}>{eyebrow}</div>
                   <h3 className="mt-4 text-3xl font-black text-ctp-text">{title}</h3>
-                  <p className="mt-5 text-lg leading-8 text-ctp-subtext0">{description}</p>
+                  <p className="mt-4 text-lg leading-8 text-ctp-subtext0">{description}</p>
                 </article>
               ))}
             </div>
@@ -325,7 +324,7 @@ export const HomePage = ({ onOpenEditor }) => {
             <Sparkles className="h-5 w-5 text-ctp-mauve" />
             <span className="font-bold">MDD-HQC</span>
           </div>
-          <p className="text-sm text-ctp-overlay1">© 2026 MDD-HQC. Built for the Quantum Future.</p>
+          <p className="text-sm text-ctp-overlay1">© 2026 MDD-HQC.</p>
         </div>
       </footer>
     </div>

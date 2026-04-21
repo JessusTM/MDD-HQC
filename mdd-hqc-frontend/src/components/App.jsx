@@ -1,20 +1,20 @@
 /**
- * Main application shell that switches between the editor and home views.
+ * Main application shell that maps top-level pages to real browser routes.
  */
 
-import { useState } from "react"
+import { Navigate, Route, Routes } from "react-router-dom"
 import { EditorPage } from "./editor/EditorPage"
 import { HomePage } from "./home/HomePage"
 
 /**
- * Renders the top-level application view and keeps navigation intentionally simple.
+ * Renders the top-level application routes.
  */
 export const App = () => {
-  const [currentView, setCurrentView] = useState("editor")
-
-  return currentView === "home" ? (
-    <HomePage onOpenEditor={() => setCurrentView("editor")} />
-  ) : (
-    <EditorPage onGoHome={() => setCurrentView("home")} />
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/editor" element={<EditorPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
