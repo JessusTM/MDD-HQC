@@ -20,10 +20,10 @@
 </div>
 
 <p align="center">
-  <a href="http://200.13.5.22:3000/"><strong><font size="6">Try the Application</font></strong></a>
+  <a href="http://200.13.5.22:3000/"><strong><font size="6">Open the Editor</font></strong></a>
 </p>
 
-> **Version:** v1.2.2  
+> **Version:** v1.3.0  
 > **Status:** Functional Prototype  
 
 **MDD-HQC** is a model-driven platform for designing hybrid quantum-classical systems. It transforms **iStar 2.0** models into traceable **UVL** and **UML** artifacts enriched with **QuantumUML** stereotypes, with advisory **LLM support**.
@@ -171,4 +171,20 @@ Each transformation maintains **traceability** between levels, allowing elements
       <sub>Transformation results</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/images/3.png" alt="Editor workflow" width="100%">
+      <br>
+      <sub>Editor workflow</sub>
+    </td>
+    <td width="50%" align="center"></td>
+  </tr>
 </table>
+
+---
+
+### Home Landing
+
+<p align="center">
+  <img src="docs/images/4.png" alt="Home landing page" width="460">
+</p>
