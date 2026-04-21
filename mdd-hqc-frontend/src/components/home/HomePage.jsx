@@ -113,6 +113,9 @@ const operationsCards = [
   },
 ]
 
+/**
+ * Renders a reusable section heading block for home sections.
+ */
 const SectionHeading = ({ title, description, centered = false }) => (
   <div className={centered ? "mx-auto max-w-3xl text-center" : "max-w-3xl"}>
     <h2 className="text-4xl md:text-5xl font-black tracking-tight text-ctp-text">{title}</h2>
@@ -120,6 +123,9 @@ const SectionHeading = ({ title, description, centered = false }) => (
   </div>
 )
 
+/**
+ * Renders the transformation connector shown between workflow stages.
+ */
 const WorkflowArrow = () => (
   <div className="hidden items-center justify-center lg:flex">
     <div className="flex flex-col items-center gap-3 text-center text-ctp-overlay1">

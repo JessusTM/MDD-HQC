@@ -38,6 +38,9 @@ export const EditorPage = ({ onGoHome }) => {
   const [questionsStatus, setQuestionsStatus] = useState("idle")
   const [questionsError, setQuestionsError] = useState("")
 
+  /**
+   * Clears the guided-interaction state kept after UVL generation.
+   */
   const resetInteractionState = useCallback(() => {
     setQuestions([])
     setQuestionsStatus("idle")
@@ -45,6 +48,9 @@ export const EditorPage = ({ onGoHome }) => {
     setIsQuestionsModalOpen(false)
   }, [])
 
+  /**
+   * Cancels in-flight interaction requests and invalidates the current run.
+   */
   const abortInteractionRequests = useCallback(() => {
     interactionRunIdRef.current += 1
     questionsAbortRef.current?.abort()
@@ -66,6 +72,9 @@ export const EditorPage = ({ onGoHome }) => {
     }
   }, [abortInteractionRequests])
 
+  /**
+   * Stores the uploaded CIM path and clears downstream editor results.
+   */
   const handleFileUploaded = useCallback((path) => {
     abortInteractionRequests()
     setUploadedFilePath(path)
@@ -77,10 +86,16 @@ export const EditorPage = ({ onGoHome }) => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Stores the latest CIM metrics returned after upload processing.
+   */
   const handleCimMetricsLoaded = useCallback((metrics) => {
     setCimMetrics(metrics)
   }, [])
 
+  /**
+   * Applies the CIM-to-PIM response to the editor state.
+   */
   const handlePimTransformed = useCallback((data) => {
     setGeneratedUvlPath(data.output_uvl || null)
     setUvlContent(data.uvl_content)
@@ -88,6 +103,9 @@ export const EditorPage = ({ onGoHome }) => {
     setPimMetrics(data.metrics?.pim || null)
   }, [cimMetrics])
 
+  /**
+   * Applies the PIM-to-PSM response to the editor state.
+   */
   const handlePsmTransformed = useCallback((data) => {
     setPumlContent(data.puml_content)
     setUvlContent(data.uvl_content || uvlContent)
@@ -96,11 +114,17 @@ export const EditorPage = ({ onGoHome }) => {
     setPsmMetrics(data.metrics?.psm || null)
   }, [cimMetrics, pimMetrics, uvlContent])
 
+  /**
+   * Clears only the generated PSM artifact and its metrics.
+   */
   const handleClearPsm = useCallback(() => {
     setPumlContent(null)
     setPsmMetrics(null)
   }, [])
 
+  /**
+   * Clears the PIM result and every dependent editor state.
+   */
   const handleClearPim = useCallback(() => {
     abortInteractionRequests()
     setGeneratedUvlPath(null)
@@ -111,6 +135,9 @@ export const EditorPage = ({ onGoHome }) => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Clears the CIM source and resets every later stage.
+   */
   const handleClearCim = useCallback(() => {
     abortInteractionRequests()
     setUploadedFilePath(null)
@@ -124,6 +151,9 @@ export const EditorPage = ({ onGoHome }) => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Applies a predefined example as the new CIM source.
+   */
   const handleExampleSelected = useCallback((example) => {
     abortInteractionRequests()
     setSelectedExample({
@@ -140,6 +170,9 @@ export const EditorPage = ({ onGoHome }) => {
     resetInteractionState()
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Loads guided questions for the current UVL artifact.
+   */
   const loadQuestionsForUvl = useCallback(async (uvlPath, { openModal = false } = {}) => {
     if (!uvlPath || !isAiEnabled) return
 
@@ -188,6 +221,9 @@ export const EditorPage = ({ onGoHome }) => {
     }
   }, [isAiEnabled, questionsStatus])
 
+  /**
+   * Toggles AI assistance and clears guided-interaction state when disabling it.
+   */
   const handleToggleAi = useCallback(() => {
     setIsAiEnabled((currentValue) => {
       const nextValue = !currentValue
@@ -201,6 +237,9 @@ export const EditorPage = ({ onGoHome }) => {
     })
   }, [abortInteractionRequests, resetInteractionState])
 
+  /**
+   * Runs the CIM-to-PIM transformation for the active uploaded file.
+   */
   const runCimToPimTransformation = useCallback(async () => {
     if (!uploadedFilePath) return
 
@@ -228,6 +267,9 @@ export const EditorPage = ({ onGoHome }) => {
     }
   }, [handlePimTransformed, isAiEnabled, loadQuestionsForUvl, uploadedFilePath])
 
+  /**
+   * Opens the guided-questions modal with the latest available state.
+   */
   const openQuestionsModal = async () => {
     if (!generatedUvlPath || !isAiEnabled) return
 
@@ -244,14 +286,23 @@ export const EditorPage = ({ onGoHome }) => {
     await loadQuestionsForUvl(generatedUvlPath, { openModal: true })
   }
 
+  /**
+   * Closes the guided-questions modal.
+   */
   const handleQuestionsModalClose = () => {
     setIsQuestionsModalOpen(false)
   }
 
+  /**
+   * Closes the guided-questions modal after the user continues.
+   */
   const handleContinueWithQuestions = () => {
     setIsQuestionsModalOpen(false)
   }
 
+  /**
+   * Renders the interaction button displayed between editor stages.
+   */
   const renderInteractionButton = ({ interactive = false }) => {
     const isLoadingQuestions = interactive && questionsStatus === "loading"
     const isDisabled = interactive ? !generatedUvlPath || !isAiEnabled : true
