@@ -16,7 +16,6 @@ const QuestionsModal = ({ isOpen, onClose, children }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ctp-base/70 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-2xl rounded-2xl border border-ctp-surface1 bg-ctp-mantle shadow-2xl shadow-black/30">
-        {/* Close action */}
         <button
           type="button"
           onClick={onClose}
@@ -26,7 +25,6 @@ const QuestionsModal = ({ isOpen, onClose, children }) => {
           <X className="h-5 w-5" />
         </button>
 
-        {/* Modal content */}
         <div className="p-6 pr-16">{children}</div>
       </div>
     </div>

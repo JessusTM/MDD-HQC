@@ -5,8 +5,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { Upload, FileText, CheckCircle, Loader2, Trash2 } from "lucide-react"
-import { uploadFile } from "../../services/file"
-import { getCimMetrics } from "../../services/metrics"
+import { uploadFile } from "../../../services/file"
+import { getCimMetrics } from "../../../services/metrics"
 
 /**
  * Displays the CIM stage and manages the source file-processing workflow.
